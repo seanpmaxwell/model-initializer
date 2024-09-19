@@ -43,11 +43,20 @@ const User = ModelInitializer.init<IUser>([
 ]);
 
 function checkAvatar(arg: unknown): arg is IUser['avatar'] {
-  return (
-    !!arg && typeof arg === 'object' && 
-    'fileName' in arg && typeof arg.fileName === 'string' &&
-    'data' in arg && typeof arg.data === 'string'
-  )
+  if (!arg) {
+    return true;
+  }
+  const fn = ModelInitializer.checkObject<IUser['avatar']>([
+    {
+      prop: 'fileName',
+      type: 'string',
+    },
+    {
+      prop: 'data',
+      type: 'string',
+    }
+  ]);
+  return fn(arg);
 }
 
 
