@@ -51,7 +51,10 @@ ModelInitializer.timeCloneFns = {
 }
 
 // Should throw error
-// const Post = ModelInitializer.init<{day: 'date'}>([
+// ModelInitializer.init<{day: 'date'}>([
 //   { prop: 'day', type: 'date', default: 'horse' as any }
 // ]);
-User.new({ children: 'horse' as any })
+// ModelInitializer.init<{ children: string[] }>([
+//   { prop: 'children', type: 'string[]', default: 'horse' as any }
+// ]);
+// User.new({ children: 'horse' as any })
