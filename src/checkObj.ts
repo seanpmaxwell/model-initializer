@@ -27,7 +27,7 @@ export type TObjProp<T> = {
 /**
  * Check object function
  */
-function checkObject<T>(
+function checkObj<T>(
   props: TObjProp<T>[],
   timeCloneFns: ITimeCloneFns,
 ): (arg: unknown) => arg is NonNullable<T> {
@@ -38,4 +38,4 @@ function checkObject<T>(
 
 // **** Export default **** //
 
-export default checkObject;
+export default checkObj;
