@@ -1,5 +1,5 @@
-import moment, { MomentInput } from 'moment';
-import _ from 'lodash';
+import moment from 'moment';
+import lodash from 'lodash';
 
 import Errors from './common/Errors';
 import { TModelProp, TModelPropNotFks } from './common/types';
@@ -103,7 +103,7 @@ function _copyAndValidate<T>(prop: TModelPropNotFks<T>, val: T[keyof T]) {
   const propName = String(prop.prop);
   // Date
   if (prop.type === 'date') {
-    const temp = moment(val as MomentInput);
+    const temp = moment(val as moment.MomentInput);
     if (temp.isValid()) {
       return temp.toDate();
     } else {
@@ -114,7 +114,7 @@ function _copyAndValidate<T>(prop: TModelPropNotFks<T>, val: T[keyof T]) {
     if (!validateArr(prop, val)) {
       throw new Error(Errors.notValidArr(propName));
     } else {
-      return _.cloneDeep(val);
+      return lodash.cloneDeep(val);
     }
   // Check basic type
   } else if (prop.type !== typeof val) {
@@ -127,7 +127,7 @@ function _copyAndValidate<T>(prop: TModelPropNotFks<T>, val: T[keyof T]) {
     if (!prop.vldrFn) {
       throw new Error(Errors.vldrFnMissing(propName));
     } else {
-      return _.cloneDeep(val);
+      return lodash.cloneDeep(val);
     }
   // Return basic type
   } else {
