@@ -31,12 +31,10 @@
     "url": "https://github.com/seanpmaxwell/model-initializer/issues"
   },
   "homepage": "https://github.com/seanpmaxwell/model-initializer#readme",
-  "dependencies": {
-    "lodash": "^4.17.21",
-    "moment": "^2.29.4"
-  },
   "devDependencies": {
     "@types/lodash": "^4.17.7",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.4",
     "ts-node": "^10.9.2",
     "tslib": "^2.6.3",
     "typescript": "^5.5.4"

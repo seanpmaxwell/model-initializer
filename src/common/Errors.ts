@@ -36,4 +36,8 @@ export default {
     return `An array type was specified but "${propName}" is not a valid ` + 
       'array.';
   },
+  notNullable(propName: string) {
+    return `Value found for "${propName}" was null, but "nullable" was not ` + 
+      'marked as true.';
+  },
 } as const;

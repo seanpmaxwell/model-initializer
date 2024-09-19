@@ -73,3 +73,12 @@ type TForeignKeyModelProp<T> = {
 export type TModelPropNotFks<T> = TBaseTypeModelProp<T> | TObjModelProp<T>;
 type TModelPropFks<T> = TForeignKeyModelProp<T> | TPrimaryKeyModelProp<T>;
 export type TModelProp<T> = TModelPropNotFks<T> | TModelPropFks<T>;
+
+
+// **** User Custom Stuff **** //
+
+export interface ITimeCloneFns {
+  cloneDeep: <T>(arg: T) => T;
+  validateTime: <T>(arg: T) => boolean;
+  toDate: <T>(arg: T) => Date;
+}
