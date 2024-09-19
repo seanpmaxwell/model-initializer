@@ -8,11 +8,6 @@
     "test": "npx ts-node ./test",
     "build": "tsc -p tsconfig.build.json"
   },
-  "exports": {
-    "require": "./dist/cjs/index.cjs",
-    "import": "./dist/esm/index.js",
-    "default": "./dist/cjs/index.cjs"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/seanpmaxwell/model-initializer.git"
