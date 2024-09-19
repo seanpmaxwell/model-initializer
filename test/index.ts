@@ -9,6 +9,8 @@ export interface IUser {
   email: string;
   lastLogin: Date;
   created: Date;
+  boss: number;
+  children: string[];
   avatar?: { fileName: string; data: string };
 }
 
@@ -35,11 +37,22 @@ const User = ModelInitializer.init<IUser>([
     type: 'date',
   },
   {
+    prop: 'boss',
+    type: 'fk',
+    nullable: true,
+    default: null,
+  },
+  {
     prop: 'avatar',
     type: 'object',
     optional: true,
     vldrFn: checkAvatar,
   },
+  {
+    prop: 'children',
+    type: 'string[]',
+    optional: false,
+  }
 ]);
 
 function checkAvatar(arg: unknown): arg is IUser['avatar'] {
