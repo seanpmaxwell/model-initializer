@@ -1,0 +1,32 @@
+{
+  "name": "model-initializer",
+  "version": "1.0.0",
+  "description": "Create and validate database models from fully typesafe arrays.",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/seanpmaxwell/model-initializer.git"
+  },
+  "keywords": [
+    "model",
+    "record",
+    "node",
+    "schema",
+    "postgres",
+    "validate",
+    "validator",
+    "inti",
+    "initialzer",
+    "create",
+    "validation"
+  ],
+  "author": "sean maxwell",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/seanpmaxwell/model-initializer/issues"
+  },
+  "homepage": "https://github.com/seanpmaxwell/model-initializer#readme"
+}
