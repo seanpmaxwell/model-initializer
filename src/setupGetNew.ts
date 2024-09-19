@@ -5,7 +5,8 @@ import { validateProp } from './common/validator-fns';
 /**
  * Setup the "GetNew" function. Note that whether a property is optional or 
  * not, if you supply a default value, it will get initialized with that 
- * value.
+ * value. Also, not being there doesn't cause errors, cause we just insert
+ * the default.
  */
 function setupGetNew<T>(props: TModelProp<T>[], timeCloneFns: ITimeCloneFns) {
   return (arg: Partial<T> = {}): T => {

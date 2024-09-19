@@ -43,14 +43,15 @@ function _checkAvatar(arg: unknown): arg is IUser['avatar'] {
 const user1 = User.new({ name: 'john' });
 console.log(user1)
 
-// // Test errors
-// ModelInitializer.timeCloneFns = {
-//   cloneDeep: arg => arg,
-//   validateTime: arg => false,
-//   toDate: arg => new Date(),
-// }
+// Test errors
+ModelInitializer.timeCloneFns = {
+  cloneDeep: arg => arg,
+  validateTime: arg => false,
+  toDate: arg => new Date(),
+}
 
-// // Should throw error
+// Should throw error
 // const Post = ModelInitializer.init<{day: 'date'}>([
 //   { prop: 'day', type: 'date', default: 'horse' as any }
 // ]);
+User.new({ children: 'horse' as any })
