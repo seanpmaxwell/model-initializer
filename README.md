@@ -1,7 +1,5 @@
 # About model-initializer
 <h3>Quick, simple, and fully-typesafe library for setting up models used to represent database schemas.</h3>
-<br>
-
 
 ## Summary
 - This library's default export is a module that holds 2 functions `init` and `checkObj`. `init` is the heart of the library, we'll talk about `checkObj` later.
