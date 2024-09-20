@@ -124,7 +124,9 @@ type Prop<YourModel, keyof YourModel> = {
 ### Setting your own time/clone functions
 - I've never created a project that didn't use `moment` and `lodash` so that's what I decided to use, but I've heard some developers fuss that these libraries are overkill or provide way more than what they usually need. So if you want to forgo them you will need to pass your own `cloneDeep`, `validateTime`, `toDate` functions to init:
 ```typescript
+// some pre-run script
 import ModelInitializer, { ITimeCloneFns } from 'model-intializer';
+
 
 const CUSTOM_ADDONS: ITimeCloneFns {
   cloneDeep: arg => { ...your clone deep logic; return clone };
@@ -133,6 +135,5 @@ const CUSTOM_ADDONS: ITimeCloneFns {
 }
 
 ModelInitializer.timeDateFns = CUSTOM_ADDONS;
-export ModelInitializer;
 
 ```
