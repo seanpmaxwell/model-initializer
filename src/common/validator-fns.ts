@@ -49,11 +49,19 @@ export function validateProp<T>(
     }
     return true;
   // Check optional
-  } else if (val === undefined && !prop.optional) {
-    throw new Error(Errors.propMissing(propName));
+  } else if (val === undefined) {
+    if (!prop.optional) {
+      throw new Error(Errors.propMissing(propName));
+    } else {
+      true;
+    }
   // Check null
-  } else if (val === null && !prop.nullable) {
-    throw new Error(Errors.notNullable(propName));
+  } else if (val === null) {
+    if (!prop.nullable) {
+      throw new Error(Errors.notNullable(propName));
+    } else {
+      return true;
+    }
   // Check date
   } else if (prop.type === 'date') {
     if (!timeCloneFns.validateTime(val)) {
@@ -66,7 +74,7 @@ export function validateProp<T>(
   } else if (typeof val !== prop.type) {
     throw new Error(Errors.default(propName));
   }
-  // Must always check function if there
+  // Must always check function if there (except if null or undefined)
   if (!!prop.vldrFn && !prop.vldrFn?.(val)) {
     throw new Error(Errors.vldrFnFailed(propName));
   }
