@@ -92,7 +92,7 @@ type Prop<YourModel, keyof YourModel> = {
 }
 ```
 - `prop`: Must be a key of the type you pass to the `init` generic.
-- `type`: There are 12 types to chose from. The 5 basic types are `'string' | 'number' | 'boolean' | 'date' | object`, each one has an array counter part: i.e. `string[]`. There is also `pk` (primary-key) and `fk` foreign-key.
+- `type`: There are 12 types to chose from. The 5 basic types are `'string' | 'number' | 'boolean' | 'date' | object`, each one has an array counter part: i.e. `string[]`. There is also `pk` (primary-key) and `fk` (foreign-key).
 - `nullable`: optional, default is `false`, says that null is a valid value regardless of what's set by type.
 - `optional`: optional, default is `false`, prevents an error from being thrown if key is absent from the `isValid` check and tells `new` to skip this key if it's not in the partial and there is no default.
 - `default`: optional, except for `object`s when `optional` is `false`, a default value passed to `new` if the key is absent from the partial being passed.
@@ -115,7 +115,8 @@ type Prop<YourModel, keyof YourModel> = {
 - `pk` and `fk`: `-1`
 
 ### Validation
-- Validation of values and not just types will be done both in the `isValid` function and in the `new` function before setting value passed from a partial AND a value passed by a default (if you passed your own custom default). The reason I decided to make it throw errors instead of just return a boolean is so we can read the name of the property that failed and see exactly where the validation failed. If you don't want it throw errors you should wrap `isValid` and `new` in `try/catch` blocks and handle the error message and values manually.
+- Validation of values and not just types will be done both in the `isValid` function and in the `new` function before setting a value passed from a partial. Default values (if you passed your own custom default) will also be validated. The reason I decided to make it throw errors instead of just return a boolean is so we can read the name of the property that failed and see exactly where the validation failed. If you don't want it throw errors you should wrap `isValid` and `new` in `try/catch` blocks and handle the error message and values manually.
+- The array types `string[]`, `boolean[]` etc will only work for single layer arrays. If you want to validate a nested array just mark it as an `object[]` and pass your validator function.
 
 ### checkObj Function
 - Creating validator functions for object properties can get a little tedious, that's why is decided to include the `checkObj` function in addition to `init`. `checkObj` works very similar to `isValid` and just like `init` you pass it a generic along with an array of properties but the `default:` prop is absent since we're only dealing with type-validation and not setting any values. The quick start above contains an example of `checkObj` in action.
