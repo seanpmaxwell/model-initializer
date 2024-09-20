@@ -53,7 +53,7 @@ export function validateProp<T>(
     if (!prop.optional) {
       throw new Error(Errors.propMissing(propName));
     } else {
-      true;
+      return true;
     }
   // Check null
   } else if (val === null) {
