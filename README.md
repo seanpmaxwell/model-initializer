@@ -1,8 +1,8 @@
 # About model-initializer
-<h3>Quick, simple, and fully-typesafe library for setting up models used to represent database schemas.</h3>
+<h3>Quick, simple library for setting up models used to represent database schemas. Fully typesafe, works client or server side.</h3>
 
 ## Summary
-- This library's default export is a module that holds 2 functions `init` and `checkObj`. `init` is the heart of the library, we'll talk about `checkObj` later.
+- This library's default export is a module that holds 2 functions `init` and `checkObj`. `init` is the heart of the library, `checkObj` is a helper function see the last section.
 - When you pass `init` a generic and an array of objects used to represent your schema, it gives you back an object with 2 functions: `new` and `isValid` which typesafety enforced by the generic you passed.
   - `new()` let's us create new object using a partial of your model and defaults from the array. Defaults are deep cloned before being added. The returned value is a full (not partial) object of your schema (minus certain optional ones, see the guide).
   - `isValid()` accepts an unknown argument and throws errors if they do not match the required schema.
@@ -119,7 +119,7 @@ type Prop<YourModel, keyof YourModel> = {
 - The array types `string[]`, `boolean[]` etc will only work for single layer arrays. If you want to validate a nested array just mark it as an `object[]` and pass your validator function.
 
 ### checkObj Function
-- Creating validator functions for object properties can get a little tedious, that's why is decided to include the `checkObj` function in addition to `init`. `checkObj` works very similar to `isValid` and just like `init` you pass it a generic along with an array of properties but the `default:` prop is absent since we're only dealing with type-validation and not setting any values. The quick start above contains an example of `checkObj` in action.
+- Creating validator functions for object properties can get a little tedious, that's why is decided to include the `checkObj` function in addition to `init`. `checkObj` works very similar to `isValid` and just like `init` you pass it a generic along with an array of properties but the `default:` prop is not required since we're only dealing with type-validation and not setting any values. The quick start above contains an example of `checkObj` in action. I've found that the `checkObj` very useful even outside of my database models. I use it for validation on the back-end in my routing layer as well for checking incoming API data.
 
 ### Setting your own time/clone functions
 - I've never created a project that didn't use `moment` and `lodash` so that's what I decided to use, but I've heard some developers fuss that these libraries are overkill or provide way more than what they usually need. So if you want to forgo them you will need to pass your own `cloneDeep`, `validateTime`, `toDate` functions to init:
