@@ -2,7 +2,7 @@
 <h3>Quick, simple library for setting up models used to represent database schemas. Fully typesafe, works client or server side.</h3>
 
 ## Summary
-- This library's default export is a module that holds 2 functions `init` and `checkObj`. `init` is the heart of the library, `checkObj` is a helper function see the last section.
+- This library's default export is a module that holds 2 functions `init` and `checkObj`. `init` is the heart of the library, `checkObj` is a helper function see the second to last section.
 - When you pass `init` a generic and an array of objects used to represent your schema, it gives you back an object with 2 functions: `new` and `isValid` which typesafety enforced by the generic you passed.
   - `new()` let's us create new object using a partial of your model and defaults from the array. Defaults are deep cloned before being added. The returned value is a full (not partial) object of your schema (minus certain optional ones, see the guide).
   - `isValid()` accepts an unknown argument and throws errors if they do not match the required schema.
@@ -15,7 +15,7 @@
 - Create a type to represent your model and an array of objects. `init` requires 1 generic so pass it the type and the array.
 
 ```typescript
-import ModelInitializer from 'model-initializer';
+import MI from 'model-initializer';
 
 // User as it appears in the database
 export interface IUser {
@@ -32,8 +32,14 @@ export interface IUser {
   avatar?: { fileName: string; data: string };
 }
 
+// Create check avatar function
+const checkAvatar = MI.checkObj<IUser['avatar']>([
+  { prop: 'fileName', type: 'string' },
+  { prop: 'data', type: 'string' }
+]);
+
 // Setup "User schema"
-const User = ModelInitializer.init<IUser>([
+const User = MI.init<IUser>([
   { prop: 'id', type: 'pk' },
   { prop: 'name', type: 'string' },
   { prop: 'email', type: 'string', optional: true },
@@ -43,16 +49,13 @@ const User = ModelInitializer.init<IUser>([
   { prop: 'created', type: 'date' },
   { prop: 'active', type: 'boolean' },
   { prop: 'boss', type: 'fk', nullable: true, default: null },
-  { prop: 'avatar', type: 'object', optional: true, vldrFn: _checkAvatar },
+  { prop: 'avatar', type: 'object', optional: true, vldrFn: checkAvatar },
   { prop: 'children', type: 'string[]', optional: false },
 ]);
 
 // Validate Avatar object
 function _checkAvatar(arg: unknown): arg is IUser['avatar'] {
-  return ModelInitializer.checkObj<IUser['avatar']>([
-    { prop: 'fileName', type: 'string' },
-    { prop: 'data', type: 'string' }
-  ])(arg);
+  (arg);
 }
 
 // Print results

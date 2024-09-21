@@ -1,4 +1,4 @@
-import ModelInitializer from '../src';
+import MI from '../src';
 
 
 // User as it appears in the database
@@ -16,8 +16,14 @@ export interface IUser {
   avatar?: { fileName: string; data: string };
 }
 
+// Create check avatar function
+const checkAvatar = MI.checkObj<IUser['avatar']>([
+  { prop: 'fileName', type: 'string' },
+  { prop: 'data', type: 'string' }
+]);
+
 // Setup "User schema"
-const User = ModelInitializer.init<IUser>([
+const User = MI.init<IUser>([
   { prop: 'id', type: 'pk' },
   { prop: 'name', type: 'string' },
   { prop: 'email', type: 'string', optional: true },
@@ -27,24 +33,16 @@ const User = ModelInitializer.init<IUser>([
   { prop: 'created', type: 'date' },
   { prop: 'active', type: 'boolean' },
   { prop: 'boss', type: 'fk', nullable: true, default: null },
-  { prop: 'avatar', type: 'object', optional: true, vldrFn: _checkAvatar },
+  { prop: 'avatar', type: 'object', optional: true, vldrFn: checkAvatar },
   { prop: 'children', type: 'string[]', optional: false },
 ]);
-
-// Validate Avatar object
-function _checkAvatar(arg: unknown): arg is IUser['avatar'] {
-  return ModelInitializer.checkObj<IUser['avatar']>([
-    { prop: 'fileName', type: 'string' },
-    { prop: 'data', type: 'string' }
-  ])(arg);
-}
 
 // Print results
 const user1 = User.new({ name: 'john' });
 console.log(user1)
 
 // Test errors
-ModelInitializer.timeCloneFns = {
+MI.timeCloneFns = {
   cloneDeep: arg => arg,
   validateTime: arg => false,
   toDate: arg => new Date(),
