@@ -53,11 +53,6 @@ const User = MI.init<IUser>([
   { prop: 'children', type: 'string[]', optional: false },
 ]);
 
-// Validate Avatar object
-function _checkAvatar(arg: unknown): arg is IUser['avatar'] {
-  (arg);
-}
-
 // Print results
 const user1 = User.new({ name: 'john' });
 console.log(user1)
