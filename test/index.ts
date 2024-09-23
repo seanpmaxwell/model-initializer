@@ -49,10 +49,10 @@ MI.timeCloneFns = {
 }
 
 // Should throw error
-// ModelInitializer.init<{day: 'date'}>([
-//   { prop: 'day', type: 'date', default: 'horse' as any }
-// ]);
-// ModelInitializer.init<{ children: string[] }>([
+MI.init<{day: 'date'}>([
+  { prop: 'day', type: 'date', default: 'horse' as any }
+]);
+// MI.init<{ children: string[] }>([
 //   { prop: 'children', type: 'string[]', default: 'horse' as any }
 // ]);
 // User.new({ children: 'horse' as any })

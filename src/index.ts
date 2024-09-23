@@ -1,6 +1,3 @@
-import moment, { MomentInput } from 'moment';
-import _ from 'lodash';
-
 import setupGetNew from './setupGetNew';
 import { ITimeCloneFns, TModelProp } from './common/types';
 import checkObj, { TObjProp } from './checkObj';
@@ -26,9 +23,9 @@ interface IModelFns<T> {
 
 // Default Time/Deep-Clone functions
 const DEFAULT_TIMECLONE_FNS: ITimeCloneFns = {
-  cloneDeep: arg => _.cloneDeep(arg),
-  validateTime: arg => moment(arg as MomentInput).isValid(),
-  toDate: arg => moment(arg as MomentInput).toDate()
+  cloneDeep: arg => structuredClone(arg),
+  validateTime: arg => !isNaN(new Date(arg as any).getTime()),
+  toDate: arg => new Date(arg as any),
 }
 
 // Main

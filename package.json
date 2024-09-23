@@ -1,6 +1,6 @@
 {
   "name": "model-initializer",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Create and validate database schemas with fully typesafe arrays.",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -32,9 +32,6 @@
   },
   "homepage": "https://github.com/seanpmaxwell/model-initializer#readme",
   "devDependencies": {
-    "@types/lodash": "^4.17.7",
-    "lodash": "^4.17.21",
-    "moment": "^2.29.4",
     "ts-node": "^10.9.2",
     "tslib": "^2.6.3",
     "typescript": "^5.5.4"

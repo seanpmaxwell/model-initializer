@@ -7,11 +7,11 @@
   - `new()` let's us create new object using a partial of your model and defaults from the array. Defaults are deep cloned before being added. The returned value is a full (not partial) object of your schema (minus certain optional ones, see the guide).
   - `isValid()` accepts an unknown argument and throws errors if they do not match the required schema.
 - Just to point out I know there are tons of schema validation libraries out there, but I wanted something that would both validate a schema, let me setup new instances using partials and defaults, and which would allow me to typesafe any properties I tried to add to the schema using an `interface`.
-- By default `moment` is used for date validation and `lodash` is used for deep cloning values. I know these are big libraries that not everyone likes so if you don't want to use them you must pass your own time validation and deep clone functions: see last section.
+- By default the `Date()` constructor is used for date validation and `structuredClone()` is used for deep cloning values. I know some older versions of node don't supported `structuredClone()` and most people have fancier libraries for handling dates, so you can set your own date/clone functions if you want: see the last section.
 
 
 ## Quick Start
-- Installation: `npm i -s modal-initializer lodash moment` or just `npm i -s modal-initializer` if you decided to add your own time-validation/cloning function.
+- Installation: ``npm i -s modal-initializer`.
 - Create a type to represent your model and an array of objects. `init` requires 1 generic so pass it the type and the array.
 
 ```typescript
@@ -125,7 +125,7 @@ type Prop<YourModel, keyof YourModel> = {
 - Creating validator functions for object properties can get a little tedious, that's why is decided to include the `checkObj` function in addition to `init`. `checkObj` works very similar to `isValid` and just like `init` you pass it a generic along with an array of properties but the `default:` prop is not required since we're only dealing with type-validation and not setting any values. The quick start above contains an example of `checkObj` in action. I've found that the `checkObj` very useful even outside of my database models. I use it for validation on the back-end in my routing layer as well for checking incoming API data.
 
 ### Setting your own time/clone functions
-- I've never created a project that didn't use `moment` and `lodash` so that's what I decided to use, but I've heard some developers fuss that these libraries are overkill or provide way more than what they usually need. So if you want to forgo them you will need to pass your own `cloneDeep`, `validateTime`, `toDate` functions to init:
+- If you want to forgo using `new Date()` and `structuredClone()`, then you will need to pass your own `cloneDeep`, `validateTime`, `toDate` functions to init:
 ```typescript
 // some pre-run script
 import ModelInitializer, { ITimeCloneFns } from 'model-intializer';
