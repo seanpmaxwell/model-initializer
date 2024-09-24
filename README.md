@@ -1,5 +1,6 @@
 # About model-initializer
 <h3>Quick, simple library for setting up models used to represent database schemas. Fully typesafe, works client or server side.</h3>
+<br/>
 
 ## Summary
 - This library's default export is a module that holds 2 functions `init` and `checkObj`. `init` is the heart of the library, `checkObj` is a helper function see the second to last section.
@@ -8,6 +9,7 @@
   - `isValid()` accepts an unknown argument and throws errors if they do not match the required schema.
 - Just to point out I know there are tons of schema validation libraries out there, but I wanted something that would both validate a schema, let me setup new instances using partials and defaults, and which would allow me to typesafe any properties I tried to add to the schema using an `interface`.
 - By default the `Date()` constructor is used for date validation and `structuredClone()` is used for deep cloning values. I know some older versions of node don't supported `structuredClone()` and most people have fancier libraries for handling dates, so you can set your own date/clone functions if you want: see the last section.
+<br/>
 
 
 ## Quick Start
@@ -72,6 +74,7 @@ console.log(user1)
 
 console.log(User.isValid('blah')) // throws "Error"
 ```
+<br/>
 
 
 ## Guide
