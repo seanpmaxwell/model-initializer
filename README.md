@@ -35,10 +35,6 @@ export interface IUser {
 }
 
 // Create check avatar function
-const checkAvatar = MI.checkObj<IUser['avatar']>([
-  { prop: 'fileName', type: 'string' },
-  { prop: 'data', type: 'string' }
-]);
 
 // Setup "User schema"
 const User = MI.init<IUser>([
@@ -51,9 +47,19 @@ const User = MI.init<IUser>([
   { prop: 'created', type: 'date' },
   { prop: 'active', type: 'boolean' },
   { prop: 'boss', type: 'fk', nullable: true, default: null },
-  { prop: 'avatar', type: 'object', optional: true, vldrFn: checkAvatar },
+  { prop: 'avatar', type: 'object', optional: true, vldrFn: _getCheckAvatar() },
   { prop: 'children', type: 'string[]', optional: false },
 ]);
+
+// Get the check avatar fn
+function _getCheckAvatar() {
+  return MI.checkObj<IUser['avatar']>([
+    { prop: 'fileName', type: 'string' },
+    { prop: 'data', type: 'string' }
+  ]);
+}
+
+
 
 // Print results
 const user1 = User.new({ name: 'john' });
