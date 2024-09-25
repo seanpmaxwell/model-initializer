@@ -1,11 +1,11 @@
 import Errors from './Errors';
-import { ITimeCloneFns, TBasicTypes,TVldrFn } from './types';
+import { processType } from './misc';
+import { ITimeCloneFns, TAllTypes, TVldrFn } from './types';
 
 
 interface ISharedProp<T> {
   prop: keyof T,
-  type: TBasicTypes | 'object' | 'object[]' | 'pk' | 'fk';
-  optional?: boolean;
+  type: TAllTypes;
   nullable?: boolean;
   vldrFn?: TVldrFn<T, keyof T>;
 }
@@ -38,19 +38,20 @@ export function validateProp<T>(
   val: unknown,
   timeCloneFns: ITimeCloneFns,
 ): boolean {
-  const propName = String(prop.prop);
+  const propName = String(prop.prop),
+    { isArr, type, isOptional } = processType(prop.type);
   // Check db keys
-  if (prop.type === 'fk' || prop.type === 'pk') {
+  if (type === 'fk' || type === 'pk') {
     if (
       typeof val === 'number' || 
-      (val === null && prop.type === 'fk' && prop.nullable)) {
+      (val === null && type === 'fk' && prop.nullable)) {
     } else {
       throw new Error(Errors.relationalKey(propName));
     }
     return true;
   // Check optional
   } else if (val === undefined) {
-    if (!prop.optional) {
+    if (!isOptional) {
       throw new Error(Errors.propMissing(propName));
     } else {
       return true;
@@ -63,15 +64,15 @@ export function validateProp<T>(
       return true;
     }
   // Check date
-  } else if (prop.type === 'date') {
+  } else if (type === 'date') {
     if (!timeCloneFns.validateTime(val)) {
       throw new Error(Errors.notValidDate(propName));
     }
   // Check array
-  } else if (prop.type.endsWith('[]')) {
-    return _validateArr(prop, val);
+  } else if (isArr) {
+    return _validateArr(propName, type, val, prop.vldrFn);
   // Check remaining types
-  } else if (typeof val !== prop.type) {
+  } else if (typeof val !== type) {
     throw new Error(Errors.default(propName));
   }
   // Must always check function if there (except if null or undefined)
@@ -85,22 +86,25 @@ export function validateProp<T>(
 /**
  * Check array.
  */
-function _validateArr<T>(prop: ISharedProp<T>, val: unknown): boolean {
-  const propName = String(prop.prop);
+function _validateArr<T>(
+  propName: string,
+  type: string,
+  val: unknown,
+  vldrFn: ISharedProp<T>['vldrFn'],
+): boolean {
   // Check is array
   if (!Array.isArray(val)) {
     throw new Error(Errors.notValidArr(propName));
   }
-  const baseType = prop.type.slice(0, prop.type.length - 2);
   // Interfate
   for (const itemVal of val) {
-    if (typeof itemVal !== baseType) {
+    if (typeof itemVal !== type) {
       throw new Error(Errors.typeInvalid(propName));
     }
-    if (baseType === 'object') {
-      if (!prop.vldrFn) {
+    if (type === 'object') {
+      if (!vldrFn) {
         throw new Error(Errors.vldrFnMissing(propName));
-      } else if (!prop.vldrFn(itemVal)) {
+      } else if (!vldrFn(itemVal)) {
         throw new Error(Errors.vldrFnFailed(propName));
       }
     }

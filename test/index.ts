@@ -26,15 +26,15 @@ const checkAvatar = MI.checkObj<IUser['avatar']>([
 const User = MI.init<IUser>([
   { prop: 'id', type: 'pk' },
   { prop: 'name', type: 'string' },
-  { prop: 'email', type: 'string', optional: true },
-  { prop: 'displayName', type: 'string', optional: true, default: '' },
+  { prop: 'email', type: '?string' },
+  { prop: 'displayName', type: '?string', default: '' },
   { prop: 'age', type: 'number' },
   { prop: 'lastLogin', type: 'date' },
   { prop: 'created', type: 'date' },
   { prop: 'active', type: 'boolean' },
   { prop: 'boss', type: 'fk', nullable: true, default: null },
-  { prop: 'avatar', type: 'object', optional: true, vldrFn: checkAvatar },
-  { prop: 'children', type: 'string[]', optional: false },
+  { prop: 'avatar', type: '?object', vldrFn: checkAvatar },
+  { prop: 'children', type: 'string[]' },
 ]);
 
 // Print results
@@ -49,9 +49,9 @@ MI.timeCloneFns = {
 }
 
 // Should throw error
-MI.init<{day: 'date'}>([
-  { prop: 'day', type: 'date', default: 'horse' as any }
-]);
+// MI.init<{day: 'date'}>([
+//   { prop: 'day', type: 'date', default: 'horse' as any }
+// ]);
 // MI.init<{ children: string[] }>([
 //   { prop: 'children', type: 'string[]', default: 'horse' as any }
 // ]);

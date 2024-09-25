@@ -40,15 +40,15 @@ export interface IUser {
 const User = MI.init<IUser>([
   { prop: 'id', type: 'pk' },
   { prop: 'name', type: 'string' },
-  { prop: 'email', type: 'string', optional: true },
-  { prop: 'displayName', type: 'string', optional: true, default: '' },
+  { prop: 'email', type: '?string' },
+  { prop: 'displayName', type: '?string', default: '' },
   { prop: 'age', type: 'number' },
   { prop: 'lastLogin', type: 'date' },
   { prop: 'created', type: 'date' },
   { prop: 'active', type: 'boolean' },
   { prop: 'boss', type: 'fk', nullable: true, default: null },
-  { prop: 'avatar', type: 'object', optional: true, vldrFn: _getCheckAvatar() },
-  { prop: 'children', type: 'string[]', optional: false },
+  { prop: 'avatar', type: '?object', vldrFn: _getCheckAvatar() },
+  { prop: 'children', type: 'string[]' },
 ]);
 
 // Get the check avatar fn
@@ -93,23 +93,18 @@ type Prop<YourModel, keyof YourModel> = {
   prop: keyof YourModel;
   type: 'string' | 'number' ...etc;
   nullable?: boolean;
-  optional?: boolean;
   default?: YourModel[keyof YourModel];
   vldrFn?: (arg: unknown) => arg is YourModel[keyof YourModel];
 }
 ```
 - `prop`: Must be a key of the type you pass to the `init` generic.
-- `type`: There are 12 types to chose from. The 5 basic types are `'string' | 'number' | 'boolean' | 'date' | object`, each one has an array counter part: i.e. `string[]`. There is also `pk` (primary-key) and `fk` (foreign-key).
+- `type`: The 5 basic types are `'string' | 'number' | 'boolean' | 'date' | object`, each one has an array counter part: i.e. `string[]` and can be prepending with `?` to make it optional i.e. `?string[]`. There is also `pk` (primary-key) and `fk` (foreign-key).
 - `nullable`: optional, default is `false`, says that null is a valid value regardless of what's set by type.
-- `optional`: optional, default is `false`, prevents an error from being thrown if key is absent from the `isValid` check and tells `new` to skip this key if it's not in the partial and there is no default.
 - `default`: optional, except for `object`s when `optional` is `false`, a default value passed to `new` if the key is absent from the partial being passed.
 - `vldrFn`: optional for all types except `object` and `object[]`. This function will always be called if truthy and will be used in `new` and `isValid` to validate a value.
 
-### Special notes about pk and fk
-- These are used to represent relational database keys:
-  - For `pk` the only properties you can set are `prop` and `type`, primary-keys should never be `null` in a database.
-  - For `fk` the only properties you can set are `prop`, `type`, and `nullable`. You can set `default` ONLY if `nullable` is true in which cause you can set the default to be `-1` or `null` only.
-  - There reason defaults are `-1` is cause primary keys should be set to a positive number by the database, so `-1` is used to represent a record that has not been saved in the database yet. I use postgres where convention is to use the `SERIAL` type for database keys.
+### Optional (types prepended with "?")
+- The optional character prevents an error from being thrown if key is absent from the `isValid` check and tells `new` to skip this key if it's not in the partial and there is no default.
 
 ### Defaults (only relevant to the "new" function)
 - When using `new`, if you supply a default then that will be always be used regardless if the value is optional or not. If a property is required and you do not supply a value in the partial to `new`, then the following defaults will be used. If there is no value passed to `new` and the property ID optional, then that key/value pair will be skipped in the object returned from `new`.
@@ -118,8 +113,14 @@ type Prop<YourModel, keyof YourModel> = {
 - `boolean`: `false`
 - `date`: the current datetime as a `Date` object.
 - `for values ending with "[]"`: an empty array.
-- `object`: If an object type is not optional, then you must supply a valid default to prevent a bad object from getting attached. For `object[]` that are not optional, you don't have to supply a default cause `new` will just append an empty array.
+- `object`: If an object type is not optional, then you must supply a valid default to prevent a bad object from getting attached. For `object[]` that are not optional, you don't have to supply a default cause `new` will just use an empty array.
 - `pk` and `fk`: `-1`
+
+### Special notes about pk and fk
+- These are used to represent relational database keys:
+  - For `pk` the only properties you can set are `prop` and `type`, primary-keys should never be `null` in a database.
+  - For `fk` the only properties you can set are `prop`, `type`, and `nullable`. You can set `default` ONLY if `nullable` is true in which cause you can set the default to be `-1` or `null` only.
+  - There reason defaults are `-1` is cause primary keys should be set to a positive number by the database, so `-1` is used to represent a record that has not been saved in the database yet. I use postgres where convention is to use the `SERIAL` type for database keys.
 
 ### Validation
 - Validation of values and not just types will be done both in the `isValid` function and in the `new` function before setting a value passed from a partial. Default values (if you passed your own custom default) will also be validated. The reason I decided to make it throw errors instead of just return a boolean is so we can read the name of the property that failed and see exactly where the validation failed. If you don't want it throw errors you should wrap `isValid` and `new` in `try/catch` blocks and handle the error message and values manually.

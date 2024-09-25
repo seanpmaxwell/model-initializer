@@ -1,7 +1,16 @@
-// **** Basic Types **** //
+// **** Types **** //
 
-export type TBasicTypes = 'string' |'string[]' | 'number' | 'number[]' | 
-    'boolean' | 'boolean[]' | 'date' | 'date[]';
+export type TBasicTypes = 
+  'string' |'string[]' | '?string' | '?string[]' |
+  'number' | 'number[]' | '?number' | '?number' |
+  'boolean' | 'boolean[]' | '?boolean' | '?boolean[]' |
+  'date' | 'date[]' | '?date' | '?date[]';
+
+export type TAllTypes = 
+  TBasicTypes | 
+  'object' | '?object' | 'object[]' | '?object[]' | 
+  'pk' | 'fk';
+
 export type TVldrFn<T,K extends keyof T> = (arg: unknown) => arg is T[K]; 
 
 type TBaseTypeModelProp<T> = {
@@ -9,14 +18,10 @@ type TBaseTypeModelProp<T> = {
     prop: K,
     type: TBasicTypes;
     nullable?: boolean;
-    optional?: boolean;
     default?: T[K];
     vldrFn?: TVldrFn<T,K>;
   }
 }[keyof T];
-
-
-// **** Objects and Relational Keys **** //
 
 // If the type is an object and it's not an optional property or array, 
 // then you must supply a default value.
@@ -24,25 +29,17 @@ type TObjModelProp<T> = {
   [K in keyof T]: {
     prop: K,
     type: 'object';
-    optional?: false;
     nullable?: boolean;
     default: T[K];
     vldrFn: TVldrFn<T,K>;
   }
-}[keyof T] | {
+}[keyof T]
+
+// For the other object types, default is not required but validator still is.
+type TOtherObjModelProp<T> = {
   [K in keyof T]: {
     prop: K,
-    type: 'object';
-    optional: true;
-    nullable?: boolean;
-    default?: T[K];
-    vldrFn: TVldrFn<T,K>;
-  }
-}[keyof T] | {
-  [K in keyof T]: {
-    prop: K,
-    type: 'object[]';
-    optional?: boolean;
+    type: '?object' | 'object[]' | '?object[]';
     nullable?: boolean;
     default?: T[K];
     vldrFn: TVldrFn<T,K>;
@@ -70,9 +67,15 @@ type TForeignKeyModelProp<T> = {
 
 // **** Composite Types **** //
 
-export type TModelPropNotFks<T> = TBaseTypeModelProp<T> | TObjModelProp<T>;
-type TModelPropFks<T> = TForeignKeyModelProp<T> | TPrimaryKeyModelProp<T>;
-export type TModelProp<T> = TModelPropNotFks<T> | TModelPropFks<T>;
+export type TModelPropNotFks<T> = 
+  TBaseTypeModelProp<T> | 
+  TObjModelProp<T> | 
+  TOtherObjModelProp<T>;
+  
+export type TModelProp<T> = 
+  TModelPropNotFks<T> | 
+  TForeignKeyModelProp<T> | 
+  TPrimaryKeyModelProp<T>;
 
 
 // **** User Custom Stuff **** //

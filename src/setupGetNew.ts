@@ -1,3 +1,4 @@
+import { processType } from './common/misc';
 import { ITimeCloneFns, TModelProp, TModelPropNotFks } from './common/types';
 import { validateProp } from './common/validator-fns';
 
@@ -15,7 +16,8 @@ function setupGetNew<T>(props: TModelProp<T>[], timeCloneFns: ITimeCloneFns) {
     for (const prop of props) {
       const key = prop.prop,
         val = arg[key],
-        notThere = !(key in arg) || val === undefined;
+        notThere = !(key in arg) || val === undefined,
+        { isArr, type, isOptional } = processType(prop.type);
       // If the user passed a value, need to check it
       if (!notThere) {
         validateProp(prop, val, timeCloneFns);
@@ -36,18 +38,18 @@ function setupGetNew<T>(props: TModelProp<T>[], timeCloneFns: ITimeCloneFns) {
         }
       // Check not there for non-keys
       } else if (notThere) {
-        if (prop.optional && prop.default === undefined) { // Skip
+        if (isOptional && prop.default === undefined) { // Skip
           continue;
         } else {
-          retVal[key] = _getDefault(prop, timeCloneFns);
+          retVal[key] = _getDefault(type, isArr, timeCloneFns, prop.default);
         }
       // Check null, if value is null and not optional, use the default
       } else if (val === null) {
-        if (!prop.optional) {
+        if (!isOptional) {
           if (prop.nullable) {
             retVal[key] = null;
           } else {
-            retVal[key] = _getDefault(prop, timeCloneFns);
+            retVal[key] = _getDefault(type, isArr, timeCloneFns, prop.default);
           }
         }
       // Set the value
@@ -64,20 +66,22 @@ function setupGetNew<T>(props: TModelProp<T>[], timeCloneFns: ITimeCloneFns) {
  * Get the default value non including relational keys.
  */
 function _getDefault<T>(
-  prop: TModelPropNotFks<T>,
+  type: string,
+  isArr: boolean,
   timeCloneFns: ITimeCloneFns,
+  defaultVal?: T[keyof T],
 ) {
-  if (!!prop.default) {
-    return _clone<T>(prop.default, timeCloneFns);
-  } else if (prop.type.endsWith('[]')) {
+  if (!!defaultVal) {
+    return _clone<T>(defaultVal, timeCloneFns);
+  } else if (isArr) {
     return [];
-  } else if (prop.type === 'string') {
+  } else if (type === 'string') {
     return '';
-  } else if (prop.type === 'number') {
+  } else if (type === 'number') {
     return 0;
-  } else if (prop.type === 'boolean') {
+  } else if (type === 'boolean') {
     return false;
-  } else if (prop.type === 'date') {
+  } else if (type === 'date') {
     return new Date();
   }
 }

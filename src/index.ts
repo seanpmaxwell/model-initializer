@@ -64,9 +64,9 @@ function _validateDefaults<T>(
       continue;
     }
     const propName = String(prop.prop);
-    if ((prop.type === 'object') && !prop.vldrFn) {
+    if (prop.type.includes('object') && !('vldrFn' in prop)) {
       throw new Error(Errors.vldrFnMissing(String(prop.prop)));
-    } else if (prop.type === 'object' && !prop.default && !prop.optional) {
+    } else if (prop.type === 'object' && !prop.default) {
       const msg = Errors.defaultNotFoundForObj(propName);
       throw new Error(msg);
     }
