@@ -2,12 +2,11 @@
 
 export type TBasicTypes = 
   'string' |'string[]' | '?string' | '?string[]' |
-  'number' | 'number[]' | '?number' | '?number' |
+  'number' | 'number[]' | '?number' | '?number[]' |
   'boolean' | 'boolean[]' | '?boolean' | '?boolean[]' |
   'date' | 'date[]' | '?date' | '?date[]';
 
-export type TAllTypes = 
-  TBasicTypes | 
+export type TAllTypes = TBasicTypes | 
   'object' | '?object' | 'object[]' | '?object[]' | 
   'pk' | 'fk';
 
