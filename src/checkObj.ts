@@ -9,13 +9,11 @@ export type TObjProp<T> = {
   [K in keyof T]: {
     prop: K,
     type: TBasicTypes;
-    optional?: boolean;
     nullable?: boolean;
     vldrFn?: TVldrFn<T,K>;
   } | {
     prop: K,
-    type: 'object' | 'object[]';
-    optional?: boolean;
+    type: 'object' | '?object' | 'object[]' | '?object[]';
     nullable?: boolean;
     vldrFn: TVldrFn<T,K>;
   }
