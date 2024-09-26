@@ -1,5 +1,5 @@
 # About model-initializer
-<h3>Quick, simple library for setting up models used to represent database schemas. Fully typesafe, works client or server side.</h3>
+<h3>Quick, simple library for initializing and validating TypeScript objects in a similar fashion to how we declare interfaces. Fully typesafe, works client or server side. Much more terse than some other schema validation tools like <b>zod</b></h3>
 <br/>
 
 ## Summary
@@ -34,10 +34,8 @@ export interface IUser {
   avatar?: { fileName: string; data: string };
 }
 
-// Create check avatar function
-
 // Setup "User schema"
-const User = MI.init<IUser>([
+const User = MI.init<IUser>({
   id: 'pk',
   name: 'string',
   email: '?email', // Use '?' for optional types
@@ -48,14 +46,14 @@ const User = MI.init<IUser>([
   active: 'boolean',
   avatar: { type: '?object', vldrFn: checkAvatar },
   children: 'string[]',
-]);
+});
 
 // Get the check avatar fn
 function _getCheckAvatar() {
-  return MI.checkObj<IUser['avatar']>([
+  return MI.checkObj<IUser['avatar']>({
     fileName: 'string',
     data: 'string',
-  ]);
+  });
 }
 
 
