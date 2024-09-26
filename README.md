@@ -4,7 +4,7 @@
 
 ## Summary
 - This library's default export is a module that holds 2 functions `init` and `checkObj`. `init` is the heart of the library, `checkObj` is a helper function see the second to last section.
-- When you pass `init` a generic and an array of objects used to represent your schema, it gives you back an object with 2 functions: `new` and `isValid` which typesafety enforced by the generic you passed.
+- When you pass `init` a generic and an object used to represent your schema, it gives you back an object with 2 functions: `new` and `isValid` in which typesafety is enforced by the generic you passed.
   - `new()` let's us create new object using a partial of your model and defaults from the array. Defaults are deep cloned before being added. The returned value is a full (not partial) object of your schema (minus certain optional ones, see the guide).
   - `isValid()` accepts an unknown argument and throws errors if they do not match the required schema.
 - Just to point out I know there are tons of schema validation libraries out there, but I wanted something that would both validate a schema, let me setup new instances using partials and defaults, and which would allow me to typesafe any properties I tried to add to the schema using an `interface`.
@@ -38,24 +38,23 @@ export interface IUser {
 
 // Setup "User schema"
 const User = MI.init<IUser>([
-  { prop: 'id', type: 'pk' },
-  { prop: 'name', type: 'string' },
-  { prop: 'email', type: '?string' },
-  { prop: 'displayName', type: '?string', default: '' },
-  { prop: 'age', type: 'number' },
-  { prop: 'lastLogin', type: 'date' },
-  { prop: 'created', type: 'date' },
-  { prop: 'active', type: 'boolean' },
-  { prop: 'boss', type: 'fk', nullable: true, default: null },
-  { prop: 'avatar', type: '?object', vldrFn: _getCheckAvatar() },
-  { prop: 'children', type: 'string[]' },
+  id: 'pk',
+  name: 'string',
+  email: '?email', // Use '?' for optional types
+  displayName: { type: '?string', default: '' },
+  age: 'number',
+  lastLogin: 'date',
+  created: 'date',
+  active: 'boolean',
+  avatar: { type: '?object', vldrFn: checkAvatar },
+  children: 'string[]',
 ]);
 
 // Get the check avatar fn
 function _getCheckAvatar() {
   return MI.checkObj<IUser['avatar']>([
-    { prop: 'fileName', type: 'string' },
-    { prop: 'data', type: 'string' }
+    fileName: 'string',
+    data: 'string',
   ]);
 }
 
@@ -87,24 +86,19 @@ console.log(User.isValid('blah')) // throws "Error"
 
 ### Property Object
 
-- The full structure for an array prop object looks like. Note that `prop` and `default` are fully typesafe:
+- Each key of the schema object must be a key in the type you pass. The value can be a string representing the type OR an object:
 ```typescript
-type Prop<YourModel, keyof YourModel> = {
-  prop: keyof YourModel;
+{
   type: 'string' | 'number' ...etc;
-  nullable?: boolean;
+  nullable?: boolean; // Default is false
   default?: YourModel[keyof YourModel];
   vldrFn?: (arg: unknown) => arg is YourModel[keyof YourModel];
 }
 ```
-- `prop`: Must be a key of the type you pass to the `init` generic.
-- `type`: The 5 basic types are `'string' | 'number' | 'boolean' | 'date' | object`, each one has an array counter part: i.e. `string[]` and can be prepending with `?` to make it optional i.e. `?string[]`. There is also `pk` (primary-key) and `fk` (foreign-key).
+- `type`: The 5 basic types are `'string' | 'number' | 'boolean' | 'date' | object | email`, each one has an array counter part: i.e. `string[]` and can be prepending with `?` to make it optional i.e. `?string[]`. There is also `pk` (primary-key) and `fk` (foreign-key).
 - `nullable`: optional, default is `false`, says that null is a valid value regardless of what's set by type.
 - `default`: optional, except for `object`s when `optional` is `false`, a default value passed to `new` if the key is absent from the partial being passed.
-- `vldrFn`: optional for all types except `object` and `object[]`. This function will always be called if truthy and will be used in `new` and `isValid` to validate a value.
-
-### Optional (types prepended with "?")
-- The optional character prevents an error from being thrown if key is absent from the `isValid` check and tells `new` to skip this key if it's not in the partial and there is no default.
+- `vldrFn`: optional for all types but required in those which include `object` (i.e. `?object[]`). This function will always be called if truthy and will be used in `new` and `isValid` to validate a value.
 
 ### Defaults (only relevant to the "new" function)
 - When using `new`, if you supply a default then that will be always be used regardless if the value is optional or not. If a property is required and you do not supply a value in the partial to `new`, then the following defaults will be used. If there is no value passed to `new` and the property ID optional, then that key/value pair will be skipped in the object returned from `new`.
@@ -113,10 +107,15 @@ type Prop<YourModel, keyof YourModel> = {
 - `boolean`: `false`
 - `date`: the current datetime as a `Date` object.
 - `for values ending with "[]"`: an empty array.
-- `object`: If an object type is not optional, then you must supply a valid default to prevent a bad object from getting attached. For `object[]` that are not optional, you don't have to supply a default cause `new` will just use an empty array.
+- `object`: If an object type is not optional or an array, then you must supply a valid default to prevent a bad object from getting attached. Objects arrays which just use an empty array as the default.
 - `pk` and `fk`: `-1`
 
-### Special notes about pk and fk
+### Arrays/Emails/Optional-Types
+- Validation only works for one-dimensional arrays. If you have nested arrays set the type to `object` and write your own validator function.
+- There is a built-in regex to check the email format. If you want to use your own, set the type to string and pass your own validation function. Note that an empty array counts as a valid email and will be used as the default value if the email is not optional.
+- The optional character prevents an error from being thrown if key is absent from the `isValid` check and tells `new` to skip this key if it's not in the partial and there is no default.
+
+### PK (primary-key) and FK (foreign-key)
 - These are used to represent relational database keys:
   - For `pk` the only properties you can set are `prop` and `type`, primary-keys should never be `null` in a database.
   - For `fk` the only properties you can set are `prop`, `type`, and `nullable`. You can set `default` ONLY if `nullable` is true in which cause you can set the default to be `-1` or `null` only.
@@ -124,7 +123,6 @@ type Prop<YourModel, keyof YourModel> = {
 
 ### Validation
 - Validation of values and not just types will be done both in the `isValid` function and in the `new` function before setting a value passed from a partial. Default values (if you passed your own custom default) will also be validated. The reason I decided to make it throw errors instead of just return a boolean is so we can read the name of the property that failed and see exactly where the validation failed. If you don't want it throw errors you should wrap `isValid` and `new` in `try/catch` blocks and handle the error message and values manually.
-- The array types `string[]`, `boolean[]` etc will only work for single layer arrays. If you want to validate a nested array just mark it as an `object[]` and pass your validator function.
 
 ### checkObj Function
 - Creating validator functions for object properties can get a little tedious, that's why is decided to include the `checkObj` function in addition to `init`. `checkObj` works very similar to `isValid` and just like `init` you pass it a generic along with an array of properties but the `default:` prop is not required since we're only dealing with type-validation and not setting any values. The quick start above contains an example of `checkObj` in action. I've found that the `checkObj` very useful even outside of my database models. I use it for validation on the back-end in my routing layer as well for checking incoming API data.

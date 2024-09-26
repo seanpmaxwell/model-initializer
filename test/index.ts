@@ -17,42 +17,37 @@ export interface IUser {
 }
 
 // Create check avatar function
-const checkAvatar = MI.checkObj<IUser['avatar']>([
-  { prop: 'fileName', type: 'string' },
-  { prop: 'data', type: 'string' }
-]);
+const checkAvatar = MI.checkObj<IUser['avatar']>({
+  fileName: 'string',
+  data: 'string',
+});
 
-// Setup "User schema"
-const User = MI.init<IUser>([
-  { prop: 'id', type: 'pk' },
-  { prop: 'name', type: 'string' },
-  { prop: 'email', type: '?string' },
-  { prop: 'displayName', type: '?string', default: '' },
-  { prop: 'age', type: 'number' },
-  { prop: 'lastLogin', type: 'date' },
-  { prop: 'created', type: 'date' },
-  { prop: 'active', type: 'boolean' },
-  { prop: 'boss', type: 'fk', nullable: true, default: null },
-  { prop: 'avatar', type: '?object', vldrFn: checkAvatar },
-  { prop: 'children', type: 'string[]' },
-]);
+// User schema
+const User = MI.init<IUser>({
+  id: 'pk',
+  name: 'string',
+  email: '?email',
+  displayName: { type: '?string', default: '' },
+  age: 'number',
+  lastLogin: 'date',
+  created: 'date',
+  active: 'boolean',
+  boss: { type: 'fk', nullable: true, default: null },
+  avatar: { type: '?object', vldrFn: checkAvatar },
+  children: 'string[]',
+});
 
 // Print results
 const user1 = User.new({ name: 'john' });
 console.log(user1)
 
 // Test errors
-MI.timeCloneFns = {
-  cloneDeep: arg => arg,
-  validateTime: arg => false,
-  toDate: arg => new Date(),
-}
+// MI.timeCloneFns = {
+//   cloneDeep: arg => arg,
+//   validateTime: arg => false,
+//   toDate: arg => new Date(),
+// }
 
 // Should throw error
-// MI.init<{day: 'date'}>([
-//   { prop: 'day', type: 'date', default: 'horse' as any }
-// ]);
-// MI.init<{ children: string[] }>([
-//   { prop: 'children', type: 'string[]', default: 'horse' as any }
-// ]);
-// User.new({ children: 'horse' as any })
+
+User.new({ email: 'horse@horse.com' })

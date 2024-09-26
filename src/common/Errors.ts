@@ -40,4 +40,7 @@ export default {
     return `Value found for "${propName}" was null, but "nullable" was not ` + 
       'marked as true.';
   },
+  email(propName: string) {
+    return `Property "${propName}" must be an empty string or valid email`;
+  },
 } as const;

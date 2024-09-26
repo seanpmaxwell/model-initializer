@@ -1,16 +1,18 @@
 import setupGetNew from './setupGetNew';
-import { ITimeCloneFns, TModelProp } from './common/types';
-import checkObj, { TObjProp } from './checkObj';
+import { ITimeCloneFns, TModelSchema } from './common/types';
+import checkObj, { TObjSchema } from './checkObj';
 import { validateObj, validateProp } from './common/validator-fns';
 import Errors from './common/Errors';
+import processType from './common/processType';
+
 
 
 // **** Types **** //
 
 interface IModelInitializer {
   timeCloneFns: ITimeCloneFns;
-  readonly init: <T>(props: TModelProp<T>[]) => IModelFns<T>;
-  readonly checkObj: <T>(props: TObjProp<NonNullable<T>>[]) => (arg: unknown) => arg is NonNullable<T>;
+  readonly init: <T>(props: TModelSchema<T>) => IModelFns<T>;
+  readonly checkObj: <T>(props: TObjSchema<NonNullable<T>>) => (arg: unknown) => arg is NonNullable<T>;
 }
 
 interface IModelFns<T> {
@@ -31,7 +33,7 @@ const DEFAULT_TIMECLONE_FNS: ITimeCloneFns = {
 // Main
 const ModelInitializer: IModelInitializer = {
   timeCloneFns: { ...DEFAULT_TIMECLONE_FNS },
-  init<T>(props: TModelProp<T>[]) {
+  init<T>(props: TModelSchema<T>) {
     _validateDefaults(props, this.timeCloneFns);
     const validate = validateObj<T>(props, this.timeCloneFns),
       getNew = setupGetNew<T>(props, this.timeCloneFns);
@@ -44,7 +46,7 @@ const ModelInitializer: IModelInitializer = {
       },
     };
   },
-  checkObj<T>(props: TObjProp<T>[]) {
+  checkObj<T>(props: TObjSchema<T>) {
     return checkObj<T>(props, this.timeCloneFns);
   }
 }
@@ -56,21 +58,24 @@ const ModelInitializer: IModelInitializer = {
  * Validate Defaults and make sure validator-fn is ther for objects
  */
 function _validateDefaults<T>(
-  props: TModelProp<T>[],
+  schema: TModelSchema<T>,
   timeCloneFns: ITimeCloneFns,
 ): boolean {
-  for (const prop of props) {
-    if (!('default' in prop)) {
+  for (const key in schema) {
+    const schemaKey = schema[key];
+    if (typeof schemaKey !== 'object' || !('default' in schemaKey)) {
       continue;
     }
-    const propName = String(prop.prop);
-    if (prop.type.includes('object') && !('vldrFn' in prop)) {
-      throw new Error(Errors.vldrFnMissing(String(prop.prop)));
-    } else if (prop.type === 'object' && !prop.default) {
+    const propName = key,
+      type = schemaKey.type;
+    if (type.includes('object') && !('vldrFn' in schemaKey)) {
+      throw new Error(Errors.vldrFnMissing(key));
+    } else if (type === 'object' && !schemaKey.default) {
       const msg = Errors.defaultNotFoundForObj(propName);
       throw new Error(msg);
     }
-    validateProp(prop, prop.default, timeCloneFns)
+    const typeObj = processType(schemaKey);
+    validateProp(key, typeObj, schemaKey.default, timeCloneFns)
   }
   return true;
 }

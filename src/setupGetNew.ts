@@ -1,6 +1,6 @@
-import { processType } from './common/misc';
-import { ITimeCloneFns, TModelProp, TModelPropNotFks } from './common/types';
+import { ITimeCloneFns, TModelSchema } from './common/types';
 import { validateProp } from './common/validator-fns';
+import processType, { ITypeObj } from './common/processType';
 
 
 /**
@@ -9,52 +9,38 @@ import { validateProp } from './common/validator-fns';
  * value. Also, not being there doesn't cause errors, cause we just insert
  * the default.
  */
-function setupGetNew<T>(props: TModelProp<T>[], timeCloneFns: ITimeCloneFns) {
+function setupGetNew<T>(schema: TModelSchema<T>, timeCloneFns: ITimeCloneFns) {
   return (arg: Partial<T> = {}): T => {
     // Loop array
     const retVal = {} as any;
-    for (const prop of props) {
-      const key = prop.prop,
-        val = arg[key],
-        notThere = !(key in arg) || val === undefined,
-        { isArr, type, isOptional } = processType(prop.type);
-      // If the user passed a value, need to check it
-      if (!notThere) {
-        validateProp(prop, val, timeCloneFns);
-      }
-      // Primary key
-      if (prop.type === 'pk') {
-        if (notThere) {
-          retVal[key] = -1;
-        } else {
-          retVal[key] = val;
+    for (const key in schema) {
+      const val = arg[key],
+        schemaKey = schema[key],
+        typeObj = processType(schemaKey);
+      // If its not there
+      if (!(key in arg) || val === undefined) {
+        if (!typeObj.optional || typeObj.hasDefault) { // Skip
+          retVal[key] = _getDefault(schemaKey, typeObj, timeCloneFns)
         }
-      // Foreign Key
-      } else if (prop.type === 'fk') {
-        if (notThere) {
-          retVal[key] = (prop.default !== undefined ? prop.default : -1);
-        } else {
-          retVal[key] = val;
-        }
-      // Check not there for non-keys
-      } else if (notThere) {
-        if (isOptional && prop.default === undefined) { // Skip
-          continue;
-        } else {
-          retVal[key] = _getDefault(type, isArr, timeCloneFns, prop.default);
-        }
+        continue;
       // Check null, if value is null and not optional, use the default
       } else if (val === null) {
-        if (!isOptional) {
-          if (prop.nullable) {
+        if (!typeObj.optional) {
+          if (typeObj.nullable) {
             retVal[key] = null;
           } else {
-            retVal[key] = _getDefault(type, isArr, timeCloneFns, prop.default);
+            retVal[key] = _getDefault(schemaKey, typeObj, timeCloneFns)
           }
         }
-      // Set the value
+        continue;
+      // Set the value if not null or undefined
       } else {
-        retVal[key] = _clone<T>(val, timeCloneFns);
+        validateProp(key, typeObj, val, timeCloneFns)
+        if (typeof val === 'object') {
+          retVal[key] = timeCloneFns.cloneDeep(val);
+        } else {
+          retVal[key] = val;
+        }
       }
     }
     // Return
@@ -66,37 +52,28 @@ function setupGetNew<T>(props: TModelProp<T>[], timeCloneFns: ITimeCloneFns) {
  * Get the default value non including relational keys.
  */
 function _getDefault<T>(
-  type: string,
-  isArr: boolean,
+  schemaKey: TModelSchema<T>[keyof TModelSchema<T>],
+  typeObj: ITypeObj,
   timeCloneFns: ITimeCloneFns,
-  defaultVal?: T[keyof T],
 ) {
-  if (!!defaultVal) {
-    return _clone<T>(defaultVal, timeCloneFns);
-  } else if (isArr) {
+  if (typeof schemaKey === 'object' && !!schemaKey.default) {
+    if (typeof schemaKey.default === 'object') {
+      return timeCloneFns.cloneDeep(schemaKey.default);
+    } else {
+      return schemaKey.default;
+    }
+  } else if (typeObj.isArr) {
     return [];
-  } else if (type === 'string') {
+  } else if (typeObj.type === 'string' || typeObj.type === 'email') {
     return '';
-  } else if (type === 'number') {
+  } else if (typeObj.type === 'number') {
     return 0;
-  } else if (type === 'boolean') {
+  } else if (typeObj.type === 'boolean') {
     return false;
-  } else if (type === 'date') {
+  } else if (typeObj.type === 'date') {
     return new Date();
-  }
-}
-
-/**
- * Validate a value and copy it.
- */
-function _clone<T>(
-  val: T[keyof T] | -1,
-  timeCloneFns: ITimeCloneFns,
-): typeof val {
-  if (typeof val === 'object') {
-    return timeCloneFns.cloneDeep(val);
-  } else {
-    return val;
+  } else if (typeObj.type === 'pk' || typeObj.type === 'fk') {
+    return -1;
   }
 }
 
