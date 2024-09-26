@@ -15,6 +15,7 @@ export interface ITypeObj {
   isEmail: boolean;
   hasDefault: boolean;
   isDate: boolean;
+  isRelationalKey: boolean;
   vldrFn?: (arg: unknown) => boolean;
 }
 
@@ -30,6 +31,7 @@ function processType(schemaType: string | ISchemaType): ITypeObj  {
     vldrFn,
     isDate = false,
     hasDefault = false,
+    isRelationalKey = false,
     isEmail = false;
   // Check
   if (!schemaType) {
@@ -58,6 +60,9 @@ function processType(schemaType: string | ISchemaType): ITypeObj  {
     isArr = true;
     type = type.slice(0, type.length - 2);
   }
+  if (type === 'fk' || type === 'pk') {
+    isRelationalKey = true;
+  }
   // Primary-key or Foreign-key
   if (type === 'email') {
     isEmail = true;
@@ -73,6 +78,7 @@ function processType(schemaType: string | ISchemaType): ITypeObj  {
     isEmail,
     hasDefault,
     isDate,
+    isRelationalKey,
     vldrFn,
   };
 }

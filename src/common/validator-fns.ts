@@ -84,6 +84,9 @@ export function _validate<T>(
     if ((typeof val !== 'string') || (!!val && !EMAIL_RGX.test(val))) {
       throw new Error(Errors.email(propName));
     }
+   // Check relational key (null should be checked for at this point)
+  } else if (typeObj.isRelationalKey && typeof val !== 'number') {
+    throw new Error(Errors.relationalKey(propName));
   // Check base type
   } else if (typeof val !== typeObj.type) {
     throw new Error(Errors.default(propName));
