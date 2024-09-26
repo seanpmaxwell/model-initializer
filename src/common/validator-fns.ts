@@ -65,6 +65,9 @@ export function validateProp<T>(
   return true;
 }
 
+/**
+ * Core validation
+ */
 export function _validate<T>(
   propName: string,
   typeObj: ITypeObj,
