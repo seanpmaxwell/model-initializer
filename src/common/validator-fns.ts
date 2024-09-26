@@ -85,8 +85,10 @@ export function _validate<T>(
       throw new Error(Errors.email(propName));
     }
    // Check relational key (null should be checked for at this point)
-  } else if (typeObj.isRelationalKey && typeof val !== 'number') {
-    throw new Error(Errors.relationalKey(propName));
+  } else if (typeObj.isRelationalKey) {
+    if (typeof val !== 'number') {
+      throw new Error(Errors.relationalKey(propName));
+    }
   // Check base type
   } else if (typeof val !== typeObj.type) {
     throw new Error(Errors.default(propName));

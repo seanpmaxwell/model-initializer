@@ -38,7 +38,7 @@ const User = MI.init<IUser>({
 });
 
 // Print results
-const user1 = User.new({ name: 'john' });
+const user1 = User.new({ id: 1234 });
 console.log(user1)
 
 // Test errors
