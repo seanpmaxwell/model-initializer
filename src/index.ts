@@ -63,12 +63,12 @@ function _validateDefaults<T>(
 ): boolean {
   for (const key in schema) {
     const schemaKey = schema[key];
-    if (typeof schemaKey !== 'object' || !('default' in schemaKey)) {
+    if (typeof schemaKey !== 'object' || !schemaKey.hasOwnProperty('default')) {
       continue;
     }
     const propName = key,
       type = schemaKey.type;
-    if (type.includes('object') && !('vldrFn' in schemaKey)) {
+    if (type.includes('object') && !schemaKey.hasOwnProperty('vldrFn')) {
       throw new Error(Errors.vldrFnMissing(key));
     } else if (type === 'object' && !schemaKey.default) {
       const msg = Errors.defaultNotFoundForObj(propName);

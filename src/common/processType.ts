@@ -46,7 +46,7 @@ function processType(schemaType: string | ISchemaType): ITypeObj  {
     if (schemaType.type !== 'fk') {
       vldrFn = schemaType.vldrFn;
     }
-    if ('default' in schemaType) {
+    if (schemaType.hasOwnProperty('default')) {
       hasDefault = true;
     }
   }

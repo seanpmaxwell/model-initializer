@@ -14,6 +14,7 @@ export interface IUser {
   boss: number;
   children: string[];
   avatar?: { fileName: string; data: string };
+  parentId: number | null;
 }
 
 // Create check avatar function
@@ -35,6 +36,7 @@ const User = MI.init<IUser>({
   boss: { type: 'fk', nullable: true, default: null },
   avatar: { type: '?object', vldrFn: checkAvatar },
   children: 'string[]',
+  parentId: { type: 'fk', nullable: true },
 });
 
 // Print results
@@ -48,6 +50,5 @@ console.log(user1)
 //   toDate: arg => new Date(),
 // }
 
-// Should throw error
-
+// Should throw error=
 User.new({ email: 'horse@horse.com' })

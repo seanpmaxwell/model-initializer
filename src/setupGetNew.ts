@@ -56,7 +56,7 @@ function _getDefault<T>(
   typeObj: ITypeObj,
   timeCloneFns: ITimeCloneFns,
 ) {
-  if (typeof schemaKey === 'object' && !!schemaKey.default) {
+  if (typeof schemaKey === 'object' && schemaKey.hasOwnProperty('default')) {
     if (typeof schemaKey.default === 'object') {
       return timeCloneFns.cloneDeep(schemaKey.default);
     } else {
