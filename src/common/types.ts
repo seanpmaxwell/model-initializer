@@ -60,6 +60,7 @@ export type TModelSchema<T> = {
   }
 };
 
+// Simplified schema for the test.obj function
 export type TTestObjFnSchema<T> = {
   [K in keyof T]: TBasicTypes | {
     type: TBasicTypes;

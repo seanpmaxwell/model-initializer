@@ -4,10 +4,12 @@ import { TAllTypes } from './types';
 interface ISchemaType {
   type: TAllTypes;
   nullable?: boolean;
+  nldf?: boolean;
   refine?: (arg: unknown) => boolean;
 }
 
 export interface ITypeObj {
+  propName: string;
   type: string;
   optional: boolean;
   nullable: boolean;
@@ -24,7 +26,10 @@ export interface ITypeObj {
 /**
  * Process the value on a schema object. 
  */
-function processType(schemaType: string | ISchemaType): ITypeObj  {
+function processType(
+  key: string,
+  schemaType: string | ISchemaType,
+): ITypeObj  {
   // Init
   let type = '',
     nullable = false,
@@ -47,7 +52,7 @@ function processType(schemaType: string | ISchemaType): ITypeObj  {
   } else if (typeof schemaType === 'object') {
     type = schemaType.type;
     nullable = !!schemaType.nullable;
-    if (schemaType.type !== 'fk') {
+    if ('refine' in schemaType) {
       refine = schemaType.refine;
     }
     if ('default' in schemaType) {
@@ -85,6 +90,7 @@ function processType(schemaType: string | ISchemaType): ITypeObj  {
   }
   // Return
   return {
+    propName: key,
     isArr,
     optional,
     type,

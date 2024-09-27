@@ -3,7 +3,7 @@
 <br/>
 
 ## Summary
-- This library's default export is a module that holds 2 functions `init` and `checkObj`. `init` is the heart of the library, `checkObj` is a helper function see the second to last section.
+- This library's default export is a module that holds 2 properties `init` and `test`. `init` is the heart of the library, `test` contains helper functions, see the second to last section.
 - When you pass `init` a generic and an object used to represent your schema, it gives you back an object with 2 functions: `new` and `isValid` in which typesafety is enforced by the generic you passed.
   - `new()` let's us create new object using a partial of your model and defaults from the array. Defaults are deep cloned before being added. The returned value is a full (not partial) object of your schema (minus certain optional ones, see the guide).
   - `isValid()` accepts an unknown argument and throws errors if they do not match the required schema.
@@ -50,19 +50,13 @@ const User = MI.init<IUser>({
 
 // Get the check avatar fn
 function _getCheckAvatar() {
-  return MI.checkObj<IUser['avatar']>({
+  return MI.test.obj<IUser['avatar']>({
     fileName: 'string',
     data: 'string',
   });
 }
 
-
-
-// Print results
 const user1 = User.new({ name: 'john' });
-console.log(user1)
-
-// Above command outputs
 // {
 //   id: -1,
 //   name: 'john',
@@ -74,8 +68,6 @@ console.log(user1)
 //   boss: null,
 //   children: []
 // }
-
-console.log(User.isValid('blah')) // throws "Error"
 ```
 <br/>
 
@@ -96,27 +88,27 @@ console.log(User.isValid('blah')) // throws "Error"
 ```
 - `type`: The 5 basic types are `'string' | 'number' | 'boolean' | 'date' | object | email`, each one has an array counter part: i.e. `string[]` and can be prepending with `?` to make it optional i.e. `?string[]`. There is also `pk` (primary-key) and `fk` (foreign-key).
 - `nullable`: optional, default is `false`, says that null is a valid value regardless of what's set by type. When `new` is called, if a `object` is not optional, but is nullable, and no default is supplied, then null will be used
-- `default`: optional (except for `object`s which are not optional, nullable, or an array), a default value passed to `new` if the key is absent from the partial being passed.
+- `default`: optional (except for `object`s which are not optional, nullable, or an array), a value passed to `new()` if the key is absent from the partial being passed.
 - `refine`: optional for all types but required in those which include `object` (i.e. `?object[]`). This function will always be called if truthy and will be used in `new` and `isValid` to validate a value.
 - `nldf` is available for all types except `object` types and `pk`. It is shorthand for doing `{ nullable: true, default: null }`.
 
 ### Defaults (only relevant to the "new" function)
-- When using `new`, if you supply a default then that will be always be used regardless if the value is optional or not. If there is no value passed to `new` and the property is optional, then that key/value pair will be skipped in the object returned from `new`.
-- If a property is required and you do not supply a value in the partial to `new`, then the following defaults will be used:
+- When using `new`, if you supply a default then that will be always be used regardless if the value is optional or not. 
+- If there is no value passed to `new()` and the property is optional, then that key/value pair will be skipped in the object returned from `new()`.
+- If a property is not optional and you do not supply a value in the partial to `new`, then the following defaults will be used:
   - `string`: empty string `''`
   - `number`: `0`
   - `boolean`: `false`
   - `date`: the current datetime as a `Date` object.
   - `for values ending with "[]"`: an empty array.
-  - `object`: If an object type is not optional or an array, then you must supply a valid default to prevent a bad object from getting attached. Objects arrays which just use an empty array as the default.
+  - `object`: If an object type is not optional, nullable, or an array, then you must supply a valid default to prevent a bad object from getting attached. Objects arrays will just use an empty array as the default. If an object is nullable then `null` will be used as the default.
   - `email`: empty string
   - `color`: `#FFFFFF` that's the hex code for white
   - `pk` and `fk`: `-1`
 
-### Arrays/Emails/Optional-Types/COlors
-- Validation only works for one-dimensional arrays. If you have nested arrays set the type to `object` and write your own validator function.
-- There is a built-in regex to check the email and color formats. If you want to use your own, set the type to string and pass your own refine function. Note that an empty array counts as a valid email/color and will be used as the default value if the email is not optional.
-- The optional character prevents an error from being thrown if key is absent from the `isValid` check and tells `new` to skip this key if it's not in the partial and there is no default.
+### Arrays/Emails/Colors
+- Validation only works for one-dimensional arrays. If you have nested arrays set the type to `object` and write your own `refine` function.
+- There is a built-in regex to check the email and color formats. If you want to use your own, set the type to string and pass your own `refine` function. Note that an empty string counts as a valid email and will be used as the default value if the email is not optional.
 
 ### PK (primary-key) and FK (foreign-key)
 - These are used to represent relational database keys:
@@ -140,9 +132,7 @@ MI.test.color('...') // returns boolean;
 ### Setting your own time/clone functions
 - If you want to forgo using `new Date()` and `structuredClone()`, then you will need to pass your own `cloneDeep`, `validateTime`, `toDate` functions to init:
 ```typescript
-// some pre-run script
 import ModelInitializer, { ITimeCloneFns } from 'model-intializer';
-
 
 const CUSTOM_ADDONS: ITimeCloneFns {
   cloneDeep: arg => { ...your clone deep logic; return clone };
@@ -150,6 +140,5 @@ const CUSTOM_ADDONS: ITimeCloneFns {
   toDate: arg => { ...convert value to a date };
 }
 
-ModelInitializer.timeDateFns = CUSTOM_ADDONS;
-
+ModelInitializer.setTimeCloneFns(CUSTOM_ADDONS);
 ```

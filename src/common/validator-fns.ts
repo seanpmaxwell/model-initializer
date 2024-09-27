@@ -28,8 +28,8 @@ export function validateDefaults<T>(
       const msg = Errors.defaultNotFoundForObj(propName);
       throw new Error(msg);
     }
-    const typeObj = processType(schemaKey);
-    validateProp(key, typeObj, schemaKey.default, validateTime)
+    const typeObj = processType(key, schemaKey);
+    validateProp(typeObj, schemaKey.default, validateTime)
   }
   return true;
 }
@@ -47,8 +47,8 @@ export function validateObj<T>(
     }
     for (const key in schema) {
       const val = (arg as Record<string, unknown>)[key],
-        typeObj = processType(schema[key]);
-      validateProp(key, typeObj, val, validateTime)
+        typeObj = processType(key, schema[key]);
+      validateProp(typeObj, val, validateTime)
     }
     return true;
   };
@@ -59,11 +59,11 @@ export function validateObj<T>(
  * cause we don't need to check for that in "getNew"
  */
 export function validateProp<T>(
-  propName: string,
   typeObj: ITypeObj,
   val: unknown,
   validateTime: ITimeCloneFns['validateTime'],
 ): boolean {
+  const { propName } = typeObj;
   // Check optional
   if (val === undefined) {
     if (!typeObj.optional) {
@@ -76,11 +76,11 @@ export function validateProp<T>(
     if (!Array.isArray(val)) {
       throw new Error(Errors.notValidArr(propName));
     } else {
-      val.forEach(val => _validateCore(propName, typeObj, val, validateTime));
+      val.forEach(val => _validateCore(typeObj, val, validateTime));
     }
   // Check rest
   } else {
-    _validateCore(propName, typeObj, val, validateTime)
+    _validateCore(typeObj, val, validateTime)
   }
   // Return true if no errors thrown
   return true;
@@ -90,11 +90,11 @@ export function validateProp<T>(
  * Core validation
  */
 export function _validateCore<T>(
-  propName: string,
   typeObj: ITypeObj,
   val: unknown,
   validateTime: ITimeCloneFns['validateTime'],
 ): boolean {
+  const { propName } = typeObj;
   // Check null 
   if (val === null) {
     if (!typeObj.nullable) {
@@ -106,7 +106,7 @@ export function _validateCore<T>(
     if (!validateTime(val)) {
       throw new Error(Errors.notValidDate(propName));
     }
-  // Check email
+  // Check email, empty string is allowd
   } else if (typeObj.isEmail) {
     if ((typeof val !== 'string') || (!!val && !EMAIL_RGX.test(val))) {
       throw new Error(Errors.email(propName));
@@ -116,7 +116,7 @@ export function _validateCore<T>(
     if (typeof val !== 'number') {
       throw new Error(Errors.relationalKey(propName));
     }
-  // Check color
+  // Check color, empty string is not allowed
   } else if (typeObj.isColor) {
     if ((typeof val !== 'string') || !COLOR_RGX.test(val)) {
       throw new Error(Errors.email(propName));
@@ -125,7 +125,7 @@ export function _validateCore<T>(
   } else if (typeof val !== typeObj.type) {
     throw new Error(Errors.default(propName));
   }
-  // Must always check function if there (except if null or undefined)
+  // Must always check function if there
   if (!!typeObj.refine && !typeObj.refine?.(val)) {
     throw new Error(Errors.refineFailed(propName));
   }

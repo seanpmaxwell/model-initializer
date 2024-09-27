@@ -28,7 +28,7 @@ interface IModelFns<T> {
 // Default Time/Deep-Clone functions
 const DEFAULT_TIMECLONE_FNS: ITimeCloneFns = {
   cloneDeep(arg) {
-    if (typeof arg === 'object') {
+    if (!!arg && typeof arg === 'object') {
       return structuredClone(arg);
     } else {
       return arg;

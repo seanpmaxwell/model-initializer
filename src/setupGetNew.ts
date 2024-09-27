@@ -17,7 +17,7 @@ function setupGetNew<T>(schema: TModelSchema<T>, timeCloneFns: ITimeCloneFns) {
     for (const key in schema) {
       const val = arg[key],
         schemaKey = schema[key],
-        typeObj = processType(schemaKey);
+        typeObj = processType(key, schemaKey);
       // If its not there
       if (!(key in arg) || val === undefined) {
         if (!typeObj.optional) {
@@ -29,7 +29,7 @@ function setupGetNew<T>(schema: TModelSchema<T>, timeCloneFns: ITimeCloneFns) {
         }
       // Check null, if value is null and not optional, use the default
       } else {
-        validateProp(key, typeObj, val, validateTime)
+        validateProp(typeObj, val, validateTime)
         retVal[key] = cloneDeep(val);
       }
     }
@@ -54,6 +54,8 @@ function _getDefault<T>(typeObj: ITypeObj) {
     return new Date();
   } else if (typeObj.type === 'pk' || typeObj.type === 'fk') {
     return -1;
+  } else if (typeObj.type === 'color') {
+    return '#FFFFFF';
   }
 }
 
