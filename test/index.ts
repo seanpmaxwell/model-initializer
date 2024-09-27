@@ -13,8 +13,12 @@ export interface IUser {
   active: boolean;
   boss: number;
   children: string[];
+  foo: string | null;
   avatar?: { fileName: string; data: string };
+  avatar2: { fileName: string; data: string };
   parentId: number | null;
+  color: string;
+  color2: string;
 }
 
 // Create check avatar function
@@ -33,10 +37,17 @@ const User = MI.init<IUser>({
   lastLogin: 'date',
   created: 'date',
   active: 'boolean',
-  boss: { type: 'fk', nullable: true, default: null },
-  avatar: { type: '?object', vldrFn: checkAvatar },
+  boss: { type: 'fk', nullable: true },
+  foo: { type: '?string', nullable: true },
+  avatar: { type: '?object', refine: checkAvatar },
+  avatar2: { type: 'object', nullable: true, refine: checkAvatar },
   children: 'string[]',
-  parentId: { type: 'fk', nullable: true },
+  parentId: { type: 'fk', nullable: true, default: null },
+  color: 'color',
+  color2: {
+    type: 'string',
+    refine: (arg: unknown): arg is IUser['color2'] => MI.test.color(arg),
+  },
 });
 
 // Print results

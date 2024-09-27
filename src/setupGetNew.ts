@@ -19,28 +19,17 @@ function setupGetNew<T>(schema: TModelSchema<T>, timeCloneFns: ITimeCloneFns) {
         typeObj = processType(schemaKey);
       // If its not there
       if (!(key in arg) || val === undefined) {
-        if (!typeObj.optional || typeObj.hasDefault) { // Skip
-          retVal[key] = _getDefault(schemaKey, typeObj, timeCloneFns)
-        }
-        continue;
-      // Check null, if value is null and not optional, use the default
-      } else if (val === null) {
         if (!typeObj.optional) {
-          if (typeObj.nullable) {
-            retVal[key] = null;
+          if (typeObj.hasDefault) {
+            retVal[key] = timeCloneFns.cloneDeep(typeObj.default);
           } else {
-            retVal[key] = _getDefault(schemaKey, typeObj, timeCloneFns)
+            retVal[key] = _getDefault(typeObj);
           }
         }
-        continue;
-      // Set the value if not null or undefined
+      // Check null, if value is null and not optional, use the default
       } else {
         validateProp(key, typeObj, val, timeCloneFns)
-        if (typeof val === 'object') {
-          retVal[key] = timeCloneFns.cloneDeep(val);
-        } else {
-          retVal[key] = val;
-        }
+        retVal[key] = timeCloneFns.cloneDeep(val);
       }
     }
     // Return
@@ -51,18 +40,8 @@ function setupGetNew<T>(schema: TModelSchema<T>, timeCloneFns: ITimeCloneFns) {
 /**
  * Get the default value non including relational keys.
  */
-function _getDefault<T>(
-  schemaKey: TModelSchema<T>[keyof TModelSchema<T>],
-  typeObj: ITypeObj,
-  timeCloneFns: ITimeCloneFns,
-) {
-  if (typeof schemaKey === 'object' && schemaKey.hasOwnProperty('default')) {
-    if (typeof schemaKey.default === 'object') {
-      return timeCloneFns.cloneDeep(schemaKey.default);
-    } else {
-      return schemaKey.default;
-    }
-  } else if (typeObj.isArr) {
+function _getDefault<T>(typeObj: ITypeObj) {
+  if (typeObj.isArr) {
     return [];
   } else if (typeObj.type === 'string' || typeObj.type === 'email') {
     return '';

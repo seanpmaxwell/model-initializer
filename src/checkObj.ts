@@ -1,4 +1,4 @@
-import { ITimeCloneFns, TBasicTypes, TVldrFn } from './common/types';
+import { ITimeCloneFns, TBasicTypes, TRefine } from './common/types';
 import { validateObj } from './common/validator-fns';
 
 
@@ -9,11 +9,11 @@ export type TObjSchema<T> = {
   [K in keyof T]: TBasicTypes | {
     type: TBasicTypes;
     nullable?: boolean;
-    vldrFn?: TVldrFn<T,K>;
+    refine?: TRefine<T,K>;
   } | {
     type: 'object' | '?object' | 'object[]' | '?object[]';
     nullable?: boolean;
-    vldrFn: TVldrFn<T,K>;
+    refine: TRefine<T,K>;
   }
 };
 

@@ -1,17 +1,19 @@
 // **** Types **** //
 
-export type TBasicTypes = 
+export type TBasicTypes =
   'string' |'string[]' | '?string' | '?string[]' |
   'number' | 'number[]' | '?number' | '?number[]' |
   'boolean' | 'boolean[]' | '?boolean' | '?boolean[]' |
   'date' | 'date[]' | '?date' | '?date[]' |
-  'email' | 'email[]' | '?email' | '?email[]'
+  'email' | 'email[]' | '?email' | '?email[]' |
+  'color' | 'color[]' | '?color' | '?color[]'
 
-export type TAllTypes = TBasicTypes | 
-  'object' | '?object' | 'object[]' | '?object[]' | 
-  'pk' | 'fk';
+export type TAllTypes = 
+  TBasicTypes |
+  'fk' | 'pk' |
+  'object' | '?object' | 'object[]' | '?object[]'
 
-export type TVldrFn<T,K extends keyof T> = (arg: unknown) => arg is T[K];
+export type TRefine<T,K extends keyof T> = (arg: unknown) => arg is T[K];
 
 // BaseTypes
 export type TModelSchema<T> = {
@@ -21,26 +23,37 @@ export type TModelSchema<T> = {
     type: TBasicTypes; 
     nullable?: boolean;
     default?: T[K];
-    vldrFn?: TVldrFn<T,K>;
-  // If the type is an object and it's not an optional property or array, 
-  // then you must supply a default value.
+    refine?: TRefine<T,K>;
+  // If the type is an object and it's not an optional property, array, or 
+  // nullable, then you must supply a default value. 
   } | {
     type: 'object'; 
-    nullable?: boolean;
+    nullable?: false;
     default: T[K];
-    vldrFn: TVldrFn<T,K>;
-  // For the other object types, default is not required but validator 
+    refine: TRefine<T,K>;
+  // Allow nullable objects to have optional default
+  } | {
+    type: 'object'; 
+    nullable: true;
+    default?: T[K];
+    refine: TRefine<T,K>;
+  // For the other object types, default is not required but refine 
   // still is.
   } | {
     type: '?object' | 'object[]' | '?object[]'; 
     nullable?: boolean;
     default?: T[K];
-    vldrFn: TVldrFn<T,K>;
-  // Foreign Keys
+    refine: TRefine<T,K>;
+  // Allow nullable setting for fk
   } | {
-    type: 'fk';
+    type: 'fk',
     nullable?: boolean;
-    default?: null | -1;
+    default?: T[K];
+  // Allow shorthand notation for basic types and fk
+  } | {
+    type: TBasicTypes | 'fk'; 
+    nldf: true;
+    refine?: TRefine<T,K>;
   }
 };
 

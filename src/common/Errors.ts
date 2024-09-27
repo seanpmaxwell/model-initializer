@@ -7,8 +7,8 @@ export default {
     return `Property "${propName}" was not present but is required in ` +  
       'the supplied object';
   },
-  vldrFnFailed(propName: string) {
-    return `Property "${propName}" failed to pass the custom validator ` +  
+  refineFailed(propName: string) {
+    return `Property "${propName}" failed to pass the custom refine ` +  
       'function';
   },
   notValidDate(propName: string) {
@@ -18,8 +18,8 @@ export default {
     return `Property "${propName}" does not satisfy the constraints`;
   },
   defaultNotFoundForObj(propName: string) {
-    return `If "${propName}" is an object and is required, then a ` + 
-      'default value must be provided.';
+    return `If "${propName}" is an object, required, and not nullable then ` + 
+      'a default value must be provided.';
   },
   typeInvalid(propName: string) {
     return `"${propName}" must be string, number, boolean, date, object, ` + 
@@ -29,8 +29,8 @@ export default {
     return `Relational key "${propName}" must be type number or "null" if ` + 
       'it\'s nullable.';
   },
-  vldrFnMissing(propName: string) {
-    return `A validator is required for object "${propName}".`;
+  refineMissing(propName: string) {
+    return `A refine function is required for object "${propName}".`;
   },
   notValidArr(propName: string) {
     return `An array type was specified but "${propName}" is not a valid ` + 

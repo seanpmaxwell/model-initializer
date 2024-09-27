@@ -1,10 +1,9 @@
 import setupGetNew from './setupGetNew';
 import { ITimeCloneFns, TModelSchema } from './common/types';
 import checkObj, { TObjSchema } from './checkObj';
-import { validateObj, validateProp } from './common/validator-fns';
+import { COLOR_RGX, EMAIL_RGX, validateObj, validateProp } from './common/validator-fns';
 import Errors from './common/Errors';
 import processType from './common/processType';
-
 
 
 // **** Types **** //
@@ -13,6 +12,10 @@ interface IModelInitializer {
   timeCloneFns: ITimeCloneFns;
   readonly init: <T>(props: TModelSchema<T>) => IModelFns<T>;
   readonly checkObj: <T>(props: TObjSchema<NonNullable<T>>) => (arg: unknown) => arg is NonNullable<T>;
+  readonly test: {
+    email: (val: unknown) => boolean;
+    color: (val: unknown) => boolean;
+  }
 }
 
 interface IModelFns<T> {
@@ -25,7 +28,13 @@ interface IModelFns<T> {
 
 // Default Time/Deep-Clone functions
 const DEFAULT_TIMECLONE_FNS: ITimeCloneFns = {
-  cloneDeep: arg => structuredClone(arg),
+  cloneDeep(arg) {
+    if (typeof arg === 'object') {
+      return structuredClone(arg);
+    } else {
+      return arg;
+    }
+  },
   validateTime: arg => !isNaN(new Date(arg as any).getTime()),
   toDate: arg => new Date(arg as any),
 }
@@ -48,6 +57,10 @@ const ModelInitializer: IModelInitializer = {
   },
   checkObj<T>(props: TObjSchema<T>) {
     return checkObj<T>(props, this.timeCloneFns);
+  },
+  test: {
+    email: (val: unknown) => typeof val === 'string' && EMAIL_RGX.test(val),
+    color: (val: unknown) => typeof val === 'string' && COLOR_RGX.test(val),
   }
 }
 
@@ -63,14 +76,14 @@ function _validateDefaults<T>(
 ): boolean {
   for (const key in schema) {
     const schemaKey = schema[key];
-    if (typeof schemaKey !== 'object' || !schemaKey.hasOwnProperty('default')) {
+    if (typeof schemaKey !== 'object' || !('default' in schemaKey)) {
       continue;
     }
     const propName = key,
       type = schemaKey.type;
-    if (type.includes('object') && !schemaKey.hasOwnProperty('vldrFn')) {
-      throw new Error(Errors.vldrFnMissing(key));
-    } else if (type === 'object' && !schemaKey.default) {
+    if (type.includes('object') && !schemaKey.hasOwnProperty('refine')) {
+      throw new Error(Errors.refineMissing(key));
+    } else if (type === 'object' && !schemaKey.nullable && !schemaKey.default) {
       const msg = Errors.defaultNotFoundForObj(propName);
       throw new Error(msg);
     }

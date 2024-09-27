@@ -4,7 +4,7 @@ import { TAllTypes } from './types';
 interface ISchemaType {
   type: TAllTypes;
   nullable?: boolean;
-  vldrFn?: (arg: unknown) => boolean;
+  refine?: (arg: unknown) => boolean;
 }
 
 export interface ITypeObj {
@@ -14,9 +14,11 @@ export interface ITypeObj {
   isArr: boolean;
   isEmail: boolean;
   hasDefault: boolean;
+  default: unknown;
   isDate: boolean;
   isRelationalKey: boolean;
-  vldrFn?: (arg: unknown) => boolean;
+  isColor: boolean;
+  refine?: (arg: unknown) => boolean;
 }
 
 /**
@@ -28,11 +30,13 @@ function processType(schemaType: string | ISchemaType): ITypeObj  {
     nullable = false,
     isArr = false,
     optional = false,
-    vldrFn,
+    refine,
     isDate = false,
     hasDefault = false,
     isRelationalKey = false,
-    isEmail = false;
+    isEmail = false,
+    _default = undefined,
+    isColor = false;
   // Check
   if (!schemaType) {
     throw new Error('schema property should not be falsey')
@@ -44,10 +48,16 @@ function processType(schemaType: string | ISchemaType): ITypeObj  {
     type = schemaType.type;
     nullable = !!schemaType.nullable;
     if (schemaType.type !== 'fk') {
-      vldrFn = schemaType.vldrFn;
+      refine = schemaType.refine;
     }
-    if (schemaType.hasOwnProperty('default')) {
+    if ('default' in schemaType) {
       hasDefault = true;
+      _default = schemaType.default
+    }
+    if ('nldf' in schemaType) {
+      nullable = true;
+      hasDefault = true;
+      _default = null;
     }
   }
   // Is optional
@@ -63,11 +73,16 @@ function processType(schemaType: string | ISchemaType): ITypeObj  {
   if (type === 'fk' || type === 'pk') {
     isRelationalKey = true;
   }
-  // Primary-key or Foreign-key
+  // other types
   if (type === 'email') {
     isEmail = true;
   } else if (type === 'date') {
     isDate = true;
+  } else if (type === 'color') {
+    isColor = true;
+  } else if (type === 'object' && nullable && _default === undefined) {
+    hasDefault = true;
+    _default = null;
   }
   // Return
   return {
@@ -77,9 +92,11 @@ function processType(schemaType: string | ISchemaType): ITypeObj  {
     nullable,
     isEmail,
     hasDefault,
+    default: _default,
     isDate,
     isRelationalKey,
-    vldrFn,
+    isColor,
+    refine,
   };
 }
 

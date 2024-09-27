@@ -44,7 +44,7 @@ const User = MI.init<IUser>({
   lastLogin: 'date',
   created: 'date',
   active: 'boolean',
-  avatar: { type: '?object', vldrFn: checkAvatar },
+  avatar: { type: '?object', refine: checkAvatar },
   children: 'string[]',
 });
 
@@ -90,27 +90,32 @@ console.log(User.isValid('blah')) // throws "Error"
   type: 'string' | 'number' ...etc;
   nullable?: boolean; // Default is false
   default?: YourModel[keyof YourModel];
-  vldrFn?: (arg: unknown) => arg is YourModel[keyof YourModel];
+  refine?: (arg: unknown) => arg is YourModel[keyof YourModel];
+  nldf?: true; 
 }
 ```
 - `type`: The 5 basic types are `'string' | 'number' | 'boolean' | 'date' | object | email`, each one has an array counter part: i.e. `string[]` and can be prepending with `?` to make it optional i.e. `?string[]`. There is also `pk` (primary-key) and `fk` (foreign-key).
-- `nullable`: optional, default is `false`, says that null is a valid value regardless of what's set by type.
-- `default`: optional, except for `object`s when `optional` is `false`, a default value passed to `new` if the key is absent from the partial being passed.
-- `vldrFn`: optional for all types but required in those which include `object` (i.e. `?object[]`). This function will always be called if truthy and will be used in `new` and `isValid` to validate a value.
+- `nullable`: optional, default is `false`, says that null is a valid value regardless of what's set by type. When `new` is called, if a `object` is not optional, but is nullable, and no default is supplied, then null will be used
+- `default`: optional (except for `object`s which are not optional, nullable, or an array), a default value passed to `new` if the key is absent from the partial being passed.
+- `refine`: optional for all types but required in those which include `object` (i.e. `?object[]`). This function will always be called if truthy and will be used in `new` and `isValid` to validate a value.
+- `nldf` is available for all types except `object` types and `pk`. It is shorthand for doing `{ nullable: true, default: null }`.
 
 ### Defaults (only relevant to the "new" function)
-- When using `new`, if you supply a default then that will be always be used regardless if the value is optional or not. If a property is required and you do not supply a value in the partial to `new`, then the following defaults will be used. If there is no value passed to `new` and the property ID optional, then that key/value pair will be skipped in the object returned from `new`.
-- `string`: empty string `''`
-- `number`: `0`
-- `boolean`: `false`
-- `date`: the current datetime as a `Date` object.
-- `for values ending with "[]"`: an empty array.
-- `object`: If an object type is not optional or an array, then you must supply a valid default to prevent a bad object from getting attached. Objects arrays which just use an empty array as the default.
-- `pk` and `fk`: `-1`
+- When using `new`, if you supply a default then that will be always be used regardless if the value is optional or not. If there is no value passed to `new` and the property is optional, then that key/value pair will be skipped in the object returned from `new`.
+- If a property is required and you do not supply a value in the partial to `new`, then the following defaults will be used:
+  - `string`: empty string `''`
+  - `number`: `0`
+  - `boolean`: `false`
+  - `date`: the current datetime as a `Date` object.
+  - `for values ending with "[]"`: an empty array.
+  - `object`: If an object type is not optional or an array, then you must supply a valid default to prevent a bad object from getting attached. Objects arrays which just use an empty array as the default.
+  - `email`: empty string
+  - `color`: `#FFFFFF` that's the hex code for white
+  - `pk` and `fk`: `-1`
 
-### Arrays/Emails/Optional-Types
+### Arrays/Emails/Optional-Types/COlors
 - Validation only works for one-dimensional arrays. If you have nested arrays set the type to `object` and write your own validator function.
-- There is a built-in regex to check the email format. If you want to use your own, set the type to string and pass your own validation function. Note that an empty array counts as a valid email and will be used as the default value if the email is not optional.
+- There is a built-in regex to check the email and color formats. If you want to use your own, set the type to string and pass your own refine function. Note that an empty array counts as a valid email/color and will be used as the default value if the email is not optional.
 - The optional character prevents an error from being thrown if key is absent from the `isValid` check and tells `new` to skip this key if it's not in the partial and there is no default.
 
 ### PK (primary-key) and FK (foreign-key)
@@ -121,6 +126,13 @@ console.log(User.isValid('blah')) // throws "Error"
 
 ### Validation
 - Validation of values and not just types will be done both in the `isValid` function and in the `new` function before setting a value passed from a partial. Default values (if you passed your own custom default) will also be validated. The reason I decided to make it throw errors instead of just return a boolean is so we can read the name of the property that failed and see exactly where the validation failed. If you don't want it throw errors you should wrap `isValid` and `new` in `try/catch` blocks and handle the error message and values manually.
+
+- The two types that require regex validation are `color` and `email`. The functions used to test them are public:
+```typescript
+import MI from 'model-initializer';
+MI.test.email('...') // returns boolean;
+MI.test.color('...') // returns boolean;
+```
 
 ### checkObj Function
 - Creating validator functions for object properties can get a little tedious, that's why is decided to include the `checkObj` function in addition to `init`. `checkObj` works very similar to `isValid` and just like `init` you pass it a generic along with an array of properties but the `default:` prop is not required since we're only dealing with type-validation and not setting any values. The quick start above contains an example of `checkObj` in action. I've found that the `checkObj` very useful even outside of my database models. I use it for validation on the back-end in my routing layer as well for checking incoming API data.

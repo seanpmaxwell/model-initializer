@@ -4,7 +4,10 @@ import { TObjSchema } from '../checkObj';
 import processType, { ITypeObj } from './processType';
 
 
-const EMAIL_RGX = /^(?!\.)(?!.*\.\.)([A-Z0-9_'+\-\.]*)[A-Z0-9_+-]@([A-Z0-9][A-Z0-9\-]*\.)+[A-Z]{2,}$/i;
+// Regexes
+export const EMAIL_RGX = /^(?!\.)(?!.*\.\.)([A-Z0-9_'+\-\.]*)[A-Z0-9_+-]@([A-Z0-9][A-Z0-9\-]*\.)+[A-Z]{2,}$/i;
+export const COLOR_RGX = new RegExp(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)
+
 
 /**
  * Setup the validator function
@@ -37,20 +40,13 @@ export function validateProp<T>(
   timeCloneFns: ITimeCloneFns,
 ): boolean {
   // Check optional
- if (val === undefined) {
+  if (val === undefined) {
     if (!typeObj.optional) {
       throw new Error(Errors.propMissing(propName));
     } else {
       return true;
     }
   // Check null
-  } else if (val === null) {
-    if (!typeObj.nullable) {
-      throw new Error(Errors.notNullable(propName));
-    } else {
-      return true;
-    }
-  // Check array
   } else if (typeObj.isArr) {
     if (!Array.isArray(val)) {
       throw new Error(Errors.notValidArr(propName));
@@ -74,8 +70,14 @@ export function _validate<T>(
   val: unknown,
   timeCloneFns: ITimeCloneFns,
 ): boolean {
-  // Check date
-  if (typeObj.isDate) {
+  // Check null 
+  if (val === null) {
+    if (!typeObj.nullable) {
+      throw new Error(Errors.notNullable(propName));
+    }
+    return true;
+  // Check Date
+  } else if (typeObj.isDate) {
     if (!timeCloneFns.validateTime(val)) {
       throw new Error(Errors.notValidDate(propName));
     }
@@ -89,13 +91,19 @@ export function _validate<T>(
     if (typeof val !== 'number') {
       throw new Error(Errors.relationalKey(propName));
     }
+  // Check color
+  } else if (typeObj.isColor) {
+    if ((typeof val !== 'string') || !COLOR_RGX.test(val)) {
+      throw new Error(Errors.email(propName));
+    }
   // Check base type
   } else if (typeof val !== typeObj.type) {
     throw new Error(Errors.default(propName));
   }
   // Must always check function if there (except if null or undefined)
-  if (!!typeObj.vldrFn && !typeObj.vldrFn?.(val)) {
-    throw new Error(Errors.vldrFnFailed(propName));
+  if (!!typeObj.refine && !typeObj.refine?.(val)) {
+    throw new Error(Errors.refineFailed(propName));
   }
+  // Return
   return true;
 }
