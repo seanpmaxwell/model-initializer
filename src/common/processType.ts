@@ -53,8 +53,7 @@ function processType(schemaType: string | ISchemaType): ITypeObj  {
     if ('default' in schemaType) {
       hasDefault = true;
       _default = schemaType.default
-    }
-    if ('nldf' in schemaType) {
+    } else if ('nldf' in schemaType) {
       nullable = true;
       hasDefault = true;
       _default = null;

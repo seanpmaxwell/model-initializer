@@ -1,6 +1,5 @@
 import Errors from './Errors';
-import { TModelSchema, ITimeCloneFns } from './types';
-import { TObjSchema } from '../checkObj';
+import { TModelSchema, ITimeCloneFns, TTestObjFnSchema } from './types';
 import processType, { ITypeObj } from './processType';
 
 
@@ -10,11 +9,37 @@ export const COLOR_RGX = new RegExp(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)
 
 
 /**
+ * Validate Defaults and make sure refine is there for objects
+ */
+export function validateDefaults<T>(
+  schema: TModelSchema<T>,
+  validateTime: ITimeCloneFns['validateTime'],
+): boolean {
+  for (const key in schema) {
+    const schemaKey = schema[key];
+    if (typeof schemaKey !== 'object' || !('default' in schemaKey)) {
+      continue;
+    }
+    const propName = key,
+      type = schemaKey.type;
+    if (type.includes('object') && !('refine' in schemaKey)) {
+      throw new Error(Errors.refineMissing(key));
+    } else if (type === 'object' && !schemaKey.nullable && !schemaKey.default) {
+      const msg = Errors.defaultNotFoundForObj(propName);
+      throw new Error(msg);
+    }
+    const typeObj = processType(schemaKey);
+    validateProp(key, typeObj, schemaKey.default, validateTime)
+  }
+  return true;
+}
+
+/**
  * Setup the validator function
  */
 export function validateObj<T>(
-  schema: TObjSchema<T> | TModelSchema<T>,
-  timeCloneFns: ITimeCloneFns,
+  schema: TModelSchema<T> | TTestObjFnSchema<T>,
+  validateTime: ITimeCloneFns['validateTime'],
 )  {
   return (arg: unknown) => {
     if (!arg || typeof arg !== 'object') {
@@ -23,7 +48,7 @@ export function validateObj<T>(
     for (const key in schema) {
       const val = (arg as Record<string, unknown>)[key],
         typeObj = processType(schema[key]);
-      validateProp(key, typeObj, val, timeCloneFns)
+      validateProp(key, typeObj, val, validateTime)
     }
     return true;
   };
@@ -37,7 +62,7 @@ export function validateProp<T>(
   propName: string,
   typeObj: ITypeObj,
   val: unknown,
-  timeCloneFns: ITimeCloneFns,
+  validateTime: ITimeCloneFns['validateTime'],
 ): boolean {
   // Check optional
   if (val === undefined) {
@@ -51,11 +76,11 @@ export function validateProp<T>(
     if (!Array.isArray(val)) {
       throw new Error(Errors.notValidArr(propName));
     } else {
-      val.forEach(val => _validate(propName, typeObj, val, timeCloneFns));
+      val.forEach(val => _validateCore(propName, typeObj, val, validateTime));
     }
   // Check rest
   } else {
-    _validate(propName, typeObj, val, timeCloneFns)
+    _validateCore(propName, typeObj, val, validateTime)
   }
   // Return true if no errors thrown
   return true;
@@ -64,11 +89,11 @@ export function validateProp<T>(
 /**
  * Core validation
  */
-export function _validate<T>(
+export function _validateCore<T>(
   propName: string,
   typeObj: ITypeObj,
   val: unknown,
-  timeCloneFns: ITimeCloneFns,
+  validateTime: ITimeCloneFns['validateTime'],
 ): boolean {
   // Check null 
   if (val === null) {
@@ -78,7 +103,7 @@ export function _validate<T>(
     return true;
   // Check Date
   } else if (typeObj.isDate) {
-    if (!timeCloneFns.validateTime(val)) {
+    if (!validateTime(val)) {
       throw new Error(Errors.notValidDate(propName));
     }
   // Check email

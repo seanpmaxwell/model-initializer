@@ -11,6 +11,7 @@ import processType, { ITypeObj } from './common/processType';
  */
 function setupGetNew<T>(schema: TModelSchema<T>, timeCloneFns: ITimeCloneFns) {
   return (arg: Partial<T> = {}): T => {
+    const { validateTime, cloneDeep } = timeCloneFns;
     // Loop array
     const retVal = {} as any;
     for (const key in schema) {
@@ -21,15 +22,15 @@ function setupGetNew<T>(schema: TModelSchema<T>, timeCloneFns: ITimeCloneFns) {
       if (!(key in arg) || val === undefined) {
         if (!typeObj.optional) {
           if (typeObj.hasDefault) {
-            retVal[key] = timeCloneFns.cloneDeep(typeObj.default);
+            retVal[key] = cloneDeep(typeObj.default);
           } else {
             retVal[key] = _getDefault(typeObj);
           }
         }
       // Check null, if value is null and not optional, use the default
       } else {
-        validateProp(key, typeObj, val, timeCloneFns)
-        retVal[key] = timeCloneFns.cloneDeep(val);
+        validateProp(key, typeObj, val, validateTime)
+        retVal[key] = cloneDeep(val);
       }
     }
     // Return

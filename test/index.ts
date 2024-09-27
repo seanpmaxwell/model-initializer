@@ -22,7 +22,7 @@ export interface IUser {
 }
 
 // Create check avatar function
-const checkAvatar = MI.checkObj<IUser['avatar']>({
+const checkAvatar = MI.test.obj<IUser['avatar']>({
   fileName: 'string',
   data: 'string',
 });
@@ -42,12 +42,13 @@ const User = MI.init<IUser>({
   avatar: { type: '?object', refine: checkAvatar },
   avatar2: { type: 'object', nullable: true, refine: checkAvatar },
   children: 'string[]',
-  parentId: { type: 'fk', nullable: true, default: null },
+  parentId: { type: 'fk', nldf: true },
   color: 'color',
   color2: {
     type: 'string',
     refine: (arg: unknown): arg is IUser['color2'] => MI.test.color(arg),
   },
+
 });
 
 // Print results

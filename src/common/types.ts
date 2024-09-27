@@ -49,14 +49,28 @@ export type TModelSchema<T> = {
     type: 'fk',
     nullable?: boolean;
     default?: T[K];
+  } | {
+    type: 'fk';
+    nldf: true;
   // Allow shorthand notation for basic types and fk
   } | {
-    type: TBasicTypes | 'fk'; 
+    type: TBasicTypes; 
     nldf: true;
     refine?: TRefine<T,K>;
   }
 };
 
+export type TTestObjFnSchema<T> = {
+  [K in keyof T]: TBasicTypes | {
+    type: TBasicTypes;
+    nullable?: boolean;
+    refine?: TRefine<T,K>;
+  } | {
+    type: 'object' | '?object' | 'object[]' | '?object[]';
+    nullable?: boolean;
+    refine: TRefine<T,K>;
+  }
+};
 
 // **** User Custom Stuff **** //
 
