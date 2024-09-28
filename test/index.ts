@@ -55,12 +55,17 @@ const User = MI.init<IUser>({
 const user1 = User.new({ id: 1234 });
 console.log(user1)
 
-// Test errors
-// MI.timeCloneFns = {
-//   cloneDeep: arg => arg,
-//   validateTime: arg => false,
-//   toDate: arg => new Date(),
-// }
 
-// Should throw error=
-User.new({ email: 'horse@horse.com' })
+// Test errors
+// MI.setTimeCloneFns({
+//   cloneDeep: arg => arg,
+//   validateTime: arg => false, // should force error
+//   toDate: arg => new Date(),
+// });
+
+// const Dog = MI.init<{ name: string, bday: Date}>({
+//   name: 'string',
+//   bday: 'date',
+// })
+
+// Dog.new({ name: 'fido', bday: new Date() })
