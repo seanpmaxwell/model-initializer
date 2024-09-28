@@ -73,5 +73,5 @@ const ModelInitializer: IModelInitializer = {
 
 // **** Export **** //
 
-export { ITimeCloneFns } from './common/types';
+export { ITimeCloneFns, TTestObjFnSchema } from './common/types';
 export default ModelInitializer;

@@ -1,4 +1,5 @@
 import MI from '../src';
+import { TTestObjFnSchema } from '../src/common/types';
 
 
 // User as it appears in the database
@@ -14,8 +15,8 @@ export interface IUser {
   boss: number;
   children: string[];
   foo: string | null;
-  avatar?: { fileName: string; data: string };
-  avatar2: { fileName: string; data: string } | null;
+  avatar?: IAvatar;
+  avatar2: IAvatar | null;
   parentId: number | null;
   color: string;
   color2: string;
@@ -23,10 +24,24 @@ export interface IUser {
   adminType: number;
 }
 
-// Create check avatar function
-const checkAvatar = MI.test.obj<IUser['avatar']>({
+interface IAvatar {
+  fileName: string;
+  data: string;
+  fileTypes: 'jpeg' | 'jpg' | 'png' | 'gif';
+}
+
+const a: TTestObjFnSchema<IAvatar> = {
   fileName: 'string',
   data: 'string',
+  fileTypes: {
+    type: '?string',
+    refine: ['jpeg', 'jpg', 'png', 'gif'],
+  }
+};
+
+// Create check avatar function
+const checkAvatar = MI.test.obj<IUser['avatar']>({
+  ...a,
 });
 
 // User schema

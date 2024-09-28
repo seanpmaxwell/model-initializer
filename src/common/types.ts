@@ -76,7 +76,6 @@ export type TTestObjFnSchema<T> = {
     type: TAllStr;
     nullable?: boolean;
     refine: string[];
-  // Refine using number array
   } | {
     type: TAllNum;
     nullable?: boolean;
