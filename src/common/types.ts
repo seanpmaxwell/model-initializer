@@ -1,18 +1,16 @@
 // **** Types **** //
 
-export type TBasicTypes =
-  'string' |'string[]' | '?string' | '?string[]' |
-  'number' | 'number[]' | '?number' | '?number[]' |
+type TAllStr = 'string' |'string[]' | '?string' | '?string[]';
+type TAllNum = 'number' | 'number[]' | '?number' | '?number[]';
+type TAllObj = 'object' | '?object' | 'object[]' | '?object[]';
+
+export type TBasicTypes = TAllStr | TAllNum |
   'boolean' | 'boolean[]' | '?boolean' | '?boolean[]' |
   'date' | 'date[]' | '?date' | '?date[]' |
   'email' | 'email[]' | '?email' | '?email[]' |
-  'color' | 'color[]' | '?color' | '?color[]'
+  'color' | 'color[]' | '?color' | '?color[]';
 
-export type TAllTypes = 
-  TBasicTypes |
-  'fk' | 'pk' |
-  'object' | '?object' | 'object[]' | '?object[]'
-
+export type TAllTypes = TBasicTypes | 'fk' | 'pk' | TAllObj;
 export type TRefine<T,K extends keyof T> = (arg: unknown) => arg is T[K];
 
 // BaseTypes
@@ -49,6 +47,18 @@ export type TModelSchema<T> = {
     type: 'fk',
     nullable?: boolean;
     default?: T[K];
+  // Refine using string array
+  } | {
+    type: TAllStr;
+    nullable?: boolean;
+    default?: boolean;
+    refine: string[];
+  // Refine using number array
+  } | {
+    type: TAllNum;
+    nullable?: boolean;
+    default?: boolean;
+    refine: number[];
   }
 };
 
@@ -59,7 +69,7 @@ export type TTestObjFnSchema<T> = {
     nullable?: boolean;
     refine?: TRefine<T,K>;
   } | {
-    type: 'object' | '?object' | 'object[]' | '?object[]';
+    type: TAllObj;
     nullable?: boolean;
     refine: TRefine<T,K>;
   }

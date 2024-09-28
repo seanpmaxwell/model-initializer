@@ -4,7 +4,7 @@ import { TAllTypes } from './types';
 interface ISchemaType {
   type: TAllTypes;
   nullable?: boolean;
-  refine?: (arg: unknown) => boolean;
+  refine?: ((arg: unknown) => boolean) | string[] | number[];
 }
 
 export interface ITypeObj {
@@ -51,9 +51,16 @@ function processType(
   } else if (typeof schemaType === 'object') {
     type = schemaType.type;
     nullable = !!schemaType.nullable;
+    // Setup the "refine" function
     if ('refine' in schemaType) {
-      refine = schemaType.refine;
+      const refine_ = schemaType.refine; 
+      if (typeof refine_ === 'function') {
+        refine = refine_;
+      } else if (Array.isArray(refine_) && refine_.length > 0) {
+        refine = (arg: unknown) => refine_.some(item => item === arg);
+      }
     }
+    // Setup the default value
     if ('default' in schemaType) {
       hasDefault = true;
       _default = schemaType.default

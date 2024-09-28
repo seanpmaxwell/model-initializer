@@ -15,10 +15,12 @@ export interface IUser {
   children: string[];
   foo: string | null;
   avatar?: { fileName: string; data: string };
-  avatar2: { fileName: string; data: string };
+  avatar2: { fileName: string; data: string } | null;
   parentId: number | null;
   color: string;
   color2: string;
+  orderDir: string;
+  adminType: number;
 }
 
 // Create check avatar function
@@ -48,7 +50,8 @@ const User = MI.init<IUser>({
     type: 'string',
     refine: (arg: unknown): arg is IUser['color2'] => MI.test.color(arg),
   },
-
+  orderDir: { type: 'string', refine: ['asc', 'desc', ''] },
+  adminType: { type: 'number', refine: [1, 2, 0] }
 });
 
 // Print results
@@ -69,3 +72,6 @@ console.log(user1)
 // })
 
 // Dog.new({ name: 'fido', bday: new Date() })
+
+
+const user2 = User.new({ id: 1234, orderDir: 'asc' });

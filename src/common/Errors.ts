@@ -8,8 +8,7 @@ export default {
       'the supplied object';
   },
   refineFailed(propName: string) {
-    return `Property "${propName}" failed to pass the custom refine ` +  
-      'function';
+    return `Property "${propName}" failed to pass the refine constraint`;
   },
   notValidDate(propName: string) {
     return `Property "${propName}" is not a valid date object`;
