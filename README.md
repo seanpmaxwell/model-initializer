@@ -83,14 +83,12 @@ const user1 = User.new({ name: 'john' });
   nullable?: boolean; // Default is false
   default?: YourModel[keyof YourModel];
   refine?: (arg: unknown) => arg is YourModel[keyof YourModel];
-  nldf?: true; 
 }
 ```
 - `type`: The 5 basic types are `'string' | 'number' | 'boolean' | 'date' | object | email`, each one has an array counter part: i.e. `string[]` and can be prepending with `?` to make it optional i.e. `?string[]`. There is also `pk` (primary-key) and `fk` (foreign-key).
 - `nullable`: optional, default is `false`, says that null is a valid value regardless of what's set by type. When `new` is called, if a `object` is not optional, but is nullable, and no default is supplied, then null will be used
 - `default`: optional (except for `object`s which are not optional, nullable, or an array), a value passed to `new()` if the key is absent from the partial being passed.
 - `refine`: optional for all types but required in those which include `object` (i.e. `?object[]`). This function will always be called if truthy and will be used in `new` and `isValid` to validate a value.
-- `nldf` is available for all types except `object` types and `pk`. It is shorthand for doing `{ nullable: true, default: null }`.
 
 ### Defaults (only relevant to the "new" function)
 - When using `new`, if you supply a default then that will be always be used regardless if the value is optional or not. 

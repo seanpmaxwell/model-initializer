@@ -4,7 +4,6 @@ import { TAllTypes } from './types';
 interface ISchemaType {
   type: TAllTypes;
   nullable?: boolean;
-  nldf?: boolean;
   refine?: (arg: unknown) => boolean;
 }
 
@@ -58,10 +57,6 @@ function processType(
     if ('default' in schemaType) {
       hasDefault = true;
       _default = schemaType.default
-    } else if ('nldf' in schemaType) {
-      nullable = true;
-      hasDefault = true;
-      _default = null;
     }
   }
   // Is optional

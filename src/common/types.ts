@@ -49,14 +49,6 @@ export type TModelSchema<T> = {
     type: 'fk',
     nullable?: boolean;
     default?: T[K];
-  } | {
-    type: 'fk';
-    nldf: true;
-  // Allow shorthand notation for basic types and fk
-  } | {
-    type: TBasicTypes; 
-    nldf: true;
-    refine?: TRefine<T,K>;
   }
 };
 

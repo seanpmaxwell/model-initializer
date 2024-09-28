@@ -42,7 +42,7 @@ const User = MI.init<IUser>({
   avatar: { type: '?object', refine: checkAvatar },
   avatar2: { type: 'object', nullable: true, refine: checkAvatar },
   children: 'string[]',
-  parentId: { type: 'fk', nldf: true },
+  parentId: { type: 'fk', nullable: true, default: null },
   color: 'color',
   color2: {
     type: 'string',
