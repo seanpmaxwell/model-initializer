@@ -1,11 +1,11 @@
 # About model-initializer
-<h3>Quick, simple library for initializing and validating TypeScript objects in a similar fashion to how we declare interfaces. Fully typesafe, works client or server side. Much more terse than some other schema validation tools like <b>zod</b></h3>
+<h3>Quick, easy, typescript-first library for initializing and validating objects. Works client or server side and much simpler than other schema validation tools like <b>zod</b>. Unlike typia, doesn't require an extra compilation step so still works with ts-node.</h3>
 <br/>
 
 ## Summary
 - This library's default export is a module that holds 2 properties `init` and `test`. `init` is the heart of the library, `test` contains helper functions, see the second to last section.
 - When you pass `init` a generic and an object used to represent your schema, it gives you back an object with 2 functions: `new` and `isValid` in which typesafety is enforced by the generic you passed.
-  - `new()` let's us create new object using a partial of your model and defaults from the array. Defaults are deep cloned before being added. The returned value is a full (not partial) object of your schema (minus certain optional ones, see the guide).
+  - `new()` let's us create new object using a partial of your model and defaults from the array. Defaults are deep-cloned before being added. The returned value is a full (not partial) object of your schema (minus certain optional ones, see the guide).
   - `isValid()` accepts an unknown argument and throws errors if they do not match the required schema.
 - Just to point out I know there are tons of schema validation libraries out there, but I wanted something that would both validate a schema, let me setup new instances using partials and defaults, and which would allow me to typesafe any properties I tried to add to the schema using an `interface`.
 - By default the `Date()` constructor is used for date validation and `structuredClone()` is used for deep cloning values. I know some older versions of node don't supported `structuredClone()` and most people have fancier libraries for handling dates, so you can set your own date/clone functions if you want: see the last section.
@@ -13,7 +13,7 @@
 
 
 ## Quick Start
-- Installation: ``npm i -s modal-initializer`.
+- Installation: `npm i -s modal-initializer`.
 - Create a type to represent your model and an array of objects. `init` requires 1 generic so pass it the type and the array.
 
 ```typescript
@@ -34,6 +34,12 @@ export interface IUser {
   avatar?: { fileName: string; data: string };
 }
 
+// Check is valid avatar
+const isAvatar = MI.test.obj<IUser['avatar']>({
+  fileName: 'string',
+  data: 'string',
+});
+
 // Setup "User schema"
 const User = MI.init<IUser>({
   id: 'pk',
@@ -44,17 +50,9 @@ const User = MI.init<IUser>({
   lastLogin: 'date',
   created: 'date',
   active: 'boolean',
-  avatar: { type: '?object', refine: checkAvatar },
+  avatar: { type: '?object', refine: isAvatar },
   children: 'string[]',
 });
-
-// Get the check avatar fn
-function _getCheckAvatar() {
-  return MI.test.obj<IUser['avatar']>({
-    fileName: 'string',
-    data: 'string',
-  });
-}
 
 const user1 = User.new({ name: 'john' });
 // {
@@ -68,6 +66,7 @@ const user1 = User.new({ name: 'john' });
 //   boss: null,
 //   children: []
 // }
+User.isValid('user'); // should throw Error
 ```
 <br/>
 
@@ -82,10 +81,10 @@ const user1 = User.new({ name: 'john' });
   type: 'string' | 'number' ...etc;
   nullable?: boolean; // Default is false
   default?: YourModel[keyof YourModel];
-  refine?: (arg: unknown) => arg is YourModel[keyof YourModel];
+  refine?: (arg: unknown) => arg is YourModel[keyof YourModel] OR you can pass a string or number array;
 }
 ```
-- `type`: The 5 basic types are `'string' | 'number' | 'boolean' | 'date' | object | email`, each one has an array counter part: i.e. `string[]` and can be prepending with `?` to make it optional i.e. `?string[]`. There is also `pk` (primary-key) and `fk` (foreign-key).
+- `type`: The root types are `'string' | 'number' | 'boolean' | 'date' | object | email | color`, each one has an array counterpart: i.e. `string[]` and can be prepending with `?` to make it optional i.e. `?string[]`. There is also `pk` (primary-key) and `fk` (foreign-key).
 - `nullable`: optional, default is `false`, says that null is a valid value regardless of what's set by type. When `new` is called, if a `object` is not optional, but is nullable, and no default is supplied, then null will be used
 - `default`: optional (except for `object`s which are not optional, nullable, or an array), a value passed to `new()` if the key is absent from the partial being passed.
 - `refine`: optional for all types but required in those which include `object` (i.e. `?object[]`).
@@ -126,8 +125,8 @@ MI.test.email('...') // returns boolean;
 MI.test.color('...') // returns boolean;
 ```
 
-### checkObj Function
-- Creating validator functions for object properties can get a little tedious, that's why is decided to include the `checkObj` function in addition to `init`. `checkObj` works very similar to `isValid` and just like `init` you pass it a generic along with an array of properties but the `default:` prop is not required since we're only dealing with type-validation and not setting any values. The quick start above contains an example of `checkObj` in action. I've found that the `checkObj` very useful even outside of my database models. I use it for validation on the back-end in my routing layer as well for checking incoming API data.
+### test.obj() Function
+- Creating validator functions for object properties can get a little tedious, that's why is decided to include the `test.obj()` function in addition to `init`. `obj()` works very similar to `isValid` and just like `init` you pass it a generic along with an array of properties but the `default:` prop is not required since we're only dealing with type-validation and not setting any values. The quick start above contains an example of `obj()` in action. I've found that the `obj()` very useful even outside of my database models. I use it for validation on the back-end in my routing layer for checking incoming API objects not attached to db-models.
 
 ### Setting your own time/clone functions
 - If you want to forgo using `new Date()` and `structuredClone()`, then you will need to pass your own `cloneDeep`, `validateTime`, `toDate` functions to init:
