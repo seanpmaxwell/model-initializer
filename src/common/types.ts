@@ -21,10 +21,8 @@ type TAllNum = 'number' | 'number[]' | '?number' | '?number[]' |
 type TRemObj = '?object' | 'object[]' | '?object[]' | 
   'object | null' | '?object | null' | 'object[] | null' | '?object[] | null';
 
-type TAllFk = 'fk' | 'fk | null';
-
 export type TBasicTypes = TAllStr | TAllNum | TAllBool | TAllDate | TAllEmail | TAllColor;
-export type TAllTypes = TBasicTypes | TAllFk | 'pk' | 'object' | TRemObj;
+export type TAllTypes = TBasicTypes | 'pk' | 'fk' | 'fk | null' | 'object' | TRemObj;
 export type TRefine<T,K extends keyof T> = (arg: unknown) => arg is T[K];
 
 // BaseTypes
@@ -32,7 +30,7 @@ export type TModelSchema<T> = {
   [K in keyof T]: 
   // Base types
   TBasicTypes | 'pk' | 'fk' | {
-    type: TBasicTypes | 'fk'; 
+    type: TBasicTypes; 
     default?: T[K];
     refine?: TRefine<T,K>;
   // For base object-type, you must supply a default value. 
