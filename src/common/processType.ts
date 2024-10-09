@@ -3,7 +3,6 @@ import { TAllTypes } from './types';
 
 interface ISchemaType {
   type: TAllTypes;
-  nullable?: boolean;
   refine?: ((arg: unknown) => boolean) | string[] | number[];
 }
 
@@ -50,7 +49,6 @@ function processType(
     type = schemaType;
   } else if (typeof schemaType === 'object') {
     type = schemaType.type;
-    nullable = !!schemaType.nullable;
     // Setup the "refine" function
     if ('refine' in schemaType) {
       const refine_ = schemaType.refine; 
@@ -67,6 +65,10 @@ function processType(
     }
   }
   // Is optional
+  if (type.endsWith(' | null')) {
+    nullable = true;
+    type = type.slice(0, type.length - 7);
+  }
   if (type.startsWith('?')) {
     optional = true;
     type = type.substring(1);

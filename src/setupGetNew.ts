@@ -10,14 +10,24 @@ import processType, { ITypeObj } from './common/processType';
  * the default.
  */
 function setupGetNew<T>(schema: TModelSchema<T>, timeCloneFns: ITimeCloneFns) {
+  // Process types
+  const typeMap = {} as any;
+  for (const key in schema) {
+    const schemaKey = schema[key];
+    typeMap[key] = processType(key, schemaKey);
+  }
+  // Run getNew
   return (arg: Partial<T> = {}): T => {
     const { validateTime, cloneDeep } = timeCloneFns;
     // Loop array
     const retVal = {} as any;
     for (const key in schema) {
       const val = arg[key],
-        schemaKey = schema[key],
-        typeObj = processType(key, schemaKey);
+        typeObj = typeMap[key];
+      // If the value is null and the property is optional, skip adding it
+      if (val === null && typeObj.optional) {
+        continue;
+      }
       // If its not there
       if (!(key in arg) || val === undefined) {
         if (!typeObj.optional) {
@@ -27,7 +37,7 @@ function setupGetNew<T>(schema: TModelSchema<T>, timeCloneFns: ITimeCloneFns) {
             retVal[key] = _getDefault(typeObj);
           }
         }
-      // Check null, if value is null and not optional, use the default
+      // Validate and copy the value if its there
       } else {
         validateProp(typeObj, val, validateTime)
         retVal[key] = cloneDeep(val);

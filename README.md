@@ -79,17 +79,23 @@ User.isValid('user'); // should throw Error
 ```typescript
 {
   type: 'string' | 'number' ...etc;
-  nullable?: boolean; // Default is false
   default?: YourModel[keyof YourModel];
   refine?: (arg: unknown) => arg is YourModel[keyof YourModel] OR you can pass a string or number array;
 }
 ```
-- `type`: The root types are `'string' | 'number' | 'boolean' | 'date' | object | email | color`, each one has an array counterpart: i.e. `string[]` and can be prepending with `?` to make it optional i.e. `?string[]`. There is also `pk` (primary-key) and `fk` (foreign-key).
-- `nullable`: optional, default is `false`, says that null is a valid value regardless of what's set by type. When `new` is called, if a `object` is not optional, but is nullable, and no default is supplied, then null will be used
+- `type`: The root types are `'string' | 'number' | 'boolean' | 'date' | object | email | color`
+  - Each one has an array counterpart: i.e. `string[]` and can be prepending with `?` to make it optional i.e. `?string[]`.
+  - Every property can be appended with ` | null` to make it nullable. 
+  - There is also `pk` (primary-key) and `fk` (foreign-key).
 - `default`: optional (except for `object`s which are not optional, nullable, or an array), a value passed to `new()` if the key is absent from the partial being passed.
 - `refine`: optional for all types but required in those which include `object` (i.e. `?object[]`).
   - This function will always be called if truthy and will be used in `new` and `isValid` to validate a value.
   - For each `string` or `number` type, you can also pass string or number array to `refine` instead of a function. The validation check will make sure that the value is included in the array.
+
+### Nullable 
+- `null` means that null is a valid value regardless of what's set by type.
+- If a property is nullable and optional, then a property whose value is null will be skipped in the `new()` function
+- When `new` is called, if a `object` is not optional, but is nullable, and no default is supplied, then null will be used
 
 ### Defaults (only relevant to the "new" function)
 - When using `new`, if you supply a default then that will be always be used regardless if the value is optional or not. 
@@ -111,8 +117,8 @@ User.isValid('user'); // should throw Error
 
 ### PK (primary-key) and FK (foreign-key)
 - These are used to represent relational database keys:
-  - For `pk` the only properties you can set are `prop` and `type`, primary-keys should never be `null` in a database.
-  - For `fk` the only properties you can set are `prop`, `type`, and `nullable`. You can set `default` ONLY if `nullable` is true in which cause you can set the default to be `-1` or `null` only.
+  - `pk` cannot have any properties set on it.
+  - For `fk` the only properties you can set are `type`, and `default`. You can set `default` ONLY if `nullable` in which cause you can set the default to be `-1` or `null` only.
   - There reason defaults are `-1` is cause primary keys should be set to a positive number by the database, so `-1` is used to represent a record that has not been saved in the database yet. I use postgres where convention is to use the `SERIAL` type for database keys.
 
 ### Validation

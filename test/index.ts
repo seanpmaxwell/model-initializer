@@ -17,6 +17,7 @@ export interface IUser {
   foo: string | null;
   avatar?: IAvatar;
   avatar2: IAvatar | null;
+  avatar3?: IAvatar | null;
   parentId: number | null;
   color: string;
   color2: string;
@@ -54,12 +55,13 @@ const User = MI.init<IUser>({
   lastLogin: 'date',
   created: 'date',
   active: 'boolean',
-  boss: { type: 'fk', nullable: true },
-  foo: { type: '?string', nullable: true },
+  boss: 'fk | null',
+  foo: '?string | null',
   avatar: { type: '?object', refine: checkAvatar },
-  avatar2: { type: 'object', nullable: true, refine: checkAvatar },
+  avatar2: { type: 'object | null', refine: checkAvatar },
+  avatar3: { type: '?object | null', refine: checkAvatar },
   children: 'string[]',
-  parentId: { type: 'fk', nullable: true, default: null },
+  parentId: { type: 'fk | null', default: null },
   color: 'color',
   color2: {
     type: 'string',
@@ -70,7 +72,7 @@ const User = MI.init<IUser>({
 });
 
 // Print results
-const user1 = User.new({ id: 1234 });
+const user1 = User.new({ id: 1234, avatar3: null });
 console.log(user1)
 
 

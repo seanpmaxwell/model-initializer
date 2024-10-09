@@ -24,7 +24,7 @@ export function validateDefaults<T>(
       type = schemaKey.type;
     if (type.includes('object') && !('refine' in schemaKey)) {
       throw new Error(Errors.refineMissing(key));
-    } else if (type === 'object' && !schemaKey.nullable && !schemaKey.default) {
+    } else if (type === 'object' && !schemaKey.default) {
       const msg = Errors.defaultNotFoundForObj(propName);
       throw new Error(msg);
     }
@@ -41,13 +41,20 @@ export function validateObj<T>(
   schema: TModelSchema<T> | TTestObjFnSchema<T>,
   validateTime: ITimeCloneFns['validateTime'],
 )  {
+  // Process types
+  const typeMap = {} as any;
+  for (const key in schema) {
+    const schemaKey = schema[key];
+    typeMap[key] = processType(key, schemaKey);
+  }
+  // Run validate
   return (arg: unknown) => {
     if (!arg || typeof arg !== 'object') {
       throw new Error(Errors.modelInvalid());
     }
     for (const key in schema) {
       const val = (arg as Record<string, unknown>)[key],
-        typeObj = processType(key, schema[key]);
+        typeObj = typeMap[key];
       validateProp(typeObj, val, validateTime)
     }
     return true;

@@ -1,64 +1,64 @@
 // **** Types **** //
 
-type TAllStr = 'string' |'string[]' | '?string' | '?string[]';
-type TAllNum = 'number' | 'number[]' | '?number' | '?number[]';
-type TAllObj = 'object' | '?object' | 'object[]' | '?object[]';
+type TAllBool = 'boolean' | 'boolean[]' | '?boolean' | '?boolean[]' | 
+  'boolean | null' | 'boolean[] | null' | '?boolean | null' | '?boolean[] | null';
 
-export type TBasicTypes = TAllStr | TAllNum |
-  'boolean' | 'boolean[]' | '?boolean' | '?boolean[]' |
-  'date' | 'date[]' | '?date' | '?date[]' |
-  'email' | 'email[]' | '?email' | '?email[]' |
-  'color' | 'color[]' | '?color' | '?color[]';
+type TAllDate = 'date' | 'date[]' | '?date' | '?date[]' | 
+  'date | null' | 'date[] | null' | '?date | null' | '?date[] | null';
 
-export type TAllTypes = TBasicTypes | 'fk' | 'pk' | TAllObj;
+type TAllEmail = 'email' | 'email[]' | '?email' | '?email[]' | 
+  'email | null' | 'email[] | null' | '?email | null' | '?email[] | null';
+
+type TAllColor = 'color' | 'color[]' | '?color' | '?color[]' | 
+  'color | null' | 'color[] | null' | '?color | null' | '?color[] | null';
+
+type TAllStr = 'string' |'string[]' | '?string' | '?string[]' | 
+  'string | null' |'string[] | null' | '?string | null' | '?string[] | null';
+
+type TAllNum = 'number' | 'number[]' | '?number' | '?number[]' | 
+  'number | null' | 'number[] | null' | '?number | null' | '?number[] | null';
+
+type TRemObj = '?object' | 'object[]' | '?object[]' | 
+  'object | null' | '?object | null' | 'object[] | null' | '?object[] | null';
+
+type TAllFk = 'fk' | 'fk | null';
+
+export type TBasicTypes = TAllStr | TAllNum | TAllBool | TAllDate | TAllEmail | TAllColor;
+export type TAllTypes = TBasicTypes | TAllFk | 'pk' | 'object' | TRemObj;
 export type TRefine<T,K extends keyof T> = (arg: unknown) => arg is T[K];
 
 // BaseTypes
 export type TModelSchema<T> = {
   [K in keyof T]: 
   // Base types
-  TBasicTypes | 'pk' | 'fk' | {
-    type: TBasicTypes; 
-    nullable?: boolean;
+  TBasicTypes | TAllFk | 'pk' | {
+    type: TBasicTypes | 'fk'; 
     default?: T[K];
     refine?: TRefine<T,K>;
-  // If the type is an object and it's not an optional property, array, or 
-  // nullable, then you must supply a default value. 
+  // For base object-type, you must supply a default value. 
   } | {
     type: 'object'; 
-    nullable?: false;
     default: T[K];
     refine: TRefine<T,K>;
-  // Allow nullable objects to have optional default
+  // Allow other object types to have optional default, refine still required
   } | {
-    type: 'object'; 
-    nullable: true;
+    type: TRemObj; 
     default?: T[K];
     refine: TRefine<T,K>;
-  // For the other object types, default is not required but refine 
-  // still is.
-  } | {
-    type: '?object' | 'object[]' | '?object[]'; 
-    nullable?: boolean;
-    default?: T[K];
-    refine: TRefine<T,K>;
-  // Allow nullable setting for fk
-  } | {
-    type: 'fk',
-    nullable?: boolean;
-    default?: T[K];
   // Refine using string array
   } | {
     type: TAllStr;
-    nullable?: boolean;
     default?: boolean;
     refine: string[];
   // Refine using number array
   } | {
     type: TAllNum;
-    nullable?: boolean;
     default?: boolean;
     refine: number[];
+  // If fk is nullable, allow null as default
+  } | {
+    type: 'fk | null'; 
+    default?: -1 | null;
   }
 };
 
@@ -66,19 +66,15 @@ export type TModelSchema<T> = {
 export type TTestObjFnSchema<T> = {
   [K in keyof T]: TBasicTypes | {
     type: TBasicTypes;
-    nullable?: boolean;
     refine?: TRefine<T,K>;
   } | {
-    type: TAllObj;
-    nullable?: boolean;
+    type: 'object' | TRemObj;
     refine: TRefine<T,K>;
   } | {
     type: TAllStr;
-    nullable?: boolean;
     refine: string[];
   } | {
     type: TAllNum;
-    nullable?: boolean;
     refine: number[];
   }
 };
