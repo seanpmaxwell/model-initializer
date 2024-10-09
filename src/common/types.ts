@@ -31,7 +31,7 @@ export type TRefine<T,K extends keyof T> = (arg: unknown) => arg is T[K];
 export type TModelSchema<T> = {
   [K in keyof T]: 
   // Base types
-  TBasicTypes | TAllFk | 'pk' | {
+  TBasicTypes | 'pk' | 'fk' | {
     type: TBasicTypes | 'fk'; 
     default?: T[K];
     refine?: TRefine<T,K>;
