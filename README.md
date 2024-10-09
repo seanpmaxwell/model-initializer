@@ -26,7 +26,7 @@ export interface IUser {
   name: string;
   email?: string;
   displayName?: string;
-  lastLogin: Date;
+  lastLogin: Date | null;
   created: Date;
   active: boolean;
   boss: number;
@@ -47,7 +47,7 @@ const User = MI.init<IUser>({
   email: '?email', // Use '?' for optional types
   displayName: { type: '?string', default: '' },
   age: 'number',
-  lastLogin: 'date',
+  lastLogin: 'date | null',
   created: 'date',
   active: 'boolean',
   avatar: { type: '?object', refine: isAvatar },
