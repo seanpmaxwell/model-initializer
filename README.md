@@ -142,5 +142,6 @@ Vldt.color('...') // returns boolean;
 ```typescript
 import { ModelInitializer } from 'model-intializer';
 
-export default new ModelInitializer('pass your own cloneFn to the constructor');
+const modelInitializer = new ModelInitializer('pass your own cloneFn to the constructor');
+export default modelInitializer;
 ```

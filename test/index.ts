@@ -1,4 +1,4 @@
-import MI, { Vldt, TTestObjFnSchema } from '../src';
+import MI, { ModelInitializer, Vldt, TObjSchema } from '../src';
 
 
 // User as it appears in the database
@@ -17,6 +17,7 @@ export interface IUser {
   avatar?: IAvatar;
   avatar2: IAvatar | null;
   avatar3?: IAvatar | null;
+  avatar4: IAvatar;
   parentId: number | null;
   color: string;
   color2: string;
@@ -30,7 +31,7 @@ interface IAvatar {
   fileTypes?: 'jpeg' | 'jpg' | 'png' | 'gif';
 }
 
-const a: TTestObjFnSchema<IAvatar> = {
+const a: TObjSchema<IAvatar> = {
   fileName: 'string',
   data: 'string',
   fileTypes: {
@@ -59,6 +60,11 @@ const User = MI.init<IUser>({
   avatar: { type: '?object', refine: checkAvatar },
   avatar2: { type: 'object | null', refine: checkAvatar },
   avatar3: { type: '?object | null', refine: checkAvatar },
+  avatar4: {
+    type: 'object',
+    default: { fileName: '', data: '' },
+    refine: checkAvatar,
+  },
   children: 'string[]',
   parentId: { type: 'fk | null', default: null },
   color: 'color',
@@ -77,18 +83,38 @@ console.log(user1)
 
 // Test errors
 
-// MI.setTimeCloneFns({
-//   cloneDeep: arg => arg,
-//   validateTime: arg => false, // should force error
-//   toDate: arg => new Date(),
+// const UserBad = MI.init<IUser>({
+//   id: { type: 'pk', default: -1 },
+//   age: '?number',
+//   name: 'string | null',
+//   email: 'email',
+//   displayName: { type: 'string', default: 123 },
+//   lastLogin: 'asdfadsf',
+//   created: '?date',
+//   active: 'boolean[]',
+//   boss: 'fk',
+//   foo: 'string | null',
+//   avatar: null,
+//   avatar2: { type: 'object | null' },
+//   avatar3: { type: '?object | null', default: {}, refine: checkAvatar },
+//   avatar4: { type: '?object', default: { fileName: '', data: '' }, refine: checkAvatar },
+//   children: 'string',
+//   parentId: 'fk',
+//   color: 'string[]',
+//   color2: {
+//     type: 'string',
+//     refine: ['horse'],
+//   },
+//   orderDir: { type: 'string', refine: ['asc', 'desc', 0] },
+//   adminType: { type: 'number', refine: [1, 2, 'horse'] }
 // });
 
-// const Dog = MI.init<{ name: string, bday: Date}>({
+// const MIx = new ModelInitializer(arg => arg)
+
+// const Dog = MIx.init<{ name: string, bday: Date }>({
 //   name: 'string',
 //   bday: 'date',
 // })
 
-// Dog.new({ name: 'fido', bday: new Date() })
-
-
-const user2 = User.new({ id: 1234, orderDir: 'asc' });
+// Dog.new({ name: 'fido', bday: 'horse' as any })
+// User.new({ id: 1234, orderDir: 'cheese' });

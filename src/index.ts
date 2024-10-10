@@ -59,5 +59,5 @@ export const Vldt = {
 
 // **** Export **** //
 
-export { TTestObjFnSchema } from './types';
+export type TObjSchema<T> = TTestObjFnSchema<T>;
 export default new ModelInitializer();
