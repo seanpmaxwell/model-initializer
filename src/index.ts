@@ -1,51 +1,37 @@
 import setupGetNew from './setupGetNew';
-import { ITimeCloneFns, TModelSchema, TTestObjFnSchema } from './common/types';
-import { COLOR_RGX, EMAIL_RGX, validateDefaults, validateObj } from './common/validator-fns';
+import { TModelSchema, TTestObjFnSchema } from './types';
+import { validateDefaults, validateObj, vldtColor, vldtDate, vldtEmail } from './validator-fns';
 
 
-// **** Types **** //
-
-interface IModelInitializer {
-  readonly timeCloneFns: ITimeCloneFns;
-  readonly init: <T>(props: TModelSchema<T>) => IModelFns<T>;
-  readonly test: {
-    validateTime: ITimeCloneFns['validateTime'];
-    email: (val: unknown) => boolean;
-    color: (val: unknown) => boolean;
-    obj: <T>(props: TTestObjFnSchema<NonNullable<T>>) => (arg: unknown) => arg is NonNullable<T>;
-  };
-  readonly setTimeCloneFns: (param: ITimeCloneFns) => void;
-}
+// **** ModelInitializer Class **** //
 
 interface IModelFns<T> {
   isValid: (arg: unknown) => arg is T;
   new: (arg?: Partial<T>) => T;
 }
 
+export class ModelInitializer {
 
-// **** Setup **** //
-
-// Default Time/Deep-Clone functions
-const DEFAULT_TIMECLONE_FNS: ITimeCloneFns = {
-  cloneDeep(arg) {
-    if (!!arg && typeof arg === 'object') {
+  private cloneFn = <T>(arg: T, isDate: boolean): T => {
+    if (isDate) {
+      return new Date(arg as any) as T;
+    } else if (!!arg && typeof arg === 'object') {
       return structuredClone(arg);
     } else {
       return arg;
     }
-  },
-  validateTime: arg => !isNaN(new Date(arg as any).getTime()),
-  toDate: arg => new Date(arg as any),
-}
+  };
 
-// Main
-const ModelInitializer: IModelInitializer = {
-  timeCloneFns: { ...DEFAULT_TIMECLONE_FNS },
-  init<T>(props: TModelSchema<T>) {
-    const { validateTime } = this.timeCloneFns;
-    validateDefaults(props, validateTime);
-    const validate = validateObj<T>(props, validateTime),
-      getNew = setupGetNew<T>(props, this.timeCloneFns);
+  constructor(cloneFn?: <T>(arg: T) => T) {
+    if (!!cloneFn) {
+      this.cloneFn = cloneFn;
+    }
+  }
+
+  public init<T>(props: TModelSchema<T>): IModelFns<T> {
+    validateDefaults(props);
+    const validate = validateObj<T>(props),
+      getNew = setupGetNew<T>(props, this.cloneFn);
     return {
       isValid(arg: unknown): arg is T {
         return validate(arg);
@@ -54,24 +40,24 @@ const ModelInitializer: IModelInitializer = {
         return getNew(arg);
       },
     };
-  },
-  test: {
-    validateTime: DEFAULT_TIMECLONE_FNS.validateTime,
-    email: (val: unknown) => typeof val === 'string' && EMAIL_RGX.test(val),
-    color: (val: unknown) => typeof val === 'string' && COLOR_RGX.test(val),
-    obj<T>(schema: TTestObjFnSchema<T>) {
-      const validate = validateObj<T>(schema, this.validateTime);
-      return (arg: unknown): arg is NonNullable<T> => validate(arg);
-    },
-  },
-  setTimeCloneFns(param: ITimeCloneFns) {
-    (this as any).timeCloneFns = { ...param };
-    this.test.validateTime = param.validateTime;
   }
+}
+
+
+// **** Validator Object **** //
+
+export const Vldt = {
+  time: vldtDate,
+  email: vldtEmail,
+  color: vldtColor,
+  obj<T>(schema: TTestObjFnSchema<T>) {
+    const validate = validateObj<T>(schema);
+    return (arg: unknown): arg is NonNullable<T> => validate(arg);
+  },
 }
 
 
 // **** Export **** //
 
-export { ITimeCloneFns, TTestObjFnSchema } from './common/types';
-export default ModelInitializer;
+export { TTestObjFnSchema } from './types';
+export default new ModelInitializer();

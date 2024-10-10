@@ -1,20 +1,22 @@
 import Errors from './Errors';
-import { TModelSchema, ITimeCloneFns, TTestObjFnSchema } from './types';
+import { TModelSchema, TTestObjFnSchema } from './types';
 import processType, { ITypeObj } from './processType';
 
 
 // Regexes
-export const EMAIL_RGX = /^(?!\.)(?!.*\.\.)([A-Z0-9_'+\-\.]*)[A-Z0-9_+-]@([A-Z0-9][A-Z0-9\-]*\.)+[A-Z]{2,}$/i;
-export const COLOR_RGX = new RegExp(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)
+const EMAIL_RGX = /^(?!\.)(?!.*\.\.)([A-Z0-9_'+\-\.]*)[A-Z0-9_+-]@([A-Z0-9][A-Z0-9\-]*\.)+[A-Z]{2,}$/i;
+const COLOR_RGX = new RegExp(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)
+
+// Simple Functions
+export const vldtEmail = (val: unknown) => typeof val === 'string' && EMAIL_RGX.test(val);
+export const vldtColor = (val: unknown) => typeof val === 'string' && COLOR_RGX.test(val);
+export const vldtDate = (arg: unknown) => !isNaN(new Date(arg as any).getTime());
 
 
 /**
  * Validate Defaults and make sure refine is there for objects
  */
-export function validateDefaults<T>(
-  schema: TModelSchema<T>,
-  validateTime: ITimeCloneFns['validateTime'],
-): boolean {
+export function validateDefaults<T>(schema: TModelSchema<T>): boolean {
   for (const key in schema) {
     const schemaKey = schema[key];
     if (typeof schemaKey !== 'object' || !('default' in schemaKey)) {
@@ -29,7 +31,7 @@ export function validateDefaults<T>(
       throw new Error(msg);
     }
     const typeObj = processType(key, schemaKey);
-    validateProp(typeObj, schemaKey.default, validateTime)
+    validateProp(typeObj, schemaKey.default)
   }
   return true;
 }
@@ -37,10 +39,7 @@ export function validateDefaults<T>(
 /**
  * Setup the validator function
  */
-export function validateObj<T>(
-  schema: TModelSchema<T> | TTestObjFnSchema<T>,
-  validateTime: ITimeCloneFns['validateTime'],
-)  {
+export function validateObj<T>(schema: TModelSchema<T> | TTestObjFnSchema<T>) {
   // Process types
   const typeMap = {} as any;
   for (const key in schema) {
@@ -55,7 +54,7 @@ export function validateObj<T>(
     for (const key in schema) {
       const val = (arg as Record<string, unknown>)[key],
         typeObj = typeMap[key];
-      validateProp(typeObj, val, validateTime)
+      validateProp(typeObj, val)
     }
     return true;
   };
@@ -65,11 +64,7 @@ export function validateObj<T>(
  * Validate a value using a prop. NOTE, this doesn't check for missing,
  * cause we don't need to check for that in "getNew"
  */
-export function validateProp<T>(
-  typeObj: ITypeObj,
-  val: unknown,
-  validateTime: ITimeCloneFns['validateTime'],
-): boolean {
+export function validateProp(typeObj: ITypeObj, val: unknown): boolean {
   const { propName } = typeObj;
   // Check optional
   if (val === undefined) {
@@ -83,11 +78,11 @@ export function validateProp<T>(
     if (!Array.isArray(val)) {
       throw new Error(Errors.notValidArr(propName));
     } else {
-      val.forEach(val => _validateCore(typeObj, val, validateTime));
+      val.forEach(val => _validateCore(typeObj, val));
     }
   // Check rest
   } else {
-    _validateCore(typeObj, val, validateTime)
+    _validateCore(typeObj, val)
   }
   // Return true if no errors thrown
   return true;
@@ -96,11 +91,7 @@ export function validateProp<T>(
 /**
  * Core validation
  */
-export function _validateCore<T>(
-  typeObj: ITypeObj,
-  val: unknown,
-  validateTime: ITimeCloneFns['validateTime'],
-): boolean {
+export function _validateCore(typeObj: ITypeObj, val: unknown): boolean {
   const { propName } = typeObj;
   // Check null 
   if (val === null) {
@@ -110,7 +101,7 @@ export function _validateCore<T>(
     return true;
   // Check Date
   } else if (typeObj.isDate) {
-    if (!validateTime(val)) {
+    if (!vldtDate(val)) {
       throw new Error(Errors.notValidDate(propName));
     }
   // Check email, empty string is allowd

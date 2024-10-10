@@ -17,7 +17,7 @@
 - Create a type to represent your model and an array of objects. `init` requires 1 generic so pass it the type and the array.
 
 ```typescript
-import MI from 'model-initializer';
+import MI, { Vldt } from 'model-initializer';
 
 // User as it appears in the database
 export interface IUser {
@@ -35,7 +35,7 @@ export interface IUser {
 }
 
 // Check is valid avatar
-const isAvatar = MI.test.obj<IUser['avatar']>({
+const isAvatar = Vldt.obj<IUser['avatar']>({
   fileName: 'string',
   data: 'string',
 });
@@ -87,13 +87,13 @@ User.isValid('user'); // should throw Error
   - Each one has an array counterpart: i.e. `string[]` and can be prepending with `?` to make it optional i.e. `?string[]`.
   - Every property can be appended with ` | null` to make it nullable. 
   - There is also `pk` (primary-key) and `fk` (foreign-key).
-- `default`: optional (except for `object`s which are not optional, nullable, or an array), a value passed to `new()` if the key is absent from the partial being passed.
+- `default`: optional (except for `object`'s which are not optional, nullable, or an array), a value passed to `new()` if the key is absent from the partial being passed.
 - `refine`: optional for all types but required in those which include `object` (i.e. `?object[]`).
   - This function will always be called if truthy and will be used in `new` and `isValid` to validate a value.
   - For each `string` or `number` type, you can also pass string or number array to `refine` instead of a function. The validation check will make sure that the value is included in the array.
 
 ### Nullable 
-- `null` means that null is a valid value regardless of what's set by type.
+- `| null` means that null is a valid value regardless of what's set by type.
 - If a property is nullable and optional, then a property whose value is null will be skipped in the `new()` function
 - When `new` is called, if a `object` is not optional, but is nullable, and no default is supplied, then null will be used
 
@@ -124,26 +124,23 @@ User.isValid('user'); // should throw Error
 ### Validation
 - Validation of values and not just types will be done both in the `isValid` function and in the `new` function before setting a value passed from a partial. Default values (if you passed your own custom default) will also be validated. The reason I decided to make it throw errors instead of just return a boolean is so we can read the name of the property that failed and see exactly where the validation failed. If you don't want it throw errors you should wrap `isValid` and `new` in `try/catch` blocks and handle the error message and values manually.
 
-- The two types that require regex validation are `color` and `email`. The functions used to test them are public:
+#### The `Vldt` object
+- This library exports the `Vldt` object so you can access the functions used for validation.
+- The main ones are `time`, `date`, `email`, and `color`. More may get added over time.
+- The two types that require regex validation are `color` and `email`.
 ```typescript
-import MI from 'model-initializer';
-MI.test.email('...') // returns boolean;
-MI.test.color('...') // returns boolean;
+import { Vldt } from 'model-initializer';
+Vldt.email('...') // returns boolean;
+Vldt.color('...') // returns boolean;
 ```
 
-### test.obj() Function
-- Creating validator functions for object properties can get a little tedious, that's why is decided to include the `test.obj()` function in addition to `init`. `obj()` works very similar to `isValid` and just like `init` you pass it a generic along with an array of properties but the `default:` prop is not required since we're only dealing with type-validation and not setting any values. The quick start above contains an example of `obj()` in action. I've found that the `obj()` very useful even outside of my database models. I use it for validation on the back-end in my routing layer for checking incoming API objects not attached to db-models.
+#### Vldt.obj() Function
+- Creating validator functions for object properties can get a little tedious, that's why is decided to include the `obj()` function on the `Vldt` object. `obj()` works very similar to `isValid` and just like `init` you pass it a generic along with an array of properties but the `default:` prop is not required since we're only dealing with type-validation and not setting any values. The quick start above contains an example of `obj()` in action. I've found that the `obj()` very useful even outside of my database models. I use it for validation on the back-end in my routing layer for checking incoming API objects not attached to db-models.
 
-### Setting your own time/clone functions
-- If you want to forgo using `new Date()` and `structuredClone()`, then you will need to pass your own `cloneDeep`, `validateTime`, `toDate` functions to init:
+### Setting your own clone function
+- If you want to forgo using `structuredClone()`, then you will need to pass your own `clone`, functions to init:
 ```typescript
-import ModelInitializer, { ITimeCloneFns } from 'model-intializer';
+import { ModelInitializer } from 'model-intializer';
 
-const CUSTOM_ADDONS: ITimeCloneFns {
-  cloneDeep: arg => { ...your clone deep logic; return clone };
-  validateTime: arg => { ...your time validation logic; return boolean };
-  toDate: arg => { ...convert value to a date };
-}
-
-ModelInitializer.setTimeCloneFns(CUSTOM_ADDONS);
+export default new ModelInitializer('pass your own cloneFn to the constructor');
 ```

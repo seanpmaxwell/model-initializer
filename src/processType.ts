@@ -1,8 +1,6 @@
-import { TAllTypes } from './types';
-
 
 interface ISchemaType {
-  type: TAllTypes;
+  type: string;
   refine?: ((arg: unknown) => boolean) | string[] | number[];
 }
 
@@ -64,11 +62,12 @@ function processType(
       _default = schemaType.default
     }
   }
-  // Is optional
+  // Is nullable
   if (type.endsWith(' | null')) {
     nullable = true;
     type = type.slice(0, type.length - 7);
   }
+  // Is optional
   if (type.startsWith('?')) {
     optional = true;
     type = type.substring(1);
@@ -81,7 +80,7 @@ function processType(
   if (type === 'fk' || type === 'pk') {
     isRelationalKey = true;
   }
-  // other types
+  // Other types
   if (type === 'email') {
     isEmail = true;
   } else if (type === 'date') {

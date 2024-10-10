@@ -1,5 +1,4 @@
-import MI from '../src';
-import { TTestObjFnSchema } from '../src/common/types';
+import MI, { Vldt, TTestObjFnSchema } from '../src';
 
 
 // User as it appears in the database
@@ -12,9 +11,9 @@ export interface IUser {
   lastLogin: Date;
   created: Date;
   active: boolean;
-  boss: number;
+  boss: number | null;
   children: string[];
-  foo: string | null;
+  foo?: string | null;
   avatar?: IAvatar;
   avatar2: IAvatar | null;
   avatar3?: IAvatar | null;
@@ -28,7 +27,7 @@ export interface IUser {
 interface IAvatar {
   fileName: string;
   data: string;
-  fileTypes: 'jpeg' | 'jpg' | 'png' | 'gif';
+  fileTypes?: 'jpeg' | 'jpg' | 'png' | 'gif';
 }
 
 const a: TTestObjFnSchema<IAvatar> = {
@@ -41,17 +40,17 @@ const a: TTestObjFnSchema<IAvatar> = {
 };
 
 // Create check avatar function
-const checkAvatar = MI.test.obj<IUser['avatar']>({
+const checkAvatar = Vldt.obj<IUser['avatar']>({
   ...a,
 });
 
 // User schema
 const User = MI.init<IUser>({
   id: 'pk',
+  age: 'number',
   name: 'string',
   email: '?email',
   displayName: { type: '?string', default: '' },
-  age: 'number',
   lastLogin: 'date',
   created: 'date',
   active: 'boolean',
@@ -65,7 +64,7 @@ const User = MI.init<IUser>({
   color: 'color',
   color2: {
     type: 'string',
-    refine: (arg: unknown): arg is IUser['color2'] => MI.test.color(arg),
+    refine: (arg: unknown): arg is IUser['color2'] => Vldt.color(arg),
   },
   orderDir: { type: 'string', refine: ['asc', 'desc', ''] },
   adminType: { type: 'number', refine: [1, 2, 0] }
@@ -77,6 +76,7 @@ console.log(user1)
 
 
 // Test errors
+
 // MI.setTimeCloneFns({
 //   cloneDeep: arg => arg,
 //   validateTime: arg => false, // should force error

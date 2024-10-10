@@ -1,6 +1,6 @@
-import { ITimeCloneFns, TModelSchema } from './common/types';
-import { validateProp } from './common/validator-fns';
-import processType, { ITypeObj } from './common/processType';
+import { TModelSchema } from './types';
+import { validateProp } from './validator-fns';
+import processType, { ITypeObj } from './processType';
 
 
 /**
@@ -9,7 +9,10 @@ import processType, { ITypeObj } from './common/processType';
  * value. Also, not being there doesn't cause errors, cause we just insert
  * the default.
  */
-function setupGetNew<T>(schema: TModelSchema<T>, timeCloneFns: ITimeCloneFns) {
+function setupGetNew<T>(
+  schema: TModelSchema<T>,
+  cloneFn: <T>(arg: T, isDate: boolean) => T,
+) {
   // Process types
   const typeMap = {} as any;
   for (const key in schema) {
@@ -18,7 +21,6 @@ function setupGetNew<T>(schema: TModelSchema<T>, timeCloneFns: ITimeCloneFns) {
   }
   // Run getNew
   return (arg: Partial<T> = {}): T => {
-    const { validateTime, cloneDeep } = timeCloneFns;
     // Loop array
     const retVal = {} as any;
     for (const key in schema) {
@@ -32,15 +34,15 @@ function setupGetNew<T>(schema: TModelSchema<T>, timeCloneFns: ITimeCloneFns) {
       if (!(key in arg) || val === undefined) {
         if (!typeObj.optional) {
           if (typeObj.hasDefault) {
-            retVal[key] = cloneDeep(typeObj.default);
+            retVal[key] = cloneFn(typeObj.default, typeObj.isDate);
           } else {
             retVal[key] = _getDefault(typeObj);
           }
         }
       // Validate and copy the value if its there
       } else {
-        validateProp(typeObj, val, validateTime)
-        retVal[key] = cloneDeep(val);
+        validateProp(typeObj, val)
+        retVal[key] = cloneFn(val, typeObj.isDate);
       }
     }
     // Return
