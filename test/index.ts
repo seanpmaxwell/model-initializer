@@ -1,6 +1,12 @@
 import MI, { ModelInitializer, Vldt, TObjSchema } from '../src';
 
 
+enum Status {
+  NA,
+  Active,
+  Suspended,
+}
+
 // User as it appears in the database
 export interface IUser {
   id: number; // pk
@@ -18,12 +24,16 @@ export interface IUser {
   avatar2: IAvatar | null;
   avatar3?: IAvatar | null;
   avatar4: IAvatar;
+  avatar5: IAvatar;
   parentId: number | null;
   color: string;
   color2: string;
   orderDir: string;
   adminType: number;
   page: number;
+  status: Status;
+  statuses?: Status[];
+  boo: boolean;
 }
 
 interface IAvatar {
@@ -66,6 +76,12 @@ const User = MI.init<IUser>({
     default: { fileName: '', data: '' },
     refine: checkAvatar,
   },
+  avatar5: {
+    type: 'object',
+    default: { fileName: '', data: '' },
+    refine: checkAvatar,
+    transform: 'json',
+  },
   children: 'string[]',
   parentId: { type: 'fk | null', default: null },
   color: 'color',
@@ -75,12 +91,32 @@ const User = MI.init<IUser>({
   },
   orderDir: { type: 'string', refine: ['asc', 'desc', ''] },
   adminType: { type: 'number', refine: [1, 2, 0] },
-  page: { type: 'number', transform: arg => Number(arg) }
+  page: { type: 'number', transform: 'auto' },
+  status: 'number',
+  statuses: '?number[]',
+  boo: { type: 'boolean', transform: arg => Boolean(arg) },
 });
 
 // Print results
-const user1 = User.new({ id: 1234, avatar3: null, page: '1234' as any });
+const user1 = User.new({
+  id: 1234,
+  avatar3: null,
+  avatar5: JSON.stringify({ fileName: 'foo', data: 'bar' }) as any,
+  page: '1234' as any,
+  boo: null as any,
+});
+
 console.log(user1)
+
+
+// Create check avatar function
+const checkAvatars = Vldt.objarr<IUser['avatar']>({
+  ...a,
+});
+
+const result = checkAvatars([{ fileName: '', data: '' }, { fileName: '', data: '' }, { fileName: '', data: '' }]);
+console.log(result)
+
 
 
 // Test errors

@@ -1,19 +1,28 @@
 // **** Model-Schema Types **** //
 
 type Flatten<T> = (T extends any[] ? T[number] : NonNullable<T>);
+type Refine<Prop> = (arg: unknown) => arg is Prop;
+type Transform<Prop> = (arg: unknown) => Prop;
 
 // Setup the type object
-type TRefine<Prop> = (arg: unknown) => arg is Prop;
 type TTypeObj<Prop, TType> = {
   type: TType;
-  transform?: (arg: unknown) => Prop;
   default?: Prop;
   refine?: (
     Flatten<Prop> extends string 
-    ? (TRefine<Prop> | string[])
+    ? (Refine<Prop> | string[])
     : Flatten<Prop> extends number 
-    ? (TRefine<Prop> | number[])
-    : TRefine<Prop>
+    ? (Refine<Prop> | number[])
+    : Refine<Prop>
+  );
+  transform?: (
+    Flatten<Prop> extends string 
+    ? (Transform<Prop> | 'auto' | 'json')
+    : Flatten<Prop> extends number 
+    ? (Transform<Prop> | 'auto' | 'json')
+    : Flatten<Prop> extends boolean 
+    ? (Transform<Prop> | 'auto' | 'json')
+    : (Transform<Prop> | 'json')
   );
 }
 
@@ -58,10 +67,7 @@ type TObjFull<Prop> = ({
 } | {
   type: TObj<Prop>;
   default?: Prop;
-}) & ({
-  transform?: (arg: unknown) => Prop;
-  refine: TRefine<Prop>;
-})
+}) & Pick<TTypeObj<Prop, TObj<Prop>>, 'refine' | 'transform'>;
 
 // BaseTypes
 export type TModelSchema<T> = {
@@ -94,8 +100,7 @@ type TObjs<Prop> = TSetupTypes<Prop, '?object[] | null', 'object | null', '?obje
 // Setup object full
 type TObjFulls<Prop> = {
   type: TObjs<Prop>; 
-  refine: TRefine<Prop>;
-}
+} & Pick<TTypeObj<Prop, TObj<Prop>>, 'refine' | 'transform'>;
 
 export type TTestObjFnSchema<T> = {
   [K in keyof T]: (

@@ -92,7 +92,14 @@ User.isValid('user'); // should throw Error
 - `refine`: optional for all types but required in those which include `object` (i.e. `?object[]`).
   - This function will always be called if truthy and will be used in `new` and `isValid` to validate a value.
   - For each `string` or `number` type, you can also pass string or number array to `refine` instead of a function. The validation check will make sure that the value is included in the array.
-- `transform`: you might want to transform a value before validating it or setting in the new function. You can pass the optional `transform` function which will receive an unknown type and must return the a typesafe value. For example, maybe you received a string value over an API call and you want it transformed into a `number` or you want to run `JSON.parse`. Note that transform will run before validation is done and manipulate the original object being passed with the new value. If the key is absent from the object, then `transform` will be skipped.
+- `transform`: you might want to transform a value before validating it or setting in the new function. You can pass the optional `transform` property. Transform will run before validation is done and manipulate the original object being passed with a new value. If the key is absent from the object, then `transform` will be skipped. To give an example, maybe you received a string value over an API call and you want it transformed into a `number` or you want to run `JSON.parse`.
+  - `transform` can be a a function `(arg: unknown) => "typesafe value"`, `auto` or `json`.
+  - `auto` can work for `number`, `string` or `boolean` base-types is short for doing `(arg: unknown) => "Base-Type ie Number"(arg)`
+  - `json` can be applied to any type and is short for doing `(arg: unknown) => JSON.parse(arg)`
+  - Note that transform will NOT be applied to the default values.
+```typescript
+  avatar: { type: 'object', refine: _someFun, transform: 'json' },
+```
 
 ### Nullable 
 - `| null` means that null is a valid value regardless of what's set by type.
@@ -136,8 +143,10 @@ Vldt.email('...') // returns boolean;
 Vldt.color('...') // returns boolean;
 ```
 
-#### Vldt.obj() Function
+#### Vldt.obj() and Vldt.objarr() Functions
 - Creating validator functions for object properties can get a little tedious, that's why is decided to include the `obj()` function on the `Vldt` object. `obj()` works very similar to `isValid` and just like `init` you pass it a generic along with an array of properties but the `default:` prop is not required since we're only dealing with type-validation and not setting any values. The quick start above contains an example of `obj()` in action. I've found that the `obj()` very useful even outside of my database models. I use it for validation on the back-end in my routing layer for checking incoming API objects not attached to db-models.
+- `objarr` works just like `obj` except it expects an array of objects and applies the validator function to each item in the array.
+
 
 ### Setting your own clone function
 - If you want to forgo using `structuredClone()`, then you will need to pass your own `clone`, functions to init:

@@ -1,7 +1,7 @@
 
 interface ISchemaType {
   type: string;
-  transform?: (arg: unknown) => typeof arg;
+  transform?: ((arg: unknown) => typeof arg) | 'auto' | 'json';
   refine?: ((arg: unknown) => boolean) | string[] | number[];
 }
 
@@ -59,9 +59,6 @@ function processType(
         refine = (arg: unknown) => refine_.some(item => item === arg);
       }
     }
-    if ('transform' in schemaType && typeof schemaType.transform === 'function') {
-      transform = schemaType.transform; 
-    }
     // Setup the default value
     if ('default' in schemaType) {
       hasDefault = true;
@@ -96,6 +93,21 @@ function processType(
   } else if (type === 'object' && nullable && _default === undefined) {
     hasDefault = true;
     _default = null;
+  }
+  if (typeof schemaType === 'object' && 'transform' in schemaType) {
+    if (typeof schemaType.transform === 'function') {
+      transform = schemaType.transform; 
+    } else if (schemaType.transform === 'auto') {
+      if (type === 'string') {
+        transform = (arg: any) => String(arg);
+      } else if (type === 'number') {
+        transform = (arg: any) => Number(arg);
+      } else if (type === 'boolean') {
+        transform = (arg: any) => Boolean(arg);
+      }
+    } else if (schemaType.transform === 'json') {
+      transform = (arg: any) => JSON.parse(arg);
+    }
   }
   // Return
   return {
