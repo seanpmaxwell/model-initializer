@@ -102,7 +102,7 @@ type TObjFulls<Prop> = {
   type: TObjs<Prop>; 
 } & Pick<TTypeObj<Prop, TObj<Prop>>, 'refine' | 'transform'>;
 
-export type TAllTypeObjects<Prop> = (
+export type TAllTypeOptions<Prop> = (
   Flatten<Prop> extends boolean
   ? TBoolFulls<Prop>
   : Flatten<Prop> extends number
@@ -117,7 +117,7 @@ export type TAllTypeObjects<Prop> = (
 ) 
 
 export type TTestObjFnSchema<T> = {
-  [K in keyof T]: TAllTypeObjects<T[K]>;
+  [K in keyof T]: TAllTypeOptions<T[K]>;
 };
 
 
@@ -126,5 +126,5 @@ export type TTestObjFnSchema<T> = {
 export interface ITestObj {
   obj: <T>(schema: TTestObjFnSchema<T>) => (arg: unknown) => arg is NonNullable<T>;
   objarr: <T>(schema: TTestObjFnSchema<T>) => (arg: unknown) => arg is NonNullable<T[]>;
-  val: <T>(val: unknown, typeObj: TAllTypeObjects<T>) => T
+  val: <T>(typeObj: TAllTypeOptions<T>) => (arg: unknown) => T;
 }

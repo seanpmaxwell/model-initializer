@@ -126,9 +126,13 @@ console.log(result)
 
 
 // Test test.val function
-const value = JSON.stringify([1,2,3]),
-  transformed = MI.test.val<number[]>(value, { type: 'number[]', transform: 'json' })
-console.log(transformed)
+const checkAndTransform = MI.test.val<number[]>({ type: 'number[]', transform: 'json' }),
+  value = JSON.stringify([1,2,3]);
+console.log(checkAndTransform(value))
+
+const checkAndTransform2 = MI.test.val<string[]>('string[]'),
+  value2 = ['a','b','c'];
+console.log(checkAndTransform2(value2))
 
 // Test errors
 

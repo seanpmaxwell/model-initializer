@@ -136,7 +136,8 @@ User.isValid('user'); // should throw Error
 #### The `MI.test` object
 - Creating validator functions for object properties can get a little tedious, that's why is decided to include the `obj()` function on the `test` object. `obj()` works very similar to `isValid` and just like `init` you pass it a generic along with an array of properties but the `default:` prop is not required since we're only dealing with type-validation and not setting any values. The quick start above contains an example of `obj()` in action. I've found that the `obj()` very useful even outside of my database models. I use it for validation on the back-end in my routing layer for checking incoming API objects not attached to db-models.
 - `objarr` works just like `obj` except it expects an array of objects and applies the validator function to each item in the array.
-- You can test individual values with the `val` function. Simply pass the value you want to check and a type-object `MI.test.val<number>(value, {type: number})`. Unlike `obj` and `objarr` though, this returns the value itself with type-safety (and the transformed value if you passed the `transform` prop) and not a validator-function.
+- You can test individual values with the `val` function. Simply pass a single type-object or string `MI.test.val<number>({type: number})`. Unlike `obj` and `objarr` though, this returns a validator-function that returns the value itself (and the transformed value if you passed the `transform` prop) and not a boolean.
+- Please look at the `test/index.ts` file to see examples of `MI.test`.
 
 
 ### Setting your own clone function

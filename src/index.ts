@@ -1,6 +1,6 @@
 import processType from './processType';
 import setupGetNew from './setupGetNew';
-import { ITestObj, TModelSchema, TTestObjFnSchema, TAllTypeObjects } from './types';
+import { ITestObj, TModelSchema, TTestObjFnSchema, TAllTypeOptions } from './types';
 import { validateDefaults, validateObj, validateProp } from './validator-fns';
 
 
@@ -67,17 +67,20 @@ export class ModelInitializer {
         return true;
       };
     },
-    val<T>(val: unknown, typeProp: TAllTypeObjects<T>): T {
-      const propName = JSON.stringify(val),
-        typeObj = processType(propName, typeProp);
-      if (!!typeObj.transform) {
-        val = typeObj.transform(val);
+    val<T>(typeProp: TAllTypeOptions<T>) {
+      const typeObj = processType('the value from val()', typeProp);
+      return (arg: unknown) => {
+        if (!!typeObj.transform) {
+          arg = typeObj.transform(arg);
+        }
+        if (validateProp(typeObj, arg)) {
+          return arg as T;
+        } else {
+          const propName = JSON.stringify(arg)
+          throw new Error(propName + ' validate failed');
+        }
       }
-      if (validateProp(typeObj, val)) {
-        return val as T;
-      } else {
-        throw new Error(propName + ' validate failed');
-      }
+
     }
   }
 
