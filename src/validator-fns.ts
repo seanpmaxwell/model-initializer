@@ -52,8 +52,14 @@ export function validateObj<T>(schema: TModelSchema<T> | TTestObjFnSchema<T>) {
       throw new Error(Errors.modelInvalid());
     }
     for (const key in schema) {
-      const val = (arg as Record<string, unknown>)[key],
-        typeObj = typeMap[key];
+      const typeObj = typeMap[key];
+      // Apply the transform function
+      const argg: any = arg;
+      if (argg[key] !== undefined && !!typeObj.transform) {
+        argg[key] = typeObj.transform(argg[key]);
+      }
+      const val = argg[key];
+      // Run validation
       validateProp(typeObj, val)
     }
     return true;
@@ -119,7 +125,12 @@ export function _validateCore(typeObj: ITypeObj, val: unknown): boolean {
     if ((typeof val !== 'string') || !COLOR_RGX.test(val)) {
       throw new Error(Errors.email(propName));
     }
-  // Check base type
+  // Check number type
+  } else if (typeObj.type === 'number') {
+    if (typeof val !== 'number' || isNaN(val)) {
+      throw new Error(Errors.default(propName));
+    }
+  // Check rest
   } else if (typeof val !== typeObj.type) {
     throw new Error(Errors.default(propName));
   }

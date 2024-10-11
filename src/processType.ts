@@ -1,6 +1,7 @@
 
 interface ISchemaType {
   type: string;
+  transform?: (arg: unknown) => typeof arg;
   refine?: ((arg: unknown) => boolean) | string[] | number[];
 }
 
@@ -16,6 +17,7 @@ export interface ITypeObj {
   isDate: boolean;
   isRelationalKey: boolean;
   isColor: boolean;
+  transform?: (arg: unknown) => typeof arg;
   refine?: (arg: unknown) => boolean;
 }
 
@@ -37,7 +39,8 @@ function processType(
     isRelationalKey = false,
     isEmail = false,
     _default = undefined,
-    isColor = false;
+    isColor = false,
+    transform;
   // Check
   if (!schemaType) {
     throw new Error('schema property should not be falsey')
@@ -55,6 +58,9 @@ function processType(
       } else if (Array.isArray(refine_) && refine_.length > 0) {
         refine = (arg: unknown) => refine_.some(item => item === arg);
       }
+    }
+    if ('transform' in schemaType && typeof schemaType.transform === 'function') {
+      transform = schemaType.transform; 
     }
     // Setup the default value
     if ('default' in schemaType) {
@@ -105,6 +111,7 @@ function processType(
     isRelationalKey,
     isColor,
     refine,
+    transform,
   };
 }
 

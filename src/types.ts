@@ -5,7 +5,8 @@ type Flatten<T> = (T extends any[] ? T[number] : NonNullable<T>);
 // Setup the type object
 type TRefine<Prop> = (arg: unknown) => arg is Prop;
 type TTypeObj<Prop, TType> = {
-  type: TType; 
+  type: TType;
+  transform?: (arg: unknown) => Prop;
   default?: Prop;
   refine?: (
     Flatten<Prop> extends string 
@@ -50,17 +51,17 @@ type TEmailFull<Prop> = TEmail<Prop> | TTypeObj<Prop, TEmail<Prop>>;
 type TColorFull<Prop> = TColor<Prop> | TTypeObj<Prop, TColor<Prop>>;
 type TRelKeyFull<Prop> = 'pk' | (null extends Prop ? ('fk | null' | { type: 'fk | null', default: null }) : 'fk');
 
-// Setup object full
-type TObjFull<Prop> = {
-  type: 'object'; 
+// Setup object full, "Default is required for basic obj"
+type TObjFull<Prop> = ({
+  type: 'object';
   default: Prop;
-  refine: TRefine<Prop>;
-// Allow other object types to have optional default, refine still required
 } | {
   type: TObj<Prop>;
   default?: Prop;
+}) & ({
+  transform?: (arg: unknown) => Prop;
   refine: TRefine<Prop>;
-}
+})
 
 // BaseTypes
 export type TModelSchema<T> = {

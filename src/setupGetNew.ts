@@ -24,8 +24,8 @@ function setupGetNew<T>(
     // Loop array
     const retVal = {} as any;
     for (const key in schema) {
-      const val = arg[key],
-        typeObj = typeMap[key];
+      const typeObj = typeMap[key],
+        val = arg[key];
       // If the value is null and the property is optional, skip adding it
       if (val === null && typeObj.optional) {
         continue;
@@ -39,11 +39,16 @@ function setupGetNew<T>(
             retVal[key] = _getDefault(typeObj);
           }
         }
-      // Validate and copy the value if its there
-      } else {
-        validateProp(typeObj, val)
-        retVal[key] = cloneFn(val, typeObj.isDate);
+        continue;
       }
+      // Apply the transform function
+      const argg: any = arg;
+      if (!!typeObj.transform) {
+        argg[key] = typeObj.transform(val);
+      }
+      // Validate and add
+      validateProp(typeObj, argg[key])
+      retVal[key] = cloneFn(argg[key], typeObj.isDate);
     }
     // Return
     return retVal;

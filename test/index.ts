@@ -23,6 +23,7 @@ export interface IUser {
   color2: string;
   orderDir: string;
   adminType: number;
+  page: number;
 }
 
 interface IAvatar {
@@ -73,11 +74,12 @@ const User = MI.init<IUser>({
     refine: (arg: unknown): arg is IUser['color2'] => Vldt.color(arg),
   },
   orderDir: { type: 'string', refine: ['asc', 'desc', ''] },
-  adminType: { type: 'number', refine: [1, 2, 0] }
+  adminType: { type: 'number', refine: [1, 2, 0] },
+  page: { type: 'number', transform: arg => Number(arg) }
 });
 
 // Print results
-const user1 = User.new({ id: 1234, avatar3: null });
+const user1 = User.new({ id: 1234, avatar3: null, page: '1234' as any });
 console.log(user1)
 
 

@@ -81,6 +81,7 @@ User.isValid('user'); // should throw Error
   type: 'string' | 'number' ...etc;
   default?: YourModel[keyof YourModel];
   refine?: (arg: unknown) => arg is YourModel[keyof YourModel] OR you can pass a string or number array;
+  transform?: (arg: unknown) => T
 }
 ```
 - `type`: The root types are `'string' | 'number' | 'boolean' | 'date' | object | email | color`
@@ -91,6 +92,7 @@ User.isValid('user'); // should throw Error
 - `refine`: optional for all types but required in those which include `object` (i.e. `?object[]`).
   - This function will always be called if truthy and will be used in `new` and `isValid` to validate a value.
   - For each `string` or `number` type, you can also pass string or number array to `refine` instead of a function. The validation check will make sure that the value is included in the array.
+- `transform`: you might want to transform a value before validating it or setting in the new function. You can pass the optional `transform` function which will receive an unknown type and must return the a typesafe value. For example, maybe you received a string value over an API call and you want it transformed into a `number` or you want to run `JSON.parse`. Note that transform will run before validation is done and manipulate the original object being passed with the new value. If the key is absent from the object, then `transform` will be skipped.
 
 ### Nullable 
 - `| null` means that null is a valid value regardless of what's set by type.
