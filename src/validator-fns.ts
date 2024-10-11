@@ -102,7 +102,7 @@ export function _validateCore(typeObj: ITypeObj, val: unknown): boolean {
     return true;
   // Check Date
   } else if (typeObj.isDate) {
-    if (!isNaN(new Date(val as any).getTime())) {
+    if (isNaN(new Date(val as any).getTime())) {
       throw new Error(Errors.notValidDate(propName));
     }
   // Check email, empty string is allowd
