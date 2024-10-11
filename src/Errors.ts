@@ -42,4 +42,7 @@ export default {
   email(propName: string) {
     return `Property "${propName}" must be an empty string or valid email`;
   },
+  color(propName: string) {
+    return `Property "${propName}" must be valid color hex string i.e. "#FFFFFF"`;
+  },
 } as const;

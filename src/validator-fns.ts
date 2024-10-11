@@ -118,7 +118,7 @@ export function _validateCore(typeObj: ITypeObj, val: unknown): boolean {
   // Check color, empty string is not allowed
   } else if (typeObj.isColor) {
     if ((typeof val !== 'string') || !COLOR_RGX.test(val)) {
-      throw new Error(Errors.email(propName));
+      throw new Error(Errors.color(propName));
     }
   // Check number type
   } else if (typeObj.type === 'number') {

@@ -130,9 +130,14 @@ const checkAndTransform = MI.test.val<number[]>({ type: 'number[]', transform: '
   value = JSON.stringify([1,2,3]);
 console.log(checkAndTransform(value))
 
-const checkAndTransform2 = MI.test.val<string[]>('string[]'),
+const check2 = MI.test.val<string[]>('string[]'),
   value2 = ['a','b','c'];
-console.log(checkAndTransform2(value2))
+console.log(check2(value2))
+
+
+const checkColor = MI.test.val<string>('color'),
+  valueColor = '#ffffffhor';
+console.log(checkColor(valueColor))
 
 // Test errors
 
