@@ -16,11 +16,11 @@ type TTypeObj<Prop, TType> = {
     : Refine<Prop>
   );
   transform?: (
-    Flatten<Prop> extends string 
+    NonNullable<Prop> extends string 
     ? (Transform<Prop> | 'auto' | 'json')
-    : Flatten<Prop> extends number 
+    : NonNullable<Prop> extends number 
     ? (Transform<Prop> | 'auto' | 'json')
-    : Flatten<Prop> extends boolean 
+    : NonNullable<Prop> extends boolean 
     ? (Transform<Prop> | 'auto' | 'json')
     : (Transform<Prop> | 'json')
   );

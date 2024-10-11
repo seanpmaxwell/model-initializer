@@ -34,6 +34,8 @@ export interface IUser {
   status: Status;
   statuses?: Status[];
   boo: boolean;
+  booOpt?: boolean | null;
+  booArr: boolean[];
 }
 
 interface IAvatar {
@@ -95,6 +97,8 @@ const User = MI.init<IUser>({
   status: 'number',
   statuses: '?number[]',
   boo: { type: 'boolean', transform: arg => Boolean(arg) },
+  booOpt: { type: '?boolean | null', transform: 'auto' },
+  booArr: { type: 'boolean[]', transform: () => [] },
 });
 
 // Print results
