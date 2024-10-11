@@ -56,7 +56,7 @@ export const Vldt = {
   },
   objarr<T>(schema: TTestObjFnSchema<T>) {
     const validate = validateObj<T>(schema);
-    return (arg: unknown[]): arg is NonNullable<T>[] => {
+    return (arg: unknown): arg is NonNullable<T>[] => {
       if (!Array.isArray(arg)) {
         return false;
       }
