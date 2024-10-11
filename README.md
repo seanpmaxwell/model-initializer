@@ -8,7 +8,7 @@
   - `new()` let's us create new object using a partial of your model and defaults from the array. Defaults are deep-cloned before being added. The returned value is a full (not partial) object of your schema (minus certain optional ones, see the guide).
   - `isValid()` accepts an unknown argument and throws errors if they do not match the required schema.
 - Just to point out I know there are tons of schema validation libraries out there, but I wanted something that would both validate a schema, let me setup new instances using partials and defaults, and which would allow me to typesafe any properties I tried to add to the schema using an `interface`.
-- By default the `Date()` constructor is used for date validation and `structuredClone()` is used for deep cloning values. I know some older versions of node don't supported `structuredClone()` and most people have fancier libraries for handling dates, so you can set your own date/clone functions if you want: see the last section.
+- By default `structuredClone()` is used for deep cloning values. I know some older versions of node don't supported `structuredClone()`, so you can set your own clone function if you want: see the last section.
 <br/>
 
 
