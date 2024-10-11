@@ -47,8 +47,9 @@ function setupGetNew<T>(
         argg[key] = typeObj.transform(val);
       }
       // Validate and add
-      validateProp(typeObj, argg[key])
-      retVal[key] = cloneFn(argg[key], typeObj.isDate);
+      if (validateProp(typeObj, argg[key])) {
+        retVal[key] = cloneFn(argg[key], typeObj.isDate);
+      }
     }
     // Return
     return retVal;
@@ -58,7 +59,7 @@ function setupGetNew<T>(
 /**
  * Get the default value non including relational keys.
  */
-function _getDefault<T>(typeObj: ITypeObj) {
+function _getDefault(typeObj: ITypeObj) {
   if (typeObj.isArr) {
     return [];
   } else if (typeObj.type === 'string' || typeObj.type === 'email') {

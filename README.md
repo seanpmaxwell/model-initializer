@@ -17,7 +17,7 @@
 - Create a type to represent your model and an array of objects. `init` requires 1 generic so pass it the type and the array.
 
 ```typescript
-import MI, { Vldt } from 'model-initializer';
+import MI from 'model-initializer';
 
 // User as it appears in the database
 export interface IUser {
@@ -35,7 +35,7 @@ export interface IUser {
 }
 
 // Check is valid avatar
-const isAvatar = Vldt.obj<IUser['avatar']>({
+const isAvatar = MI.test.obj<IUser['avatar']>({
   fileName: 'string',
   data: 'string',
 });
@@ -133,19 +133,10 @@ User.isValid('user'); // should throw Error
 ### Validation
 - Validation of values and not just types will be done both in the `isValid` function and in the `new` function before setting a value passed from a partial. Default values (if you passed your own custom default) will also be validated. The reason I decided to make it throw errors instead of just return a boolean is so we can read the name of the property that failed and see exactly where the validation failed. If you don't want it throw errors you should wrap `isValid` and `new` in `try/catch` blocks and handle the error message and values manually.
 
-#### The `Vldt` object
-- This library exports the `Vldt` object so you can access the functions used for validation.
-- The main ones are `time`, `date`, `email`, and `color`. More may get added over time.
-- The two types that require regex validation are `color` and `email`.
-```typescript
-import { Vldt } from 'model-initializer';
-Vldt.email('...') // returns boolean;
-Vldt.color('...') // returns boolean;
-```
-
-#### Vldt.obj() and Vldt.objarr() Functions
-- Creating validator functions for object properties can get a little tedious, that's why is decided to include the `obj()` function on the `Vldt` object. `obj()` works very similar to `isValid` and just like `init` you pass it a generic along with an array of properties but the `default:` prop is not required since we're only dealing with type-validation and not setting any values. The quick start above contains an example of `obj()` in action. I've found that the `obj()` very useful even outside of my database models. I use it for validation on the back-end in my routing layer for checking incoming API objects not attached to db-models.
+#### The `MI.test` object
+- Creating validator functions for object properties can get a little tedious, that's why is decided to include the `obj()` function on the `test` object. `obj()` works very similar to `isValid` and just like `init` you pass it a generic along with an array of properties but the `default:` prop is not required since we're only dealing with type-validation and not setting any values. The quick start above contains an example of `obj()` in action. I've found that the `obj()` very useful even outside of my database models. I use it for validation on the back-end in my routing layer for checking incoming API objects not attached to db-models.
 - `objarr` works just like `obj` except it expects an array of objects and applies the validator function to each item in the array.
+- You can test individual values with the `val` function. Simply pass the value you want to check and a type-object `MI.test.val<number>(value, {type: number})`. Unlike `obj` and `objarr` though, this returns the value itself with type-safety (and the transformed value if you passed the `transform` prop) and not a validator-function.
 
 
 ### Setting your own clone function

@@ -7,11 +7,6 @@ import processType, { ITypeObj } from './processType';
 const EMAIL_RGX = /^(?!\.)(?!.*\.\.)([A-Z0-9_'+\-\.]*)[A-Z0-9_+-]@([A-Z0-9][A-Z0-9\-]*\.)+[A-Z]{2,}$/i;
 const COLOR_RGX = new RegExp(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)
 
-// Simple Functions
-export const vldtEmail = (val: unknown) => typeof val === 'string' && EMAIL_RGX.test(val);
-export const vldtColor = (val: unknown) => typeof val === 'string' && COLOR_RGX.test(val);
-export const vldtDate = (arg: unknown) => !isNaN(new Date(arg as any).getTime());
-
 
 /**
  * Validate Defaults and make sure refine is there for objects
@@ -107,7 +102,7 @@ export function _validateCore(typeObj: ITypeObj, val: unknown): boolean {
     return true;
   // Check Date
   } else if (typeObj.isDate) {
-    if (!vldtDate(val)) {
+    if (!isNaN(new Date(val as any).getTime())) {
       throw new Error(Errors.notValidDate(propName));
     }
   // Check email, empty string is allowd

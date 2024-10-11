@@ -102,18 +102,29 @@ type TObjFulls<Prop> = {
   type: TObjs<Prop>; 
 } & Pick<TTypeObj<Prop, TObj<Prop>>, 'refine' | 'transform'>;
 
+export type TAllTypeObjects<Prop> = (
+  Flatten<Prop> extends boolean
+  ? TBoolFulls<Prop>
+  : Flatten<Prop> extends number
+  ? TNumFulls<Prop>
+  : Flatten<Prop> extends string
+  ? (TStrFulls<Prop> | TEmailFulls<Prop> | TColorFulls<Prop>)
+  : Flatten<Prop> extends Date
+  ? TDateFulls<Prop>
+  : Flatten<Prop> extends object
+  ? TObjFulls<Prop>
+  : never
+) 
+
 export type TTestObjFnSchema<T> = {
-  [K in keyof T]: (
-    Flatten<T[K]> extends boolean
-    ? TBoolFulls<T[K]>
-    : Flatten<T[K]> extends number
-    ? TNumFulls<T[K]>
-    : Flatten<T[K]> extends string
-    ? (TStrFulls<T[K]> | TEmailFulls<T[K]> | TColorFulls<T[K]>)
-    : Flatten<T[K]> extends Date
-    ? TDateFulls<T[K]>
-    : Flatten<T[K]> extends object
-    ? TObjFulls<T[K]>
-    : never
-  )
+  [K in keyof T]: TAllTypeObjects<T[K]>;
 };
+
+
+// **** Test Object **** //
+
+export interface ITestObj {
+  obj: <T>(schema: TTestObjFnSchema<T>) => (arg: unknown) => arg is NonNullable<T>;
+  objarr: <T>(schema: TTestObjFnSchema<T>) => (arg: unknown) => arg is NonNullable<T[]>;
+  val: <T>(val: unknown, typeObj: TAllTypeObjects<T>) => T
+}

@@ -1,4 +1,4 @@
-import MI, { ModelInitializer, Vldt, TObjSchema } from '../src';
+import MI, { ModelInitializer, TObjSchema } from '../src';
 
 
 enum Status {
@@ -54,7 +54,7 @@ const a: TObjSchema<IAvatar> = {
 };
 
 // Create check avatar function
-const checkAvatar = Vldt.obj<IUser['avatar']>({
+const checkAvatar = MI.test.obj<IUser['avatar']>({
   ...a,
 });
 
@@ -89,7 +89,7 @@ const User = MI.init<IUser>({
   color: 'color',
   color2: {
     type: 'string',
-    refine: (arg: unknown): arg is IUser['color2'] => Vldt.color(arg),
+    refine: (arg: unknown): arg is IUser['color2'] => typeof arg === 'string',
   },
   orderDir: { type: 'string', refine: ['asc', 'desc', ''] },
   adminType: { type: 'number', refine: [1, 2, 0] },
@@ -101,7 +101,8 @@ const User = MI.init<IUser>({
   booArr: { type: 'boolean[]', transform: () => [] },
 });
 
-// Print results
+
+// Check "new()" function
 const user1 = User.new({
   id: 1234,
   avatar3: null,
@@ -109,19 +110,25 @@ const user1 = User.new({
   page: '1234' as any,
   boo: null as any,
 });
-
 console.log(user1)
 
 
-// Create check avatar function
-const checkAvatars = Vldt.objarr<IUser['avatar']>({
+// Test validating an array of objects
+const checkAvatars = MI.test.objarr<IUser['avatar']>({
   ...a,
 });
-
-const result = checkAvatars([{ fileName: '', data: '' }, { fileName: '', data: '' }, { fileName: '', data: '' }]);
+const result = checkAvatars([
+  { fileName: '', data: '' },
+  { fileName: '', data: '' },
+  { fileName: '', data: '' },
+]);
 console.log(result)
 
 
+// Test test.val function
+const value = JSON.stringify([1,2,3]),
+  transformed = MI.test.val<number[]>(value, { type: 'number[]', transform: 'json' })
+console.log(transformed)
 
 // Test errors
 
@@ -160,3 +167,8 @@ console.log(result)
 
 // Dog.new({ name: 'fido', bday: 'horse' as any })
 // User.new({ id: 1234, orderDir: 'cheese' });
+
+
+// const badValue = JSON.stringify([1,2,'horse']),
+//   badTransformed = MI.test.val<number[]>(badValue, { type: 'number[]', transform: 'json' })
+// console.log(badTransformed)

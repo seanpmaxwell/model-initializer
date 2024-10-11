@@ -1,33 +1,27 @@
+import processType from './processType';
 import setupGetNew from './setupGetNew';
-import { TModelSchema, TTestObjFnSchema } from './types';
-import { validateDefaults, validateObj, vldtColor, vldtDate, vldtEmail } from './validator-fns';
+import { ITestObj, TModelSchema, TTestObjFnSchema, TAllTypeObjects } from './types';
+import { validateDefaults, validateObj, validateProp } from './validator-fns';
 
-
-// **** ModelInitializer Class **** //
 
 interface IModelFns<T> {
   isValid: (arg: unknown) => arg is T;
   new: (arg?: Partial<T>) => T;
 }
 
+
+// **** ModelInitializer Class **** //
+
 export class ModelInitializer {
 
-  private cloneFn = <T>(arg: T, isDate: boolean): T => {
-    if (isDate) {
-      return new Date(arg as any) as T;
-    } else if (!!arg && typeof arg === 'object') {
-      return structuredClone(arg);
-    } else {
-      return arg;
-    }
-  };
-
+  // Constructor
   constructor(cloneFn?: <T>(arg: T) => T) {
     if (!!cloneFn) {
       this.cloneFn = cloneFn;
     }
   }
 
+  // Initialize a schema function
   public init<T>(props: TModelSchema<T>): IModelFns<T> {
     validateDefaults(props);
     const validate = validateObj<T>(props),
@@ -41,33 +35,54 @@ export class ModelInitializer {
       },
     };
   }
-}
 
+  // cloneFn
+  private cloneFn = <T>(arg: T, isDate: boolean): T => {
+    if (isDate) {
+      return new Date(arg as any) as T;
+    } else if (!!arg && typeof arg === 'object') {
+      return structuredClone(arg);
+    } else {
+      return arg;
+    }
+  };
 
-// **** Validator Object **** //
-
-export const Vldt = {
-  time: vldtDate,
-  email: vldtEmail,
-  color: vldtColor,
-  obj<T>(schema: TTestObjFnSchema<T>) {
-    const validate = validateObj<T>(schema);
-    return (arg: unknown): arg is NonNullable<T> => validate(arg);
-  },
-  objarr<T>(schema: TTestObjFnSchema<T>) {
-    const validate = validateObj<T>(schema);
-    return (arg: unknown): arg is NonNullable<T>[] => {
-      if (!Array.isArray(arg)) {
-        return false;
-      }
-      for (const item of arg) {
-        if (!(validate(item))) {
+  // Static Test Object
+  public static readonly Test: ITestObj = {
+    obj<T>(schema: TTestObjFnSchema<T>) {
+      const validate = validateObj<T>(schema);
+      return (arg: unknown): arg is NonNullable<T> => validate(arg);
+    },
+    objarr<T>(schema: TTestObjFnSchema<T>) {
+      const validate = validateObj<T>(schema);
+      return (arg: unknown): arg is NonNullable<T>[] => {
+        if (!Array.isArray(arg)) {
           return false;
         }
+        for (const item of arg) {
+          if (!(validate(item))) {
+            return false;
+          }
+        }
+        return true;
+      };
+    },
+    val<T>(val: unknown, typeProp: TAllTypeObjects<T>): T {
+      const propName = JSON.stringify(val),
+        typeObj = processType(propName, typeProp);
+      if (!!typeObj.transform) {
+        val = typeObj.transform(val);
       }
-      return true;
-    };
-  },
+      if (validateProp(typeObj, val)) {
+        return val as T;
+      } else {
+        throw new Error(propName + ' validate failed');
+      }
+    }
+  }
+
+  // Dynamic test object
+  public readonly test: ITestObj = { ...ModelInitializer.Test };
 }
 
 
