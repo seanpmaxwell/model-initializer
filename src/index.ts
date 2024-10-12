@@ -70,7 +70,7 @@ export class ModelInitializer {
     val<T>(typeProp: TAllTypeOptions<T>) {
       const typeObj = processType('the value from val()', typeProp);
       return (arg: unknown) => {
-        if (!!typeObj.transform) {
+        if (arg !== undefined && !!typeObj.transform) {
           arg = typeObj.transform(arg);
         }
         if (validateProp(typeObj, arg)) {
