@@ -3,10 +3,11 @@
 <br/>
 
 ## Summary
-- This library's default export is a module that holds 2 properties `init` and `test`. `init` is the heart of the library, `test` contains helper functions, see the second to last section.
-- When you pass `init` a generic and an object used to represent your schema, it gives you back an object with 2 functions: `new` and `isValid` in which typesafety is enforced by the generic you passed.
-  - `new()` let's us create new object using a partial of your model and defaults from the array. Defaults are deep-cloned before being added. The returned value is a full (not partial) object of your schema (minus certain optional ones, see the guide).
-  - `isValid()` accepts an unknown argument and throws errors if they do not match the required schema.
+- This library's default export is an object that holds several properties. The main one `init` is the heart of the library, we'll talk about the other ones later.
+- To call `init` you must pass a generic and an object used to represent your schema (i.e. `init<IUser>({ name: 'string' })`) it gives you back an object with 3 functions: `new`, `isValid`, and `vldt`. For all 3, typesafety is enforced by the generic you passed.
+  - `new` let's us create new object using a partial of your model and returns a full complete object. For missing keys, values are supplied by defaults which you can optionally configure. Defaults are deep-cloned before being added.
+  - `isValid` accepts an unknown argument and throws errors if they do not match the schema requirements.
+  - `vldt("prop")` extracts the validation logic for a single property and returns a validator-function. The property passed must be a key of the the generic passed to `init`. However, one difference is that `undefined` will not be accepted as a valid value even if the property is optional.
 - Just to point out I know there are tons of schema validation libraries out there, but I wanted something that would both validate a schema, let me setup new instances using partials and defaults, and which would allow me to typesafe any properties I tried to add to the schema using an `interface`.
 - By default `structuredClone()` is used for deep cloning values. I know some older versions of node don't supported `structuredClone()`, so you can set your own clone function if you want: see the last section.
 <br/>
@@ -34,12 +35,6 @@ export interface IUser {
   avatar?: { fileName: string; data: string };
 }
 
-// Check is valid avatar
-const isAvatar = MI.test.obj<IUser['avatar']>({
-  fileName: 'string',
-  data: 'string',
-});
-
 // Setup "User schema"
 const User = MI.init<IUser>({
   id: 'pk',
@@ -50,11 +45,19 @@ const User = MI.init<IUser>({
   lastLogin: 'date | null',
   created: 'date',
   active: 'boolean',
-  avatar: { type: '?object', refine: isAvatar },
+  avatar: {
+    type: '?object',
+    refine: MI.test<IUser['avatar']>({
+      fileName: 'string',
+      data: 'string',
+    }),
+  },
   children: 'string[]',
 });
 
+User.isValid('user'); // should throw Error
 const user1 = User.new({ name: 'john' });
+console.log(user1)
 // {
 //   id: -1,
 //   name: 'john',
@@ -66,7 +69,7 @@ const user1 = User.new({ name: 'john' });
 //   boss: null,
 //   children: []
 // }
-User.isValid('user'); // should throw Error
+const validateAvatar = User.vldt('avatar');
 ```
 <br/>
 
@@ -94,17 +97,14 @@ User.isValid('user'); // should throw Error
   - For each `string` or `number` type, you can also pass string or number array to `refine` instead of a function. The validation check will make sure that the value is included in the array.
 - `transform`: you might want to transform a value before validating it or setting in the new function. You can pass the optional `transform` property. Transform will run before validation is done and manipulate the original object being passed with a new value. If the key is absent from the object, then `transform` will be skipped. To give an example, maybe you received a string value over an API call and you want it transformed into a `number` or you want to run `JSON.parse`.
   - `transform` can be a a function `(arg: unknown) => "typesafe value"`, `auto` or `json`.
-  - `auto` can work for `number`, `string` or `boolean` base-types is short for doing `(arg: unknown) => "Base-Type ie Number"(arg)`
+  - `auto` can work for `number`, `string` or `boolean` base-types and is short for doing `(arg: unknown) => "Base-Type i.e. Number"(arg)` 
   - `json` can be applied to any type and is short for doing `(arg: unknown) => JSON.parse(arg)`
   - Note that transform will NOT be applied to the default values.
-```typescript
-  avatar: { type: 'object', refine: _someFun, transform: 'json' },
-```
 
 ### Nullable 
 - `| null` means that null is a valid value regardless of what's set by type.
-- If a property is nullable and optional, then a property whose value is null will be skipped in the `new()` function
-- When `new` is called, if a `object` is not optional, but is nullable, and no default is supplied, then null will be used
+- If a property is nullable and optional, then a property whose value is null will be skipped in the `new()` function.
+- When `new` is called, if a `object` is not optional, but is nullable, and no default is supplied, then null will be used.
 
 ### Defaults (only relevant to the "new" function)
 - When using `new`, if you supply a default then that will be always be used regardless if the value is optional or not. 
@@ -123,6 +123,7 @@ User.isValid('user'); // should throw Error
 ### Arrays/Emails/Colors
 - Validation only works for one-dimensional arrays. If you have nested arrays set the type to `object` and write your own `refine` function.
 - There is a built-in regex to check the email and color formats. If you want to use your own, set the type to string and pass your own `refine` function. Note that an empty string counts as a valid email and will be used as the default value if the email is not optional.
+- All regexes used for validation can be accessed via the `rgxs` prop and you don't need to call `.test`: `MI.rgxs.email("some string")`
 
 ### PK (primary-key) and FK (foreign-key)
 - These are used to represent relational database keys:
@@ -133,12 +134,8 @@ User.isValid('user'); // should throw Error
 ### Validation
 - Validation of values and not just types will be done both in the `isValid` function and in the `new` function before setting a value passed from a partial. Default values (if you passed your own custom default) will also be validated. The reason I decided to make it throw errors instead of just return a boolean is so we can read the name of the property that failed and see exactly where the validation failed. If you don't want it throw errors you should wrap `isValid` and `new` in `try/catch` blocks and handle the error message and values manually.
 
-#### The `MI.test` object
-- Creating validator functions for object properties can get a little tedious, that's why is decided to include the `obj()` function on the `test` object. `obj()` works very similar to `isValid` and just like `init` you pass it a generic along with an array of properties but the `default:` prop is not required since we're only dealing with type-validation and not setting any values. The quick start above contains an example of `obj()` in action. I've found that the `obj()` very useful even outside of my database models. I use it for validation on the back-end in my routing layer for checking incoming API objects not attached to db-models.
-- `objarr` works just like `obj` except it expects an array of objects and applies the validator function to each item in the array.
-- You can test individual values with the `val` function. Simply pass a single type-object or string `MI.test.val<number>({type: number})`. Unlike `obj` and `objarr` though, this returns a validator-function that returns the value itself (and the transformed value if you passed the `transform` prop) and not a boolean.
-- Please look at the `test/index.ts` file to see examples of `MI.test`.
-
+#### The `MI.test()` function
+- Creating validator functions for object properties can get a little tedious, that's why is decided to include the `test()` function. `test()` works very similar to `isValid` and just like `init` you pass it a generic along with an array of properties but the `default:` prop is not required since we're only dealing with type-validation and not setting any values. The quick start above contains an example of `test()` in action. I've found that the `obj()` very useful even outside of my database models. I use it for validation on the back-end in my routing layer for checking incoming API objects not attached to db-models.
 
 ### Setting your own clone function
 - If you want to forgo using `structuredClone()`, then you will need to pass your own `clone`, functions to init:

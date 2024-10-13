@@ -1,42 +1,74 @@
+import Errors from './Errors';
 import processType from './processType';
+import Regexes from './Regexes';
 import setupGetNew from './setupGetNew';
-import { ITestObj, TModelSchema, TTestObjFnSchema, TAllTypeOptions } from './types';
+import { TModelSchema, TTestFnSchema } from './types';
 import { validateDefaults, validateObj, validateProp } from './validator-fns';
-
-
-interface IModelFns<T> {
-  isValid: (arg: unknown) => arg is T;
-  new: (arg?: Partial<T>) => T;
-}
 
 
 // **** ModelInitializer Class **** //
 
 export class ModelInitializer {
 
-  // Constructor
+  // Readonly fields
+
+  public readonly rgxs = { ...Regexes };
+
+  /**
+   * Constructor
+   */
   constructor(cloneFn?: <T>(arg: T) => T) {
     if (!!cloneFn) {
       this.cloneFn = cloneFn;
     }
   }
 
-  // Initialize a schema function
-  public init<T>(props: TModelSchema<T>): IModelFns<T> {
-    validateDefaults(props);
-    const validate = validateObj<T>(props),
-      getNew = setupGetNew<T>(props, this.cloneFn);
+  /**
+   * Initialize a schema function
+   */
+  public init<T>(schema: TModelSchema<T>) {
+    // Process types
+    const typeMap = {} as Record<any, any>;
+    for (const key in schema) {
+      const schemaKey = schema[key];
+      typeMap[key] = processType(key, schemaKey);
+    }
+    // Setup functions
+    validateDefaults(schema, typeMap);
+    const isValid = validateObj<T>(schema, typeMap),
+      getNew = setupGetNew<T>(schema, typeMap, this.cloneFn);
+    // Return
     return {
-      isValid(arg: unknown): arg is T {
-        return validate(arg);
-      },
-      new(arg?: Partial<T>): T {
-        return getNew(arg);
-      },
+      isValid,
+      new: (arg?: Partial<T>) => getNew(arg),
+      vldt(prop: keyof T) {
+        const typeObj = typeMap[prop];
+        return (arg: unknown): arg is NonNullable<T[typeof prop]> => {
+          if (arg === undefined) {
+            throw new Error(Errors.propMissing(String(prop)))
+          }
+          return validateProp(typeObj, arg);
+        }
+      }
     };
   }
 
-  // cloneFn
+  /**
+   * Test an object schema
+   */
+  public test<T>(schema: TTestFnSchema<T>) {
+    const typeMap = {} as Record<any, any>;
+    for (const key in schema) {
+      const schemaKey = schema[key];
+      typeMap[key] = processType(key, schemaKey);
+    }
+    const validate = validateObj<T>(schema, typeMap);
+    return (arg: unknown): arg is NonNullable<T> => validate(arg);
+  }
+
+  /**
+   * cloneFn
+   */
   private cloneFn = <T>(arg: T, isDate: boolean): T => {
     if (isDate) {
       return new Date(arg as any) as T;
@@ -46,50 +78,11 @@ export class ModelInitializer {
       return arg;
     }
   };
-
-  // Static Test Object
-  public static readonly Test: ITestObj = {
-    obj<T>(schema: TTestObjFnSchema<T>) {
-      const validate = validateObj<T>(schema);
-      return (arg: unknown): arg is NonNullable<T> => validate(arg);
-    },
-    objarr<T>(schema: TTestObjFnSchema<T>) {
-      const validate = validateObj<T>(schema);
-      return (arg: unknown): arg is NonNullable<T>[] => {
-        if (!Array.isArray(arg)) {
-          return false;
-        }
-        for (const item of arg) {
-          if (!(validate(item))) {
-            return false;
-          }
-        }
-        return true;
-      };
-    },
-    val<T>(typeProp: TAllTypeOptions<T>) {
-      const typeObj = processType('the value from val()', typeProp);
-      return (arg: unknown) => {
-        if (arg !== undefined && !!typeObj.transform) {
-          arg = typeObj.transform(arg);
-        }
-        if (validateProp(typeObj, arg)) {
-          return arg as T;
-        } else {
-          const propName = JSON.stringify(arg)
-          throw new Error(propName + ' validate failed');
-        }
-      }
-
-    }
-  }
-
-  // Dynamic test object
-  public readonly test: ITestObj = { ...ModelInitializer.Test };
 }
+
 
 
 // **** Export **** //
 
-export type TObjSchema<T> = TTestObjFnSchema<T>;
+export type TObjSchema<T> = TTestFnSchema<T>;
 export default new ModelInitializer();

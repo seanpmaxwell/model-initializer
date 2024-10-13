@@ -11,15 +11,9 @@ import processType, { ITypeObj } from './processType';
  */
 function setupGetNew<T>(
   schema: TModelSchema<T>,
+  typeMap: Record<any, any>,
   cloneFn: <T>(arg: T, isDate: boolean) => T,
 ) {
-  // Process types
-  const typeMap = {} as any;
-  for (const key in schema) {
-    const schemaKey = schema[key];
-    typeMap[key] = processType(key, schemaKey);
-  }
-  // Run getNew
   return (arg: Partial<T> = {}): T => {
     // Loop array
     const retVal = {} as any;

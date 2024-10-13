@@ -1,17 +1,16 @@
 import Errors from './Errors';
-import { TModelSchema, TTestObjFnSchema } from './types';
+import Regexes from './Regexes';
+import { TModelSchema, TTestFnSchema } from './types';
 import processType, { ITypeObj } from './processType';
-
-
-// Regexes
-const EMAIL_RGX = /^(?!\.)(?!.*\.\.)([A-Z0-9_'+\-\.]*)[A-Z0-9_+-]@([A-Z0-9][A-Z0-9\-]*\.)+[A-Z]{2,}$/i;
-const COLOR_RGX = new RegExp(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)
 
 
 /**
  * Validate Defaults and make sure refine is there for objects
  */
-export function validateDefaults<T>(schema: TModelSchema<T>): boolean {
+export function validateDefaults<T>(
+  schema: TModelSchema<T>,
+  typeMap: Record<any, any>,
+): boolean {
   for (const key in schema) {
     const schemaKey = schema[key];
     if (typeof schemaKey !== 'object' || !('default' in schemaKey)) {
@@ -25,7 +24,7 @@ export function validateDefaults<T>(schema: TModelSchema<T>): boolean {
       const msg = Errors.defaultNotFoundForObj(propName);
       throw new Error(msg);
     }
-    const typeObj = processType(key, schemaKey);
+    const typeObj = typeMap[key];
     validateProp(typeObj, schemaKey.default)
   }
   return true;
@@ -34,21 +33,18 @@ export function validateDefaults<T>(schema: TModelSchema<T>): boolean {
 /**
  * Setup the validator function
  */
-export function validateObj<T>(schema: TModelSchema<T> | TTestObjFnSchema<T>) {
-  // Process types
-  const typeMap = {} as any;
-  for (const key in schema) {
-    const schemaKey = schema[key];
-    typeMap[key] = processType(key, schemaKey);
-  }
+export function validateObj<T>(
+  schema: TModelSchema<T> | TTestFnSchema<T>,
+  typeMap: Record<any, any>,
+) {
   // Run validate
-  return (arg: unknown) => {
+  return (arg: unknown): arg is T => {
     if (!arg || typeof arg !== 'object') {
       throw new Error(Errors.modelInvalid());
     }
     for (const key in schema) {
       const typeObj = typeMap[key];
-      // Apply the transform function
+      // Apply the transform function here so we can modify original object
       const argg: any = arg;
       if (argg[key] !== undefined && !!typeObj.transform) {
         argg[key] = typeObj.transform(argg[key]);
@@ -107,7 +103,7 @@ export function _validateCore(typeObj: ITypeObj, val: unknown): boolean {
     }
   // Check email, empty string is allowd
   } else if (typeObj.isEmail) {
-    if ((typeof val !== 'string') || (!!val && !EMAIL_RGX.test(val))) {
+    if ((typeof val !== 'string') || (!!val && !Regexes.email(val))) {
       throw new Error(Errors.email(propName));
     }
    // Check relational key (null should be checked for at this point)
@@ -117,7 +113,7 @@ export function _validateCore(typeObj: ITypeObj, val: unknown): boolean {
     }
   // Check color, empty string is not allowed
   } else if (typeObj.isColor) {
-    if ((typeof val !== 'string') || !COLOR_RGX.test(val)) {
+    if ((typeof val !== 'string') || !Regexes.color(val)) {
       throw new Error(Errors.color(propName));
     }
   // Check number type

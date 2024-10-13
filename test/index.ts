@@ -1,3 +1,4 @@
+
 import MI, { ModelInitializer, TObjSchema } from '../src';
 
 
@@ -36,6 +37,12 @@ export interface IUser {
   boo: boolean;
   booOpt?: boolean | null;
   booArr: boolean[];
+  address?: {
+    street: string;
+    city: string;
+    state: string;
+    zip: number;
+  },
 }
 
 interface IAvatar {
@@ -54,7 +61,7 @@ const a: TObjSchema<IAvatar> = {
 };
 
 // Create check avatar function
-const checkAvatar = MI.test.obj<IUser['avatar']>({
+const checkAvatar = MI.test<IUser['avatar']>({
   ...a,
 });
 
@@ -89,7 +96,7 @@ const User = MI.init<IUser>({
   color: 'color',
   color2: {
     type: 'string',
-    refine: (arg: unknown): arg is IUser['color2'] => typeof arg === 'string',
+    refine: (arg: unknown) => typeof arg === 'string',
   },
   orderDir: { type: 'string', refine: ['asc', 'desc', ''] },
   adminType: { type: 'number', refine: [1, 2, 0] },
@@ -99,8 +106,17 @@ const User = MI.init<IUser>({
   boo: { type: 'boolean', transform: arg => Boolean(arg) },
   booOpt: { type: '?boolean | null', transform: 'auto' },
   booArr: { type: 'boolean[]', transform: () => [] },
+  address: {
+    type: '?object',
+    default: { street: '', city: '', state: '', zip: 0 },
+    refine: MI.test<IUser['address']>({
+      street: 'string',
+      city: 'string',
+      state: 'string',
+      zip: 'number',
+    })
+  }
 });
-
 
 // Check "new()" function
 const user1 = User.new({
@@ -112,9 +128,8 @@ const user1 = User.new({
 });
 console.log(user1)
 
-
 // Test validating an array of objects
-const checkAvatars = MI.test.objarr<IUser['avatar']>({
+const checkAvatars = MI.test<IUser['avatar']>({
   ...a,
 });
 const result = checkAvatars([
@@ -125,19 +140,17 @@ const result = checkAvatars([
 console.log(result)
 
 
-// Test test.val function
-const checkAndTransform = MI.test.val<number[]>({ type: 'number[]', transform: 'json' }),
-  value = JSON.stringify([1,2,3]);
-console.log(checkAndTransform(value))
+// Extract the address validation
+User.vldt('address')({
+  street: '',
+  city: '',
+  state: '',
+  // zip: 'hello',
+  zip: 0,
+});
 
-const check2 = MI.test.val<string[]>('string[]'),
-  value2 = ['a','b','c'];
-console.log(check2(value2))
 
 
-const checkColor = MI.test.val<string>('color'),
-  valueColor = '#ffffffhor';
-console.log(checkColor(valueColor))
 
 // Test errors
 

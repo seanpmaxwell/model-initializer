@@ -5,7 +5,7 @@ type Refine<Prop> = (arg: unknown) => arg is Prop;
 type Transform<Prop> = (arg: unknown) => Prop;
 
 // Setup the type object
-type TTypeObj<Prop, TType> = {
+export type TTypeObj<Prop, TType> = {
   type: TType;
   default?: Prop;
   refine?: (
@@ -67,27 +67,32 @@ type TObjFull<Prop> = ({
 } | {
   type: TObj<Prop>;
   default?: Prop;
-}) & Pick<TTypeObj<Prop, TObj<Prop>>, 'refine' | 'transform'>;
+}) & ({
+  refine: Refine<Prop>;
+  transform?: (Transform<Prop> | 'json');
+});
+
+type TModelSchemaOpts<Prop> = (
+  Flatten<Prop> extends boolean
+  ? TBoolFull<Prop>
+  : Flatten<Prop> extends number
+  ? (TNumFull<Prop> | TRelKeyFull<Prop>)
+  : Flatten<Prop> extends string
+  ? (TStrFull<Prop> | TEmailFull<Prop> | TColorFull<Prop>)
+  : Flatten<Prop> extends Date
+  ? TDateFull<Prop>
+  : Flatten<Prop> extends object
+  ? TObjFull<Prop>
+  : never
+)
 
 // BaseTypes
 export type TModelSchema<T> = {
-  [K in keyof T]: (
-    Flatten<T[K]> extends boolean
-    ? TBoolFull<T[K]>
-    : Flatten<T[K]> extends number
-    ? (TNumFull<T[K]> | TRelKeyFull<T[K]>)
-    : Flatten<T[K]> extends string
-    ? (TStrFull<T[K]> | TEmailFull<T[K]> | TColorFull<T[K]>)
-    : Flatten<T[K]> extends Date
-    ? TDateFull<T[K]>
-    : Flatten<T[K]> extends object
-    ? TObjFull<T[K]>
-    : never
-  )
+  [K in keyof T]: TModelSchemaOpts<T[K]>;
 };
 
 
-// **** "test.obj(): function Types **** //
+// **** "test()" Function Types (remove default) **** //
 
 type TBoolFulls<Prop> = TBool<Prop> | Omit<TTypeObj<Prop, TBool<Prop>>, 'default'>;
 type TNumFulls<Prop> = TNum<Prop> | Omit<TTypeObj<Prop, TNum<Prop>>, 'default'>;
@@ -99,10 +104,12 @@ type TObjs<Prop> = TSetupTypes<Prop, '?object[] | null', 'object | null', '?obje
 
 // Setup object full
 type TObjFulls<Prop> = {
-  type: TObjs<Prop>; 
-} & Pick<TTypeObj<Prop, TObj<Prop>>, 'refine' | 'transform'>;
+  type: TObjs<Prop>;
+  refine: Refine<Prop>;
+  transform?: (Transform<Prop> | 'json');
+}
 
-export type TAllTypeOptions<Prop> = (
+type TAllTestOptions<Prop> = (
   Flatten<Prop> extends boolean
   ? TBoolFulls<Prop>
   : Flatten<Prop> extends number
@@ -116,15 +123,6 @@ export type TAllTypeOptions<Prop> = (
   : never
 ) 
 
-export type TTestObjFnSchema<T> = {
-  [K in keyof T]: TAllTypeOptions<T[K]>;
+export type TTestFnSchema<T> = {
+  [K in keyof T]: TAllTestOptions<T[K]>;
 };
-
-
-// **** Test Object **** //
-
-export interface ITestObj {
-  obj: <T>(schema: TTestObjFnSchema<T>) => (arg: unknown) => arg is NonNullable<T>;
-  objarr: <T>(schema: TTestObjFnSchema<T>) => (arg: unknown) => arg is NonNullable<T[]>;
-  val: <T>(typeObj: TAllTypeOptions<T>) => (arg: unknown) => T;
-}
