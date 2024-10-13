@@ -67,7 +67,7 @@ export class ModelInitializer {
   }
 
   /**
-   * Test an object schema
+   * Test an object schema in an array of objects
    */
   public testArr<T>(schema: TTestFnSchema<T>) {
     const validate = this.test(schema);
