@@ -136,6 +136,7 @@ const validateAvatar = User.vldt('avatar');
 
 #### The `MI.test()` function
 - Creating validator functions for object properties can get a little tedious, that's why is decided to include the `test()` function. `test()` works very similar to `isValid` and just like `init` you pass it a generic along with an array of properties but the `default:` prop is not required since we're only dealing with type-validation and not setting any values. The quick start above contains an example of `test()` in action. I've found that the `obj()` very useful even outside of my database models. I use it for validation on the back-end in my routing layer for checking incoming API objects not attached to db-models.
+- To make your life easier there is also the `MI.testArr()` function which is the same as test but returns and array of variant of the object used runs the validation against each item.
 
 ### Setting your own clone function
 - If you want to forgo using `structuredClone()`, then you will need to pass your own `clone`, functions to init:
