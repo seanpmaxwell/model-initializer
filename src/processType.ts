@@ -146,16 +146,13 @@ function _processRange(range: TRange): (arg: number) => boolean {
     return (arg: number) => arg >= 0;
   } else if (range === 'neg') {
     return (arg: number) => arg < 0;
-  } else if (isNum(range[0]) && isNum(range[1])) {
-    let a = range[0],
-      b = range[1];
-    if (a > b) {
-      const temp = a;
-      a = b;
-      b = temp;
+  } else if (typeof range[0] === 'number' && typeof range[1] === 'number') {
+    if (range[0] < range[1]) {
+      return (arg: number) => (arg >= range[0] && arg <= range[1]);
+    } else {
+      return (arg: number) => (arg >= range[0] || arg <= range[1]);
     }
-    return (arg: number) => (arg >= a && arg <= b);
-  } else if (isNum(range[1]) && typeof range[0] === 'string') {
+  } else if (typeof range[1] === 'number' && typeof range[0] === 'string') {
     if (range[0] === '<') {
       return (arg: number) => arg < range[1];
     } else if (range[0] === '<=') {
@@ -167,10 +164,6 @@ function _processRange(range: TRange): (arg: number) => boolean {
     }
   }
   throw new Error('Should not reach this point')
-}
-
-function isNum(arg: unknown): arg is number {
-  return typeof arg === 'number';
 }
 
 

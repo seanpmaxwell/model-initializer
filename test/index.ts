@@ -133,7 +133,7 @@ const user1 = User.new({
   boo: null as any,
   age: 4,
   rangeTest: 50,
-  rangeTest2: 50,
+  rangeTest2: 101,
   rangeTest3: 75,
 });
 console.log(user1)

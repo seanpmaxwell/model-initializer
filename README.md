@@ -101,6 +101,11 @@ const validateAvatar = User.vldt('avatar');
   - `auto` can work for `number`, `string` or `boolean` base-types and is short for doing `(arg: unknown) => "Base-Type i.e. Number"(arg)` 
   - `json` can be applied to any type and is short for doing `(arg: unknown) => JSON.parse(arg)`
   - Note that transform will NOT be applied to the default values.
+- Number types can also have the `range` prop. The values are:
+  - `pos`: any positive number
+  - `neg`: any negative number
+  - `[number, number]`: if the first value is less than the second value, range will check value is `>=` than the first value AND `<=` the second value. If the first value is greater than the second value, range will check value is `>=` than the first value OR `<=` the second value. 
+  - `['<' | '>' | '<=' | '>=', number]`: Will perform a comparison against the provided number `['<=', 100]`
 
 ### Nullable 
 - `| null` means that null is a valid value regardless of what's set by type.
@@ -125,13 +130,6 @@ const validateAvatar = User.vldt('avatar');
 - Validation only works for one-dimensional arrays. If you have nested arrays set the type to `object` and write your own `refine` function.
 - There is a built-in regex to check the email and color formats. If you want to use your own, set the type to string and pass your own `refine` function. Note that an empty string counts as a valid email and will be used as the default value if the email is not optional.
 - All regexes used for validation can be accessed via the `rgxs` prop and you don't need to call `.test`: `MI.rgxs.email("some string")`
-
-### Range
-- Number types can also have the `range` prop. The values are:
-  - `pos`: any positive number
-  - `neg`: any negative number
-  - `[number, number]`: will check value is `<=` than the lower value and `>=` the greater value. Order doesn't matter.
-  - `['<' | '>' | '<=' | '>=', number]`: Will perform a comparison against the provided number `['<=', 100]`
 
 ### PK (primary-key) and FK (foreign-key)
 - These are used to represent relational database keys:
