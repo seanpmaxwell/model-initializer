@@ -128,18 +128,6 @@ const user1 = User.new({
 });
 console.log(user1)
 
-// Test validating an array of objects
-const checkAvatars = MI.test<IUser['avatar']>({
-  ...a,
-});
-const result = checkAvatars([
-  { fileName: '', data: '' },
-  { fileName: '', data: '' },
-  { fileName: '', data: '' },
-]);
-console.log(result)
-
-
 // Extract the address validation
 User.vldt('address')({
   street: '',
