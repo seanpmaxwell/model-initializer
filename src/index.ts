@@ -41,9 +41,9 @@ export class ModelInitializer {
     return {
       isValid,
       new: (arg?: Partial<T>) => getNew(arg),
-      vldt(prop: keyof T) {
+      vldt<K extends keyof T>(prop: K) {
         const typeObj = typeMap[prop];
-        return (arg: unknown): arg is NonNullable<T[typeof prop]> => {
+        return (arg: unknown): arg is NonNullable<T[K]> => {
           if (arg === undefined) {
             throw new Error(Errors.propMissing(String(prop)))
           }
@@ -64,6 +64,24 @@ export class ModelInitializer {
     }
     const validate = validateObj<T>(schema, typeMap);
     return (arg: unknown): arg is NonNullable<T> => validate(arg);
+  }
+
+  /**
+   * Test an object schema
+   */
+  public testArr<T>(schema: TTestFnSchema<T>) {
+    const validate = this.test(schema);
+    return (arg: unknown): arg is NonNullable<T>[] => {
+      if (!Array.isArray(arg)) {
+        return false;
+      }
+      for (const item of arg) {
+        if (!(validate(item))) {
+          return false;
+        }
+      }
+      return true;
+    };
   }
 
   /**

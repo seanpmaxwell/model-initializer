@@ -129,15 +129,28 @@ const user1 = User.new({
 console.log(user1)
 
 // Extract the address validation
-User.vldt('address')({
+const obj: unknown = {
   street: '',
   city: '',
   state: '',
   // zip: 'hello',
   zip: 0,
+}
+if (User.vldt('address')(obj)) {
+  obj;
+}
+
+
+// Test validating an array of objects
+const checkAvatars = MI.testArr<IUser['avatar']>({
+  ...a,
 });
-
-
+const result = checkAvatars([
+  { fileName: '', data: '' },
+  { fileName: '', data: '' },
+  { fileName: '', data: '' },
+]);
+console.log(result)
 
 
 // Test errors
