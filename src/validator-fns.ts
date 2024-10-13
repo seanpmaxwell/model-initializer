@@ -1,7 +1,7 @@
 import Errors from './Errors';
 import Regexes from './Regexes';
 import { TModelSchema, TTestFnSchema } from './types';
-import processType, { ITypeObj } from './processType';
+import { ITypeObj } from './processType';
 
 
 /**
@@ -103,7 +103,7 @@ export function _validateCore(typeObj: ITypeObj, val: unknown): boolean {
     }
   // Check email, empty string is allowd
   } else if (typeObj.isEmail) {
-    if ((typeof val !== 'string') || (!!val && !Regexes.email(val))) {
+    if (!!val && !Regexes.email(val)) {
       throw new Error(Errors.email(propName));
     }
    // Check relational key (null should be checked for at this point)
@@ -113,7 +113,7 @@ export function _validateCore(typeObj: ITypeObj, val: unknown): boolean {
     }
   // Check color, empty string is not allowed
   } else if (typeObj.isColor) {
-    if ((typeof val !== 'string') || !Regexes.color(val)) {
+    if (!Regexes.color(val)) {
       throw new Error(Errors.color(propName));
     }
   // Check number type
