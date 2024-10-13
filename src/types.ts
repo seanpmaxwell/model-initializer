@@ -3,6 +3,7 @@
 type Flatten<T> = (T extends any[] ? T[number] : NonNullable<T>);
 type Refine<Prop> = (arg: unknown) => arg is Prop;
 type Transform<Prop> = (arg: unknown) => Prop;
+export type TRange = ['<' | '>' | '<=' | '>=', number] | [number, number] | 'pos' | 'neg';
 
 // Setup the type object
 export type TTypeObj<Prop, TType> = {
@@ -24,7 +25,9 @@ export type TTypeObj<Prop, TType> = {
     ? (Transform<Prop> | 'auto' | 'json')
     : (Transform<Prop> | 'json')
   );
-}
+} & (Flatten<Prop> extends number ? {
+  range?: TRange,
+} : {});
 
 // Setup Utility Types
 type TSetupArr<Prop, ArrType, Base> = 

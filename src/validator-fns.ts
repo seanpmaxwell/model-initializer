@@ -121,6 +121,9 @@ export function _validateCore(typeObj: ITypeObj, val: unknown): boolean {
     if (typeof val !== 'number' || isNaN(val)) {
       throw new Error(Errors.default(propName));
     }
+    if (!!typeObj.range && !typeObj.range(val)) {
+      throw new Error(Errors.rangeValidationFailed(propName));
+    }
   // Check rest
   } else if (typeof val !== typeObj.type) {
     throw new Error(Errors.default(propName));

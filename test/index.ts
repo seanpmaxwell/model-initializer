@@ -43,6 +43,9 @@ export interface IUser {
     state: string;
     zip: number;
   },
+  rangeTest: number;
+  rangeTest2: number;
+  rangeTest3: number;
 }
 
 interface IAvatar {
@@ -68,7 +71,7 @@ const checkAvatar = MI.test<IUser['avatar']>({
 // User schema
 const User = MI.init<IUser>({
   id: 'pk',
-  age: 'number',
+  age: { type: 'number', range: 'pos' },
   name: 'string',
   email: '?email',
   displayName: { type: '?string', default: '' },
@@ -115,7 +118,10 @@ const User = MI.init<IUser>({
       state: 'string',
       zip: 'number',
     })
-  }
+  },
+  rangeTest: { type: 'number', range: [1, 100] },
+  rangeTest2: { type: 'number', range: [100, 1] },
+  rangeTest3: { type: 'number', range: ['>=', 35] },
 });
 
 // Check "new()" function
@@ -125,6 +131,10 @@ const user1 = User.new({
   avatar5: JSON.stringify({ fileName: 'foo', data: 'bar' }) as any,
   page: '1234' as any,
   boo: null as any,
+  age: 4,
+  rangeTest: 50,
+  rangeTest2: 50,
+  rangeTest3: 75,
 });
 console.log(user1)
 

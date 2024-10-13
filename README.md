@@ -85,6 +85,7 @@ const validateAvatar = User.vldt('avatar');
   default?: YourModel[keyof YourModel];
   refine?: (arg: unknown) => arg is YourModel[keyof YourModel] OR you can pass a string or number array;
   transform?: (arg: unknown) => T
+  range?: (arg: unknown) => boolean; // Numbers only
 }
 ```
 - `type`: The root types are `'string' | 'number' | 'boolean' | 'date' | object | email | color`
@@ -124,6 +125,13 @@ const validateAvatar = User.vldt('avatar');
 - Validation only works for one-dimensional arrays. If you have nested arrays set the type to `object` and write your own `refine` function.
 - There is a built-in regex to check the email and color formats. If you want to use your own, set the type to string and pass your own `refine` function. Note that an empty string counts as a valid email and will be used as the default value if the email is not optional.
 - All regexes used for validation can be accessed via the `rgxs` prop and you don't need to call `.test`: `MI.rgxs.email("some string")`
+
+### Range
+- Number types can also have the `range` prop. The values are:
+  - `pos`: any positive number
+  - `neg`: any negative number
+  - `[number, number]`: will check value is `<=` than the lower value and `>=` the greater value. Order doesn't matter.
+  - `['<' | '>' | '<=' | '>=', number]`: Will perform a comparison against the provided number `['<=', 100]`
 
 ### PK (primary-key) and FK (foreign-key)
 - These are used to represent relational database keys:

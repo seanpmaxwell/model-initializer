@@ -1,8 +1,11 @@
+import { TRange } from './types';
+
 
 interface ISchemaType {
   type: string;
   transform?: ((arg: unknown) => typeof arg) | 'auto' | 'json';
   refine?: ((arg: unknown) => boolean) | string[] | number[];
+  range?: TRange;
 }
 
 export interface ITypeObj {
@@ -19,6 +22,7 @@ export interface ITypeObj {
   isColor: boolean;
   transform?: (arg: unknown) => typeof arg;
   refine?: (arg: unknown) => boolean;
+  range?: (arg: number) => boolean;
 }
 
 /**
@@ -40,6 +44,7 @@ function processType(
     isEmail = false,
     _default = undefined,
     isColor = false,
+    range,
     transform;
   // Check
   if (!schemaType) {
@@ -94,6 +99,7 @@ function processType(
     hasDefault = true;
     _default = null;
   }
+  // Setup transform
   if (typeof schemaType === 'object' && 'transform' in schemaType) {
     if (typeof schemaType.transform === 'function') {
       transform = schemaType.transform; 
@@ -108,6 +114,10 @@ function processType(
     } else if (schemaType.transform === 'json') {
       transform = (arg: any) => JSON.parse(arg);
     }
+  }
+  // Setup range
+  if (typeof schemaType === 'object' && !!schemaType.range) {
+    range = _processRange(schemaType.range)
   }
   // Return
   return {
@@ -124,7 +134,43 @@ function processType(
     isColor,
     refine,
     transform,
+    range,
   };
+}
+
+/**
+ * Get the range function
+ */
+function _processRange(range: TRange): (arg: number) => boolean {
+  if (range === 'pos') {
+    return (arg: number) => arg >= 0;
+  } else if (range === 'neg') {
+    return (arg: number) => arg < 0;
+  } else if (isNum(range[0]) && isNum(range[1])) {
+    let a = range[0],
+      b = range[1];
+    if (a > b) {
+      const temp = a;
+      a = b;
+      b = temp;
+    }
+    return (arg: number) => (arg >= a && arg <= b);
+  } else if (isNum(range[1]) && typeof range[0] === 'string') {
+    if (range[0] === '<') {
+      return (arg: number) => arg < range[1];
+    } else if (range[0] === '<=') {
+      return (arg: number) => arg <= range[1];
+    } else if (range[0] === '>') {
+      return (arg: number) => arg > range[1];
+    } else if (range[0] === '>=') {
+      return (arg: number) => arg >= range[1];
+    }
+  }
+  throw new Error('Should not reach this point')
+}
+
+function isNum(arg: unknown): arg is number {
+  return typeof arg === 'number';
 }
 
 

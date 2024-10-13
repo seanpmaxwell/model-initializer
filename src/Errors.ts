@@ -45,4 +45,7 @@ export default {
   color(propName: string) {
     return `Property "${propName}" must be valid color hex string i.e. "#FFFFFF"`;
   },
+  rangeValidationFailed(propName: string) {
+    return `Property "${propName}" failed range validation.`;
+  },
 } as const;
