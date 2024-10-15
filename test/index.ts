@@ -13,6 +13,7 @@ export interface IUser {
   id: number; // pk
   age: number;
   name: string;
+  lname: string;
   email?: string;
   displayName?: string;
   lastLogin: Date;
@@ -55,10 +56,10 @@ interface IAvatar {
 }
 
 const a: TObjSchema<IAvatar> = {
-  fileName: 'string',
-  data: 'string',
+  fileName: 'str',
+  data: 'str',
   fileTypes: {
-    type: '?string',
+    type: '?str',
     refine: ['jpeg', 'jpg', 'png', 'gif'],
   }
 };
@@ -71,67 +72,69 @@ const checkAvatar = MI.test<IUser['avatar']>({
 // User schema
 const User = MI.init<IUser>({
   id: 'pk',
-  age: { type: 'number', range: 'pos' },
-  name: 'string',
+  age: 'num+',
+  name: 'strf',
+  lname: 'strf',
   email: '?email',
-  displayName: { type: '?string', default: '' },
+  displayName: { type: '?str', default: '' },
   lastLogin: 'date',
   created: 'date',
-  active: 'boolean',
+  active: 'bool',
   boss: 'fk | null',
-  foo: '?string | null',
-  avatar: { type: '?object', refine: checkAvatar },
-  avatar2: { type: 'object | null', refine: checkAvatar },
-  avatar3: { type: '?object | null', refine: checkAvatar },
+  foo: '?str | null',
+  avatar: { type: '?obj', refine: checkAvatar },
+  avatar2: { type: 'obj | null', refine: checkAvatar },
+  avatar3: { type: '?obj | null', refine: checkAvatar },
   avatar4: {
-    type: 'object',
+    type: 'obj',
     default: { fileName: '', data: '' },
     refine: checkAvatar,
   },
   avatar5: {
-    type: 'object',
+    type: 'obj',
     default: { fileName: '', data: '' },
     refine: checkAvatar,
     transform: 'json',
   },
-  children: 'string[]',
+  children: 'str[]',
   parentId: { type: 'fk | null', default: null },
   color: 'color',
   color2: {
-    type: 'string',
+    type: 'str',
     refine: (arg: unknown) => typeof arg === 'string',
   },
-  orderDir: { type: 'string', refine: ['asc', 'desc', ''] },
-  adminType: { type: 'number', refine: [1, 2, 0] },
-  page: { type: 'number', transform: 'auto' },
-  status: 'number',
-  statuses: '?number[]',
-  boo: { type: 'boolean', transform: arg => Boolean(arg) },
-  booOpt: { type: '?boolean | null', transform: 'auto' },
-  booArr: { type: 'boolean[]', transform: () => [] },
+  orderDir: { type: 'str', refine: ['asc', 'desc', ''] },
+  adminType: { type: 'num', refine: [1, 2, 0] },
+  page: { type: 'num', transform: 'auto' },
+  status: 'num',
+  statuses: '?num[]',
+  boo: { type: 'bool', transform: arg => Boolean(arg) },
+  booOpt: { type: '?bool | null', transform: 'auto' },
+  booArr: { type: 'bool[]', transform: () => [] },
   address: {
-    type: '?object',
+    type: '?obj',
     default: { street: '', city: '', state: '', zip: 0 },
     refine: MI.test<IUser['address']>({
-      street: 'string',
-      city: 'string',
-      state: 'string',
-      zip: 'number',
+      street: 'str',
+      city: 'str',
+      state: 'str',
+      zip: 'num',
     })
   },
-  rangeTest: { type: 'number', range: [1, 100] },
-  rangeTest2: { type: 'number', range: [100, 1] },
-  rangeTest3: { type: 'number', range: ['>=', 35] },
+  rangeTest: { type: 'num', range: [1, 100] },
+  rangeTest2: { type: 'num', range: [100, 1] },
+  rangeTest3: { type: 'num', range: ['>=', 35] },
 });
 
 // Check "new()" function
 const user1 = User.new({
   id: 1234,
+  name: 'jose',
+  age: 4,
   avatar3: null,
   avatar5: JSON.stringify({ fileName: 'foo', data: 'bar' }) as any,
   page: '1234' as any,
   boo: null as any,
-  age: 4,
   rangeTest: 50,
   rangeTest2: 101,
   rangeTest3: 75,
@@ -146,10 +149,10 @@ const obj: unknown = {
   // zip: 'hello',
   zip: 0,
 }
-if (User.vldt('address')(obj)) {
-  obj;
+if (User.pick('address').vldt(obj)) {
+  console.log('address validation passed');
 }
-
+console.log(User.pick('address').default)
 
 // Test validating an array of objects
 const checkAvatars = MI.testArr<IUser['avatar']>({

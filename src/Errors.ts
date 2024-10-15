@@ -7,14 +7,11 @@ export default {
     return `Property "${propName}" was not present but is required in ` +  
       'the supplied object';
   },
-  refineFailed(propName: string) {
-    return `Property "${propName}" failed to pass the refine constraint`;
-  },
   notValidDate(propName: string) {
     return `Property "${propName}" is not a valid date object`;
   },
   default(propName: string) {
-    return `Property "${propName}" does not satisfy the constraints`;
+    return `Property "${propName}" does not satisfy the constraints.`;
   },
   defaultNotFoundForObj(propName: string) {
     return `If "${propName}" is an object, required, and not nullable then ` + 
@@ -38,12 +35,6 @@ export default {
   notNullable(propName: string) {
     return `Value found for "${propName}" was null, but "nullable" was not ` + 
       'marked as true.';
-  },
-  email(propName: string) {
-    return `Property "${propName}" must be an empty string or valid email`;
-  },
-  color(propName: string) {
-    return `Property "${propName}" must be valid color hex string i.e. "#FFFFFF"`;
   },
   rangeValidationFailed(propName: string) {
     return `Property "${propName}" failed range validation.`;

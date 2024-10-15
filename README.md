@@ -4,10 +4,10 @@
 
 ## Summary
 - This library's default export is an object that holds several properties. The main one `init` is the heart of the library, we'll talk about the other ones later.
-- To call `init` you must pass a generic and an object used to represent your schema (i.e. `init<IUser>({ name: 'string' })`) it gives you back an object with 3 functions: `new`, `isValid`, and `vldt`. For all 3, typesafety is enforced by the generic you passed.
+- To call `init` you must pass a generic and an object used to represent your schema (i.e. `init<IUser>({ name: 'string' })`) it gives you back an object with 3 functions: `new`, `isValid`, and `pick`. For all 3, typesafety is enforced by the generic you passed.
   - `new` let's us create new object using a partial of your model and returns a full complete object. For missing keys, values are supplied by defaults which you can optionally configure. Defaults are deep-cloned before being added.
   - `isValid` accepts an unknown argument and throws errors if they do not match the schema requirements.
-  - `vldt("prop")` extracts the validation logic for a single property and returns a validator-function. The property passed must be a key of the the generic passed to `init`. However, one difference is that `undefined` will not be accepted as a valid value even if the property is optional.
+  - `pick("prop")` extracts the validation logic and default value for a single property and returns an object `{ default: ..., vldt: ...}`. The property passed must be a key of the the generic passed to `init`. However, one difference with the `vldt` function is that `undefined` will not be accepted as a valid value even if the property is optional.
 - Just to point out I know there are tons of schema validation libraries out there, but I wanted something that would both validate a schema, let me setup new instances using partials and defaults, and which would allow me to typesafe any properties I tried to add to the schema using an `interface`.
 - By default `structuredClone()` is used for deep cloning values. I know some older versions of node don't supported `structuredClone()`, so you can set your own clone function if you want: see the last section.
 <br/>
@@ -38,21 +38,21 @@ export interface IUser {
 // Setup "User schema"
 const User = MI.init<IUser>({
   id: 'pk',
-  name: 'string',
+  name: 'str',
   email: '?email', // Use '?' for optional types
-  displayName: { type: '?string', default: '' },
-  age: 'number',
+  displayName: { type: '?str', default: '' },
+  age: 'num+',
   lastLogin: 'date | null',
   created: 'date',
-  active: 'boolean',
+  active: 'bool',
   avatar: {
-    type: '?object',
+    type: '?obj',
     refine: MI.test<IUser['avatar']>({
-      fileName: 'string',
-      data: 'string',
+      fileName: 'str',
+      data: 'str',
     }),
   },
-  children: 'string[]',
+  children: 'str[]',
 });
 
 User.isValid('user'); // should throw Error
@@ -69,7 +69,7 @@ console.log(user1)
 //   boss: null,
 //   children: []
 // }
-const validateAvatar = User.vldt('avatar');
+const validateAvatar = User.pick('avatar').vldt;
 ```
 <br/>
 
@@ -88,40 +88,39 @@ const validateAvatar = User.vldt('avatar');
   range?: (arg: unknown) => boolean; // Numbers only
 }
 ```
-- `type`: The root types are `'string' | 'number' | 'boolean' | 'date' | object | email | color`
-  - Each one has an array counterpart: i.e. `string[]` and can be prepending with `?` to make it optional i.e. `?string[]`.
+- `type`: The root types are `'str' | 'num' | 'bool' | 'date' | obj | email | color`
+  - Each one has an array counterpart: i.e. `str[]` and can be prepending with `?` to make it optional i.e. `?str[]`.
   - Every property can be appended with ` | null` to make it nullable. 
   - There is also `pk` (primary-key) and `fk` (foreign-key).
 - `default`: optional (except for `object`'s which are not optional, nullable, or an array), a value passed to `new()` if the key is absent from the partial being passed.
-- `refine`: optional for all types but required in those which include `object` (i.e. `?object[]`).
+- `refine`: optional for all types but required in those which include `obj` (i.e. `?obj[]`).
   - This function will always be called if truthy and will be used in `new` and `isValid` to validate a value.
-  - For each `string` or `number` type, you can also pass string or number array to `refine` instead of a function. The validation check will make sure that the value is included in the array.
+  - For each `str` or `num` type, you can also pass string or number array to `refine` instead of a function. The validation check will make sure that the value is included in the array.
 - `transform`: you might want to transform a value before validating it or setting in the new function. You can pass the optional `transform` property. Transform will run before validation is done and manipulate the original object being passed with a new value. If the key is absent from the object, then `transform` will be skipped. To give an example, maybe you received a string value over an API call and you want it transformed into a `number` or you want to run `JSON.parse`.
   - `transform` can be a a function `(arg: unknown) => "typesafe value"`, `auto` or `json`.
-  - `auto` can work for `number`, `string` or `boolean` base-types and is short for doing `(arg: unknown) => "Base-Type i.e. Number"(arg)` 
+  - `auto` can work for `num`, `str` or `bool` base-types and is short for doing `(arg: unknown) => "Base-Type i.e. Number"(arg)` 
   - `json` can be applied to any type and is short for doing `(arg: unknown) => JSON.parse(arg)`
   - Note that transform will NOT be applied to the default values.
 - Number types can also have the `range` prop. The values are:
-  - `pos`: any positive number
-  - `neg`: any negative number
   - `[number, number]`: if the first value is less than the second value, range will check value is `>=` than the first value AND `<=` the second value. If the first value is greater than the second value, range will check value is `>=` than the first value OR `<=` the second value. 
   - `['<' | '>' | '<=' | '>=', number]`: Will perform a comparison against the provided number `['<=', 100]`
+  - Two alternate `num` types are `num+`: any positive number including 0, and `num-`: any negative number.
 
 ### Nullable 
 - `| null` means that null is a valid value regardless of what's set by type.
 - If a property is nullable and optional, then a property whose value is null will be skipped in the `new()` function.
-- When `new` is called, if a `object` is not optional, but is nullable, and no default is supplied, then null will be used.
+- When `new` is called, if a `obj` is not optional, but is nullable, and no default is supplied, then null will be used.
 
 ### Defaults (only relevant to the "new" function)
 - When using `new`, if you supply a default then that will be always be used regardless if the value is optional or not. 
 - If there is no value passed to `new()` and the property is optional, then that key/value pair will be skipped in the object returned from `new()`.
 - If a property is not optional and you do not supply a value in the partial to `new`, then the following defaults will be used:
-  - `string`: empty string `''`
-  - `number`: `0`
-  - `boolean`: `false`
+  - `str`: empty string `''`, `strf` will be `--` since cannot be empty.
+  - `num`: `0`
+  - `bool`: `false`
   - `date`: the current datetime as a `Date` object.
   - `for values ending with "[]"`: an empty array.
-  - `object`: If an object type is not optional, nullable, or an array, then you must supply a valid default to prevent a bad object from getting attached. Objects arrays will just use an empty array as the default. If an object is nullable then `null` will be used as the default.
+  - `obj`: If an object type is not optional, nullable, or an array, then you must supply a valid default to prevent a bad object from getting attached. Objects arrays will just use an empty array as the default. If an object is nullable then `null` will be used as the default.
   - `email`: empty string
   - `color`: `#FFFFFF` that's the hex code for white
   - `pk` and `fk`: `-1`

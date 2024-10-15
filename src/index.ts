@@ -1,5 +1,5 @@
 import Errors from './Errors';
-import processType from './processType';
+import processType, { ITypeObj } from './processType';
 import Regexes from './Regexes';
 import setupGetNew from './setupGetNew';
 import { TModelSchema, TTestFnSchema } from './types';
@@ -41,14 +41,17 @@ export class ModelInitializer {
     return {
       isValid,
       new: (arg?: Partial<T>) => getNew(arg),
-      vldt<K extends keyof T>(prop: K) {
-        const typeObj = typeMap[prop];
-        return (arg: unknown): arg is NonNullable<T[K]> => {
-          if (arg === undefined) {
-            throw new Error(Errors.propMissing(String(prop)))
+      pick<K extends keyof T>(prop: K) {
+        const typeObj: ITypeObj = typeMap[prop];
+        return {
+          default: typeMap[prop].default as T[K],
+          vldt: (arg: unknown): arg is NonNullable<T[K]> => {
+            if (arg === undefined) {
+              throw new Error(Errors.propMissing(String(prop)))
+            }
+            return validateProp(typeObj, arg);
           }
-          return validateProp(typeObj, arg);
-        }
+        };
       }
     };
   }

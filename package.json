@@ -1,11 +1,11 @@
 {
   "name": "model-initializer",
-  "version": "1.7.5",
+  "version": "1.7.6",
   "description": "Create and validate database schemas with fully typesafe arrays.",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "scripts": {
-    "test": "npx ts-node ./test",
+    "test": "ts-node ./test",
     "build": "rm -rf ./dist && tsc -p tsconfig.build.json"
   },
   "repository": {

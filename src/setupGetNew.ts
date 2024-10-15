@@ -18,7 +18,7 @@ function setupGetNew<T>(
     // Loop array
     const retVal = {} as any;
     for (const key in schema) {
-      const typeObj = typeMap[key],
+      const typeObj: ITypeObj = typeMap[key],
         val = arg[key];
       // If the value is null and the property is optional, skip adding it
       if (val === null && typeObj.optional) {
@@ -27,11 +27,7 @@ function setupGetNew<T>(
       // If its not there
       if (!(key in arg) || val === undefined) {
         if (!typeObj.optional) {
-          if (typeObj.hasDefault) {
-            retVal[key] = cloneFn(typeObj.default, typeObj.isDate);
-          } else {
-            retVal[key] = _getDefault(typeObj);
-          }
+          retVal[key] = cloneFn(typeObj.default, typeObj.isDate);
         }
         continue;
       }
@@ -48,27 +44,6 @@ function setupGetNew<T>(
     // Return
     return retVal;
   };
-}
-
-/**
- * Get the default value non including relational keys.
- */
-function _getDefault(typeObj: ITypeObj) {
-  if (typeObj.isArr) {
-    return [];
-  } else if (typeObj.type === 'string' || typeObj.type === 'email') {
-    return '';
-  } else if (typeObj.type === 'number') {
-    return 0;
-  } else if (typeObj.type === 'boolean') {
-    return false;
-  } else if (typeObj.type === 'date') {
-    return new Date();
-  } else if (typeObj.type === 'pk' || typeObj.type === 'fk') {
-    return -1;
-  } else if (typeObj.type === 'color') {
-    return '#FFFFFF';
-  }
 }
 
 
