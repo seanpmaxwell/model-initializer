@@ -152,7 +152,7 @@ const obj: unknown = {
 if (User.pick('address').vldt(obj)) {
   console.log('address validation passed');
 }
-console.log(User.pick('address').default)
+console.log(User.pick('address').default())
 
 // Test validating an array of objects
 const checkAvatars = MI.testArr<IUser['avatar']>({

@@ -34,9 +34,10 @@ export class ModelInitializer {
       typeMap[key] = processType(key, schemaKey);
     }
     // Setup functions
+    const cloneFn = this.cloneFn;
     validateDefaults(schema, typeMap);
     const isValid = validateObj<T>(schema, typeMap),
-      getNew = setupGetNew<T>(schema, typeMap, this.cloneFn);
+      getNew = setupGetNew<T>(schema, typeMap, cloneFn);
     // Return
     return {
       isValid,
@@ -44,7 +45,7 @@ export class ModelInitializer {
       pick<K extends keyof T>(prop: K) {
         const typeObj: ITypeObj = typeMap[prop];
         return {
-          default: typeMap[prop].default as T[K],
+          default: () => cloneFn(typeObj.default, typeObj.isDate) as T[K],
           vldt: (arg: unknown): arg is NonNullable<T[K]> => {
             if (arg === undefined) {
               throw new Error(Errors.propMissing(String(prop)))
