@@ -163,6 +163,7 @@ const user1 = User.new({
   rangeTest3: 75,
   email: 'asdf.asdf@asdf.com',
   color: '#ffffff',
+  created: '2024-10-16T23:01:37.919Z' as any,
 });
 console.log(user1)
 

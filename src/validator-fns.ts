@@ -94,7 +94,6 @@ export function validateProp(pObj: IProcessedType, val: unknown): boolean {
  */
 export function _validateCore(pObj: IProcessedType, val: unknown): boolean {
   const { propName } = pObj;
-
   // Check null 
   if (val === null) {
     if (!pObj.nullable) {
@@ -107,7 +106,7 @@ export function _validateCore(pObj: IProcessedType, val: unknown): boolean {
       throw new Error(Errors.notValidDate(propName));
     }
   // Check number type
-  } if (pObj.type === 'number') {
+  } else if (pObj.type === 'number') {
     if (typeof val !== 'number' || isNaN(val)) {
       throw new Error(Errors.default(propName));
     }

@@ -1,7 +1,7 @@
 
 export default {
   modelInvalid() {
-    return 'The record argument was falsey or not an object';
+    return 'The object argument was falsey or not an object.';
   },
   propMissing(propName: string) {
     return `Property "${propName}" was not present but is required in ` +  
