@@ -55,7 +55,8 @@ export interface IUser {
     horse: { name: string };
     // horsee: object;
   };
-  record: Record<symbol, string>;
+  record: Record<string, unknown>;
+  // record: object; // don't need to worry about cause the readme says only use Interfaces, Mapped types, and Record<string, something>;
 }
 
 type IAvatar = {
@@ -143,7 +144,7 @@ const User = MI.init<IUser>({
   },
   record: {
     type: 'rec',
-    refine: (arg: unknown): arg is Record<symbol, string> => { return true; },
+    refine: (arg: unknown): arg is Record<string, unknown> => { return true; },
     default: {},
   }
 });
