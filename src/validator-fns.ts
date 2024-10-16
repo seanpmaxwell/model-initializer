@@ -1,6 +1,7 @@
 import Errors from './Errors';
 import { TModelSchema, TTestFnSchema } from './types';
-import { ITypeObj } from './processType';
+import { IProcessedType } from './processType';
+import { isObj } from './misc';
 
 
 /**
@@ -8,23 +9,28 @@ import { ITypeObj } from './processType';
  */
 export function validateDefaults<T>(
   schema: TModelSchema<T>,
-  typeMap: Record<any, any>,
+  typeMap: Record<string, IProcessedType>,
 ): boolean {
-  for (const key in schema) {
-    const schemaKey = schema[key];
-    if (typeof schemaKey !== 'object' || !schemaKey.default) {
+  for (const schemaPropKey in schema) {
+    // Skip
+    const schemaPropVal = schema[schemaPropKey],
+      hasDefaultProp = schemaPropVal.hasOwnProperty('default');
+    if (!isObj(schemaPropVal) || !hasDefaultProp || schemaPropVal.type.includes('schema')) {
       continue;
     }
-    const propName = key,
-      type = schemaKey.type;
-    if (type.includes('obj') && !('refine' in schemaKey)) {
-      throw new Error(Errors.refineMissing(key));
-    } else if (type === 'obj' && !schemaKey.default) {
+    // Make sure its there for default/refine are there
+    const propName = schemaPropKey,
+      type = schemaPropVal.type;
+    if (type.includes('obj') && !schemaPropVal.hasOwnProperty('refine')) {
+      throw new Error(Errors.refineMissing(schemaPropKey));
+    } else if (type === 'obj' && !hasDefaultProp) {
       const msg = Errors.defaultNotFoundForObj(propName);
       throw new Error(msg);
     }
-    const typeObj: ITypeObj = typeMap[key];
-    validateProp(typeObj, schemaKey.default)
+    // Validate default if there
+    if ('default' in schemaPropVal) {
+      validateProp(typeMap[schemaPropKey], schemaPropVal.default)
+    }
   }
   return true;
 }
@@ -34,23 +40,22 @@ export function validateDefaults<T>(
  */
 export function validateObj<T>(
   schema: TModelSchema<T> | TTestFnSchema<T>,
-  typeMap: Record<any, any>,
+  typeMap: Record<string, IProcessedType>,
 ) {
   // Run validate
-  return (arg: unknown): arg is T => {
-    if (!arg || typeof arg !== 'object') {
+  return (paramArg: unknown): paramArg is T => {
+    if (!isObj(paramArg)) {
       throw new Error(Errors.modelInvalid());
     }
+    const arg = paramArg as Record<string, unknown>;
     for (const key in schema) {
-      const typeObj: ITypeObj = typeMap[key];
+      const pObj = typeMap[key];
       // Apply the transform function here so we can modify original object
-      const argg: any = arg;
-      if (argg[key] !== undefined && !!typeObj.transform) {
-        argg[key] = typeObj.transform(argg[key]);
+      if (arg[key] !== undefined && !!pObj.transform) {
+        arg[key] = pObj.transform(arg[key]);
       }
-      const val = argg[key];
       // Run validation
-      validateProp(typeObj, val)
+      validateProp(pObj, arg[key])
     }
     return true;
   };
@@ -60,25 +65,25 @@ export function validateObj<T>(
  * Validate a value using a prop. NOTE, this doesn't check for missing,
  * cause we don't need to check for that in "getNew"
  */
-export function validateProp(typeObj: ITypeObj, val: unknown): boolean {
-  const { propName } = typeObj;
+export function validateProp(pObj: IProcessedType, val: unknown): boolean {
+  const { propName } = pObj;
   // Check optional
   if (val === undefined) {
-    if (!typeObj.optional) {
+    if (!pObj.optional) {
       throw new Error(Errors.propMissing(propName));
     } else {
       return true;
     }
   // Check null
-  } else if (typeObj.isArr) {
+  } else if (pObj.isArr) {
     if (!Array.isArray(val)) {
       throw new Error(Errors.notValidArr(propName));
     } else {
-      val.forEach(val => _validateCore(typeObj, val));
+      val.forEach(val => _validateCore(pObj, val));
     }
   // Check rest
   } else {
-    _validateCore(typeObj, val)
+    _validateCore(pObj, val)
   }
   // Return true if no errors thrown
   return true;
@@ -87,35 +92,35 @@ export function validateProp(typeObj: ITypeObj, val: unknown): boolean {
 /**
  * Core validation
  */
-export function _validateCore(typeObj: ITypeObj, val: unknown): boolean {
-  const { propName } = typeObj;
+export function _validateCore(pObj: IProcessedType, val: unknown): boolean {
+  const { propName } = pObj;
   // Check null 
   if (val === null) {
-    if (!typeObj.nullable) {
+    if (!pObj.nullable) {
       throw new Error(Errors.notNullable(propName));
     }
     return true;
   // Check Date
-  } else if (typeObj.isDate) {
+  } else if (pObj.isDate) {
     if (isNaN(new Date(val as any).getTime())) {
       throw new Error(Errors.notValidDate(propName));
     }
   // Check number type
-  } if (typeObj.type === 'number') {
+  } if (pObj.type === 'number') {
     if (typeof val !== 'number' || isNaN(val)) {
       throw new Error(Errors.default(propName));
     }
-    if (!!typeObj.range && !typeObj.range(val)) {
+    if (!!pObj.range && !pObj.range(val)) {
       throw new Error(Errors.rangeValidationFailed(propName));
     }
   // Check rest
-  } else if (typeof val !== typeObj.type) {
+  } else if (typeof val !== pObj.type) {
     throw new Error(Errors.default(propName));
   }
   // Must always check "refine" functions if there
   if (
-    (!!typeObj.refine && !typeObj.refine(val)) || 
-    (!!typeObj._refine && !typeObj._refine(val))
+    (!!pObj.refine && !pObj.refine(val)) || 
+    (!!pObj._refine && !pObj._refine(val))
   ) {
     throw new Error(Errors.default(propName));
   }

@@ -55,7 +55,7 @@ type TStrf<Prop> = TSetupTypes<Prop, '?strf[] | null', 'strf[] | null', '?strf |
 type TDate<Prop> = TSetupTypes<Prop, '?date[] | null', 'date[] | null', '?date | null', 'date | null', '?date[]', '?date', 'date[]', 'date'>;
 type TEmail<Prop> = TSetupTypes<Prop, '?email[] | null', 'email[] | null', '?email | null', 'email | null', '?email[]', '?email', 'email[]', 'email'>;
 type TColor<Prop> = TSetupTypes<Prop, '?color[] | null', 'color[] | null', '?color | null', 'color | null', '?color[]', '?color', 'color[]', 'color'>;
-type TObj<Prop> = TSetupTypes<Prop, '?obj[] | null', 'obj[] | null', '?obj | null', 'obj | null', '?obj[]', '?obj', 'obj[]', never>; 
+type TObj<Prop> = TSetupTypes<Prop, '?obj[] | null', 'obj[] | null', '?obj | null', 'obj | null', '?obj[]', '?obj', 'obj[]', 'obj'>;
 
 // Setup full types
 type TBoolFull<Prop> = TBool<Prop> | TTypeObj<Prop, TBool<Prop>>;
@@ -66,17 +66,18 @@ type TEmailFull<Prop> = TEmail<Prop> | TTypeObj<Prop, TEmail<Prop>>;
 type TColorFull<Prop> = TColor<Prop> | TTypeObj<Prop, TColor<Prop>>;
 type TRelKeyFull<Prop> = 'pk' | (null extends Prop ? ('fk | null' | { type: 'fk | null', default: null }) : 'fk');
 
-// Setup object full, "Default is required for basic obj"
 type TObjFull<Prop> = ({
-  type: 'obj';
-  default: Prop;
-} | {
-  type: TObj<Prop>;
-  default?: Prop;
-}) & ({
-  refine: Refine<Prop>;
-  transform?: (Transform<Prop> | 'json');
+  type: TObj<Prop>,
+  props: TModelSchema<Prop>,
+  refine?: Refine<Prop>,
+  transform?: (Transform<Prop> | 'json'),
 });
+
+type DynObj<Prop> = ({
+  type: 'dyn-obj' | '?dyn-obj',
+  refine: Refine<Prop>,
+  transform?: (Transform<Prop> | 'json'),
+})
 
 type TModelSchemaOpts<Prop> = (
   Flatten<Prop> extends boolean
@@ -88,11 +89,10 @@ type TModelSchemaOpts<Prop> = (
   : Flatten<Prop> extends Date
   ? TDateFull<Prop>
   : Flatten<Prop> extends object
-  ? TObjFull<Prop>
+  ? (TObjFull<Prop> | DynObj<Prop>)
   : never
 )
 
-// BaseTypes
 export type TModelSchema<T> = {
   [K in keyof T]: TModelSchemaOpts<T[K]>;
 };
@@ -107,13 +107,12 @@ type TStrFullAlt<Prop> = TStr<Prop> | TTypeObjAlt<Prop, TStr<Prop>> | TStrf<Prop
 type TDateFullAlt<Prop> = TDate<Prop> | TTypeObjAlt<Prop, TDate<Prop>>;
 type TEmailFullAlt<Prop> = TEmail<Prop> | TTypeObjAlt<Prop, TEmail<Prop>>;
 type TColorFullAlt<Prop> = TColor<Prop> | TTypeObjAlt<Prop, TColor<Prop>>;
-type TObjs<Prop> = TSetupTypes<Prop, '?obj[] | null', 'obj[] | null', '?obj | null', 'obj | null', '?obj[]', '?obj', 'obj[]', 'obj'>; 
 
-// Setup object full
 type TObjFulls<Prop> = {
-  type: TObjs<Prop>;
-  refine: Refine<Prop>;
-  transform?: (Transform<Prop> | 'json');
+  type: TObj<Prop>,
+  props: TAllTestOptions<Prop>,
+  refine?: Refine<Prop>,
+  transform?: (Transform<Prop> | 'json'),
 }
 
 type TAllTestOptions<Prop> = (
@@ -130,7 +129,6 @@ type TAllTestOptions<Prop> = (
   : never
 )
 
-// Remove default
 export type TTestFnSchema<T> = {
   [K in keyof T]: TAllTestOptions<T[K]>;
 };

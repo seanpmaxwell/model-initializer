@@ -1,5 +1,6 @@
 
 import MI, { ModelInitializer, TObjSchema } from '../src';
+import { TModelSchema } from '../src/types';
 
 
 enum Status {
@@ -47,6 +48,12 @@ export interface IUser {
   rangeTest: number;
   rangeTest2: number;
   rangeTest3: number;
+  nested: {
+    foo: string;
+    bar: number;
+    blah: boolean;
+    horse: { name: string };
+  };
 }
 
 interface IAvatar {
@@ -82,17 +89,17 @@ const User = MI.init<IUser>({
   active: 'bool',
   boss: 'fk | null',
   foo: '?str | null',
-  avatar: { type: '?obj', refine: checkAvatar },
-  avatar2: { type: 'obj | null', refine: checkAvatar },
-  avatar3: { type: '?obj | null', refine: checkAvatar },
+  avatar: { type: '?obj', props: a },
+  avatar2: { type: 'obj | null', props: a },
+  avatar3: { type: '?obj | null', props: a },
   avatar4: {
     type: 'obj',
-    default: { fileName: '', data: '' },
+    props: { fileName: 'str', data: 'str' },
     refine: checkAvatar,
   },
   avatar5: {
     type: 'obj',
-    default: { fileName: '', data: '' },
+    props: { fileName: 'str', data: 'str' },
     refine: checkAvatar,
     transform: 'json',
   },
@@ -113,20 +120,35 @@ const User = MI.init<IUser>({
   booArr: { type: 'bool[]', transform: () => [] },
   address: {
     type: '?obj',
-    default: { street: '', city: '', state: '', zip: 0 },
-    refine: MI.test<IUser['address']>({
+    props: {
       street: 'str',
       city: 'str',
       state: 'str',
       zip: 'num',
-    })
+    },
   },
   rangeTest: { type: 'num', range: [1, 100] },
   rangeTest2: { type: 'num', range: [100, 1] },
   rangeTest3: { type: 'num', range: ['>=', 35] },
+  nested: {
+    type: 'obj',
+    props: {
+      foo: 'str',
+      bar: 'num',
+      blah: {
+        type: 'bool',
+        default: true,
+      },
+      horse: {
+        type: 'obj',
+        props: { name: 'str' },
+      }
+    },
+  },
 });
 
-// Check "new()" function
+
+// ** Check "new()" function ** //
 const user1 = User.new({
   id: 1234,
   name: 'jose',
@@ -141,7 +163,8 @@ const user1 = User.new({
 });
 console.log(user1)
 
-// Extract the address validation
+
+// ** Extract the address validation ** //
 const obj: unknown = {
   street: '',
   city: '',
@@ -150,11 +173,12 @@ const obj: unknown = {
   zip: 0,
 }
 if (User.pick('address').vldt(obj)) {
-  console.log('address validation passed');
+  console.log(obj);
 }
 console.log(User.pick('address').default())
 
-// Test validating an array of objects
+
+// ** Test validating an array of objects ** //
 const checkAvatars = MI.testArr<IUser['avatar']>({
   ...a,
 });
@@ -164,6 +188,23 @@ const result = checkAvatars([
   { fileName: '', data: '' },
 ]);
 console.log(result)
+
+
+// ** Test nested ** //
+// User.pick('active').pick('horse')
+// User.pick('orderDir').pick('orderDir')
+
+
+User.pick('active')
+User.pick('age')
+// User.pick('orderDir').pick()
+User.pick('avatar5').default;
+User.pick('avatar5').pick('fileName').vldt
+User.pick('nested').pick('bar')
+User.pick('nested').pick('horse').pick('name')
+// if (User.pick('nested').pick('foo')) {
+
+// }
 
 
 // Test errors

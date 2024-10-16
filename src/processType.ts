@@ -1,5 +1,7 @@
+import { isNum, isObj } from './misc';
+import ModelInitializer from './ModelInitializer';
 import Regexes from './Regexes';
-import { TRange } from './types';
+import { TRange, } from './types';
 
 
 // **** Type Map **** //
@@ -22,15 +24,16 @@ const TYPE_MAP = {
 
 // **** Types **** //
 
-interface ISchemaType {
+interface ITypeObj {
   type: string;
   transform?: ((arg: unknown) => typeof arg) | 'auto' | 'json';
   refine?: ((arg: unknown) => boolean) | string[] | number[];
   range?: TRange;
   default?: unknown;
+  schema?: object;
 }
 
-export interface ITypeObj {
+export interface IProcessedType {
   propName: string;
   type: string;
   origType: string;
@@ -38,11 +41,12 @@ export interface ITypeObj {
   nullable: boolean;
   isArr: boolean;
   isDate: boolean;
-  default: unknown;
+  getDefault: () => unknown;
   transform?: (arg: unknown) => typeof arg;
   refine?: (arg: unknown) => boolean;
   _refine?: (arg: unknown) => boolean;
   range?: (arg: number) => boolean;
+  pick?: (arg: 'string') => object;
 }
 
 
@@ -53,8 +57,9 @@ export interface ITypeObj {
  */
 function processType(
   key: string,
-  schemaType: string | ISchemaType,
-): ITypeObj  {
+  typeProp: string | ITypeObj,
+  cloneFn: (val: unknown, isDate: boolean) => unknown,
+): IProcessedType  {
   // Init
   let type = '',
     origType = '',
@@ -64,16 +69,17 @@ function processType(
     optional = false,
     refine,
     _refine,
-    _default = undefined,
+    getDefault = () => {},
     range,
+    pick,
     transform;
   // Type could be string or object
-  if (typeof schemaType === 'string') {
-    type = schemaType;
+  if (typeof typeProp === 'string') {
+    type = typeProp;
     origType = type;
-  } else if (typeof schemaType === 'object') {
-    type = schemaType.type;
-    origType = schemaType.type;
+  } else if (isObj(typeProp)) {
+    type = typeProp.type;
+    origType = typeProp.type;
   }
   // Is nullable
   if (type.endsWith(' | null')) {
@@ -107,10 +113,10 @@ function processType(
   // Get non-abbreviated type
   type = (TYPE_MAP as any)[type];
   // Setup transform
-  if (typeof schemaType === 'object') {
+  if (isObj(typeProp)) {
     // Setup refine
-    if (!!schemaType.refine) {
-      const refine_ = schemaType.refine; 
+    if (!!typeProp.refine) {
+      const refine_ = typeProp.refine; 
       if (typeof refine_ === 'function') {
         refine = refine_;
       } else if (Array.isArray(refine_) && refine_.length > 0) {
@@ -118,14 +124,14 @@ function processType(
       }
     }
     // Setup range
-    if (!!schemaType.range) {
-      range = _processRange(schemaType.range)
+    if (!!typeProp.range) {
+      range = _processRange(typeProp.range)
     }
     // Transform
-    if (schemaType.transform) {
-      if (typeof schemaType.transform === 'function') {
-        transform = schemaType.transform; 
-      } else if (schemaType.transform === 'auto') {
+    if (typeProp.transform) {
+      if (typeof typeProp.transform === 'function') {
+        transform = typeProp.transform; 
+      } else if (typeProp.transform === 'auto') {
         if (type === 'string') {
           transform = (arg: any) => String(arg);
         } else if (type === 'number') {
@@ -133,18 +139,25 @@ function processType(
         } else if (type === 'boolean') {
           transform = (arg: any) => Boolean(arg);
         }
-      } else if (schemaType.transform === 'json') {
+      } else if (typeProp.transform === 'json') {
         transform = (arg: any) => JSON.parse(arg);
       }
     }
-  }
-  // Setup default val
-  if (typeof schemaType === 'object' && schemaType.default !== undefined) {
-    _default = schemaType.default
-  } else if (type === 'object' && nullable) {
-    _default = null;
-  } else {
-    _default = _getDefault(type, origType, isArr);
+    // Setup default val
+    if (typeProp.default !== undefined) {
+      getDefault = () => cloneFn(getDefault, isDate);
+    } else if (type === 'object' && nullable) {
+      getDefault = () => null;
+    } else {
+      getDefault = () => _getDefault(type, origType, isArr);
+    }
+    // Process "schema" type
+    if (type === 'schema' && !!typeProp.schema) {
+      const schema: any = new ModelInitializer().init(typeProp.schema)
+      getDefault = () => schema.new();
+      refine = schema.isValid;
+      pick = schema.pick;
+    }
   }
   // Return
   return {
@@ -154,7 +167,8 @@ function processType(
     type,
     origType,
     nullable,
-    default: _default,
+    getDefault: getDefault,
+    pick, 
     isDate,
     refine,
     _refine,
@@ -164,12 +178,13 @@ function processType(
 }
 
 /**
- * Get the default value non including relational keys. Note we don't do "date" 
- * here cause that needs to be a new date at the time "new()" is called.
+ * Get the default value non including relational keys.
  */
 function _getDefault(type: string, origType: string, isArr: boolean) {
   if (isArr) {
     return [];
+  } else if (type === 'date') {
+    return new Date();
   } else if (origType === 'strf') { 
     return '--';
   } else if (type === 'string' || type === 'email') {
@@ -208,10 +223,6 @@ function _processRange(range: TRange): (arg: unknown) => boolean {
     }
   }
   throw new Error('Should not reach this point')
-}
-
-function isNum(arg: unknown): arg is number {
-  return typeof arg === 'number';
 }
 
 
