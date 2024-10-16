@@ -15,13 +15,13 @@ export function validateDefaults<T>(
     // Skip
     const schemaPropVal = schema[schemaPropKey],
       hasDefaultProp = schemaPropVal.hasOwnProperty('default');
-    if (!isObj(schemaPropVal) || !hasDefaultProp || schemaPropVal.type.includes('schema')) {
+    if (!isObj(schemaPropVal) || !hasDefaultProp || schemaPropVal.type.includes('props')) {
       continue;
     }
     // Make sure its there for default/refine are there
     const propName = schemaPropKey,
       type = schemaPropVal.type;
-    if (type.includes('obj') && !schemaPropVal.hasOwnProperty('refine')) {
+    if ((type.includes('obj') || type.includes('record')) && !schemaPropVal.hasOwnProperty('refine')) {
       throw new Error(Errors.refineMissing(schemaPropKey));
     } else if (type === 'obj' && !hasDefaultProp) {
       const msg = Errors.defaultNotFoundForObj(propName);

@@ -7,7 +7,7 @@
 - To call `init` you must pass a generic and an object used to represent your schema (i.e. `init<IUser>({ name: 'string' })`) it gives you back an object with 3 functions: `new`, `isValid`, and `pick`. For all 3, typesafety is enforced by the generic you passed.
   - `new` let's us create new object using a partial of your model and returns a full complete object. For missing keys, values are supplied by defaults which you can optionally configure. Defaults are deep-cloned before being added.
   - `isValid` accepts an unknown argument and throws errors if they do not match the schema requirements.
-  - `pick("prop")` extracts the validation logic and default value for a single property and returns an object `{ default: fn, vldt: fn }`. The property passed must be a key of the the generic passed to `init`. However, one difference with the `vldt` function is that `undefined` will not be accepted as a valid value even if the property is optional. `default()` returns a deepClone of the default value.
+  - `pick("prop")` extracts the validation logic and default value for a single property and returns an object `{ default: fn, vldt: fn }`. The property passed must be a key of the the generic passed to `init`. However, one difference with the `vldt` function is that `undefined` will not be accepted as a valid value even if the property is optional. `default()` returns a deepClone of the default value. If the property is an nested object whose `type` is object, you can also chain the `pick` method to select its values as well. 
 - Just to point out I know there are tons of schema validation libraries out there, but I wanted something that would both validate a schema, let me setup new instances using partials and defaults, and which would allow me to typesafe any properties I tried to add to the schema using an `interface`.
 - By default `structuredClone()` is used for deep cloning values. I know some older versions of node don't supported `structuredClone()`, so you can set your own clone function if you want: see the last section.
 <br/>
@@ -33,6 +33,7 @@ export interface IUser {
   boss: number;
   children: string[];
   avatar?: { fileName: string; data: string };
+  address: { street: string, city: string };
 }
 
 // Setup "User schema"
@@ -53,7 +54,17 @@ const User = MI.init<IUser>({
     }),
   },
   children: 'str[]',
+  address: {
+    type: 'obj',
+    props: { street: 'str', city: 'str' },
+  },
 });
+
+// We have an independent test functin
+const checkAvatar = MI.test<IUser['avatar']>({
+  fileName: 'str',
+  data: 'str',
+}),
 
 User.isValid('user'); // should throw Error
 const user1 = User.new({ name: 'john' });
@@ -88,17 +99,17 @@ const validateAvatar = User.pick('avatar').vldt;
   range?: (arg: unknown) => boolean; // Numbers only
 }
 ```
-- `type`: The root types are `'str' | 'num' | 'bool' | 'date' | obj | email | color`
+- `type`: The root types are `'str' | 'num' | 'bool' | 'date' | obj | rec | email | color`
   - Each one has an array counterpart: i.e. `str[]` and can be prepending with `?` to make it optional i.e. `?str[]`.
-  - Every property can be appended with ` | null` to make it nullable. 
+  - Every property can be appended with ` | null` to make it nullable.
   - There is also `pk` (primary-key) and `fk` (foreign-key).
-- `default`: optional (except for `object`'s which are not optional, nullable, or an array), a value passed to `new()` if the key is absent from the partial being passed.
-- `refine`: optional for all types but required in those which include `obj` (i.e. `?obj[]`).
+- `default`: optional (except for `records`'s which are not optional, nullable, or an array), a value passed to `new()` if the key is absent from the partial being passed.
+- `refine`: optional for all types but required for records `rec` (i.e. `?rec[]`).
   - This function will always be called if truthy and will be used in `new` and `isValid` to validate a value.
   - For each `str` or `num` type, you can also pass string or number array to `refine` instead of a function. The validation check will make sure that the value is included in the array.
 - `transform`: you might want to transform a value before validating it or setting in the new function. You can pass the optional `transform` property. Transform will run before validation is done and manipulate the original object being passed with a new value. If the key is absent from the object, then `transform` will be skipped. To give an example, maybe you received a string value over an API call and you want it transformed into a `number` or you want to run `JSON.parse`.
   - `transform` can be a a function `(arg: unknown) => "typesafe value"`, `auto` or `json`.
-  - `auto` can work for `num`, `str` or `bool` base-types and is short for doing `(arg: unknown) => "Base-Type i.e. Number"(arg)` 
+  - `auto` can work for `num`, `str`, `bool`, `date` base-types and is short for doing `(arg: unknown) => "Base-Type i.e. Number"(arg)` 
   - `json` can be applied to any type and is short for doing `(arg: unknown) => JSON.parse(arg)`
   - Note that transform will NOT be applied to the default values.
 - Number types can also have the `range` prop. The values are:
@@ -115,15 +126,20 @@ const validateAvatar = User.pick('avatar').vldt;
 - When using `new`, if you supply a default then that will be always be used regardless if the value is optional or not. 
 - If there is no value passed to `new()` and the property is optional, then that key/value pair will be skipped in the object returned from `new()`.
 - If a property is not optional and you do not supply a value in the partial to `new`, then the following defaults will be used:
-  - `str`: empty string `''`, `strf` will be `--` since cannot be empty.
+  - `str`: empty string `''`, `strf` will be `~` since cannot be empty.
   - `num`: `0`
   - `bool`: `false`
   - `date`: the current datetime as a `Date` object.
   - `for values ending with "[]"`: an empty array.
-  - `obj`: If an object type is not optional, nullable, or an array, then you must supply a valid default to prevent a bad object from getting attached. Objects arrays will just use an empty array as the default. If an object is nullable then `null` will be used as the default.
+  - `obj`: The default value will be an object generated by the `props` key.
+  - `rec`: If an record type is not optional, nullable, or an array, then you must supply a valid default to prevent a bad object from getting attached. Record arrays will just use an empty array as the default. If an object is nullable then `null` will be used as the default.
   - `email`: empty string
   - `color`: `#FFFFFF` that's the hex code for white
   - `pk` and `fk`: `-1`
+
+### Objects and Records
+- Objects (`obj`) are for objects whose properties we do know, while records (`rec`) are for dynamic objects who properties we don't know. If you have an an object with a distinct set of properties you should use `obj`. If you have a dynamic object with ever changing keys, you should use `rec` and set the type the in the type part of your schema as `Record<string, something>`.
+- IMPORTANT: to avoid the sketchness with working with typescript types, for `obj` types you should always use an interface or mapped type alias when working with `obj` types and `Record<string, something>` when working with records. Don't use the plain `object` types.
 
 ### Arrays/Emails/Colors
 - Validation only works for one-dimensional arrays. If you have nested arrays set the type to `object` and write your own `refine` function.
@@ -131,7 +147,7 @@ const validateAvatar = User.pick('avatar').vldt;
 - All regexes used for validation can be accessed via the `rgxs` prop and you don't need to call `.test`: `MI.rgxs.email("some string")`
 
 ### PK (primary-key) and FK (foreign-key)
-- These are used to represent relational database keys:
+- These are used to represent relational database keys. The defaults are `-1` and the range is automatically `> -1`.
   - `pk` cannot have any properties set on it.
   - For `fk` the only properties you can set are `type`, and `default`. You can set `default` ONLY if `nullable` in which cause you can set the default to be `-1` or `null` only.
   - There reason defaults are `-1` is cause primary keys should be set to a positive number by the database, so `-1` is used to represent a record that has not been saved in the database yet. I use postgres where convention is to use the `SERIAL` type for database keys.

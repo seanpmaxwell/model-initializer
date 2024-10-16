@@ -1,6 +1,6 @@
 {
   "name": "model-initializer",
-  "version": "1.8.3",
+  "version": "1.8.4",
   "description": "Create and validate database schemas with fully typesafe arrays.",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",

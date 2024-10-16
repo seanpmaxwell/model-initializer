@@ -14,6 +14,7 @@ const TYPE_MAP = {
   ['num+']: 'number',
   ['num-']: 'number',
   obj: 'object',
+  rec: 'object',
   color: 'color',
   email: 'email',
   date: 'date',
@@ -30,12 +31,13 @@ interface ITypeObj {
   refine?: ((arg: unknown) => boolean) | string[] | number[];
   range?: TRange;
   default?: unknown;
-  schema?: object;
+  props?: object;
 }
 
 export interface IProcessedType {
   propName: string;
   type: string;
+  rootType: string;
   origType: string;
   optional: boolean;
   nullable: boolean;
@@ -47,6 +49,7 @@ export interface IProcessedType {
   _refine?: (arg: unknown) => boolean;
   range?: (arg: number) => boolean;
   pick?: (arg: 'string') => object;
+  _schema: any;
 }
 
 
@@ -62,6 +65,7 @@ function processType(
 ): IProcessedType  {
   // Init
   let type = '',
+    rootType = '',
     origType = '',
     nullable = false,
     isArr = false,
@@ -72,29 +76,36 @@ function processType(
     getDefault = () => {},
     range,
     pick,
-    transform;
+    transform,
+    skipDefaultSetup = false,
+    _schema: any = null;
   // Type could be string or object
   if (typeof typeProp === 'string') {
     type = typeProp;
     origType = type;
+    rootType = type;
   } else if (isObj(typeProp)) {
     type = typeProp.type;
-    origType = typeProp.type;
+    origType = type;
+    rootType = type;
   }
   // Is nullable
   if (type.endsWith(' | null')) {
     nullable = true;
     type = type.slice(0, type.length - 7);
+    rootType = type;
   }
   // Is optional
   if (type.startsWith('?')) {
     optional = true;
     type = type.substring(1);
+    rootType = type;
   }
   // Is array
   if (type.endsWith('[]')) {
     isArr = true;
     type = type.slice(0, type.length - 2);
+    rootType = type;
   }
   // Check some special types
   if (type === 'num+') {
@@ -109,6 +120,8 @@ function processType(
     isDate = true;
   } else if (type === 'color') {
     _refine = Regexes.color;
+  } else if (['pk', 'fk'].includes(type)) {
+    _refine = _processRange(['>=', -1]);
   }
   // Get non-abbreviated type
   type = (TYPE_MAP as any)[type];
@@ -138,25 +151,30 @@ function processType(
           transform = (arg: any) => Number(arg);
         } else if (type === 'boolean') {
           transform = (arg: any) => Boolean(arg);
+        } else if (type === 'Date') {
+          transform = (arg: any) => new Date(arg);
         }
       } else if (typeProp.transform === 'json') {
         transform = (arg: any) => JSON.parse(arg);
       }
     }
-    // Setup default val
-    if (typeProp.default !== undefined) {
-      getDefault = () => cloneFn(getDefault, isDate);
+    // Process nested schemas type
+    if (rootType === 'obj' && !!typeProp.props) {
+      skipDefaultSetup = true
+      _schema = new ModelInitializer().init(typeProp.props);
+      getDefault = () => _schema.new();
+      refine = _schema.isValid;
+      pick = _schema.pick;
+    }
+  }
+  // Setup default val
+  if (!skipDefaultSetup) {
+    if (isObj(typeProp) && typeProp.default !== undefined) {
+      getDefault = () => cloneFn(typeProp.default, isDate);
     } else if (type === 'object' && nullable) {
       getDefault = () => null;
     } else {
-      getDefault = () => _getDefault(type, origType, isArr);
-    }
-    // Process "schema" type
-    if (type === 'schema' && !!typeProp.schema) {
-      const schema: any = new ModelInitializer().init(typeProp.schema)
-      getDefault = () => schema.new();
-      refine = schema.isValid;
-      pick = schema.pick;
+      getDefault = () => _getDefault(rootType, isArr);
     }
   }
   // Return
@@ -165,38 +183,42 @@ function processType(
     isArr,
     optional,
     type,
+    rootType,
     origType,
     nullable,
-    getDefault: getDefault,
+    getDefault,
     pick, 
     isDate,
     refine,
     _refine,
     transform,
     range,
+    _schema,
   };
 }
 
 /**
  * Get the default value non including relational keys.
  */
-function _getDefault(type: string, origType: string, isArr: boolean) {
+function _getDefault(rootType: string, isArr: boolean) {
   if (isArr) {
     return [];
-  } else if (type === 'date') {
+  } else if (rootType === 'date') {
     return new Date();
-  } else if (origType === 'strf') { 
-    return '--';
-  } else if (type === 'string' || type === 'email') {
+  } else if (rootType === 'strf') {
+    return '~';
+  } else if (rootType === 'email') {
     return '';
-  } else if (type === 'number') {
+  } else if (rootType === 'num') {
     return 0;
-  } else if (type === 'boolean') {
+  } else if (rootType === 'bool') {
     return false;
-  } if (type === 'pk' || type === 'fk') {
+  } if (rootType === 'pk' || rootType === 'fk') {
     return -1;
-  } else if (type === 'color') {
+  } else if (rootType === 'color') {
     return '#FFFFFF';
+  } else if (rootType === 'str') {
+    return '';
   }
 }
 

@@ -2,17 +2,8 @@ import Errors from './Errors';
 import { isObj } from './misc';
 import processType, { IProcessedType } from './processType';
 import Regexes from './Regexes';
-import { TModelSchema, TTestFnSchema } from './types';
+import { TModelSchema, TPickRet, TTestFnSchema } from './types';
 import { validateDefaults, validateObj, validateProp } from './validator-fns';
-
-
-// Recursively add object functions
-type TPickRet<T> = ({
-  vldt: (arg: unknown) => arg is Exclude<T, undefined>,
-  default: () => Exclude<T, undefined>,
-}) & (T extends object ? {
-  pick: <K extends keyof T>(k: K) => TPickRet<T[K]>,
-} : {});
 
 
 // **** ModelInitializer Class **** //

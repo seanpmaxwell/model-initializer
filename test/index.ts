@@ -53,10 +53,12 @@ export interface IUser {
     bar: number;
     blah: boolean;
     horse: { name: string };
+    // horsee: object;
   };
+  record: Record<symbol, string>;
 }
 
-interface IAvatar {
+type IAvatar = {
   fileName: string;
   data: string;
   fileTypes?: 'jpeg' | 'jpg' | 'png' | 'gif';
@@ -70,11 +72,6 @@ const a: TObjSchema<IAvatar> = {
     refine: ['jpeg', 'jpg', 'png', 'gif'],
   }
 };
-
-// Create check avatar function
-const checkAvatar = MI.test<IUser['avatar']>({
-  ...a,
-});
 
 // User schema
 const User = MI.init<IUser>({
@@ -95,12 +92,10 @@ const User = MI.init<IUser>({
   avatar4: {
     type: 'obj',
     props: { fileName: 'str', data: 'str' },
-    refine: checkAvatar,
   },
   avatar5: {
     type: 'obj',
     props: { fileName: 'str', data: 'str' },
-    refine: checkAvatar,
     transform: 'json',
   },
   children: 'str[]',
@@ -142,9 +137,15 @@ const User = MI.init<IUser>({
       horse: {
         type: 'obj',
         props: { name: 'str' },
-      }
+      },
+      // horsee: null,
     },
   },
+  record: {
+    type: 'rec',
+    refine: (arg: unknown): arg is Record<symbol, string> => { return true; },
+    default: {},
+  }
 });
 
 
@@ -198,13 +199,14 @@ console.log(result)
 User.pick('active')
 User.pick('age')
 // User.pick('orderDir').pick()
-User.pick('avatar5').default;
+User.pick('avatar5').pick('data')
 User.pick('avatar5').pick('fileName').vldt
 User.pick('nested').pick('bar')
 User.pick('nested').pick('horse').pick('name')
-// if (User.pick('nested').pick('foo')) {
+User.pick('record')
+if (User.pick('nested').pick('foo')) {
 
-// }
+}
 
 
 // Test errors

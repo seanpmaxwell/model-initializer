@@ -23,6 +23,8 @@ export type TTypeObj<Prop, TType> = {
     ? (Transform<Prop> | 'auto' | 'json')
     : NonNullable<Prop> extends boolean 
     ? (Transform<Prop> | 'auto' | 'json')
+    : NonNullable<Prop> extends Date
+    ? (Transform<Prop> | 'auto' | 'json')
     : (Transform<Prop> | 'json')
   );
 } & (Flatten<Prop> extends number ? {
@@ -56,6 +58,10 @@ type TDate<Prop> = TSetupTypes<Prop, '?date[] | null', 'date[] | null', '?date |
 type TEmail<Prop> = TSetupTypes<Prop, '?email[] | null', 'email[] | null', '?email | null', 'email | null', '?email[]', '?email', 'email[]', 'email'>;
 type TColor<Prop> = TSetupTypes<Prop, '?color[] | null', 'color[] | null', '?color | null', 'color | null', '?color[]', '?color', 'color[]', 'color'>;
 type TObj<Prop> = TSetupTypes<Prop, '?obj[] | null', 'obj[] | null', '?obj | null', 'obj | null', '?obj[]', '?obj', 'obj[]', 'obj'>;
+type TRec<Prop> = TSetupTypes<Prop, '?rec[] | null', 'rec[] | null', '?rec | null', 'rec | null', '?rec[]', '?rec', 'rec[]', never>;
+
+
+// **** Types for "init" function **** //
 
 // Setup full types
 type TBoolFull<Prop> = TBool<Prop> | TTypeObj<Prop, TBool<Prop>>;
@@ -66,18 +72,23 @@ type TEmailFull<Prop> = TEmail<Prop> | TTypeObj<Prop, TEmail<Prop>>;
 type TColorFull<Prop> = TColor<Prop> | TTypeObj<Prop, TColor<Prop>>;
 type TRelKeyFull<Prop> = 'pk' | (null extends Prop ? ('fk | null' | { type: 'fk | null', default: null }) : 'fk');
 
-type TObjFull<Prop> = ({
+type TObjFull<Prop> = {
   type: TObj<Prop>,
   props: TModelSchema<Prop>,
-  refine?: Refine<Prop>,
   transform?: (Transform<Prop> | 'json'),
-});
+};
 
-type DynObj<Prop> = ({
-  type: 'dyn-obj' | '?dyn-obj',
+type TRecord<Prop> = {
+  type: TRec<Prop>,
   refine: Refine<Prop>,
+  default?: Prop,
   transform?: (Transform<Prop> | 'json'),
-})
+} | {
+  type: 'rec',
+  refine: Refine<Prop>,
+  default: Prop,
+  transform?: (Transform<Prop> | 'json'),
+}
 
 type TModelSchemaOpts<Prop> = (
   Flatten<Prop> extends boolean
@@ -89,7 +100,7 @@ type TModelSchemaOpts<Prop> = (
   : Flatten<Prop> extends Date
   ? TDateFull<Prop>
   : Flatten<Prop> extends object
-  ? (TObjFull<Prop> | DynObj<Prop>)
+  ? (TObjFull<Prop> | TRecord<Prop>)
   : never
 )
 
@@ -97,38 +108,18 @@ export type TModelSchema<T> = {
   [K in keyof T]: TModelSchemaOpts<T[K]>;
 };
 
+// Return value for the pick function
+export type TPickRet<T> = ({
+  vldt: (arg: unknown) => arg is Exclude<T, undefined>,
+  default: () => Exclude<T, undefined>,
+  // Make sure neste value is an object but not a generic "record"
+}) & (string extends keyof T ? {} : number extends keyof T ? {} : symbol extends keyof T ? {} : T extends Record<string, unknown> ? {
+  pick: <K extends keyof T>(k: K) => TPickRet<T[K]>,
+} : {});
 
-// **** "test()" Function Types **** //
 
-type TTypeObjAlt<Prop, TType> = Omit<TTypeObj<Prop, TType>, 'default'>;
-type TBoolFullAlt<Prop> = TBool<Prop> | TTypeObjAlt<Prop, TBool<Prop>>;
-type TNumFullAlt<Prop> = TNum<Prop> | TTypeObjAlt<Prop, TNum<Prop>> | TNumNeg<Prop> | TTypeObjAlt<Prop, TNumNeg<Prop>> | TNumPos<Prop> | TTypeObjAlt<Prop, TNumPos<Prop>>;
-type TStrFullAlt<Prop> = TStr<Prop> | TTypeObjAlt<Prop, TStr<Prop>> | TStrf<Prop> | TTypeObjAlt<Prop, TStrf<Prop>>;
-type TDateFullAlt<Prop> = TDate<Prop> | TTypeObjAlt<Prop, TDate<Prop>>;
-type TEmailFullAlt<Prop> = TEmail<Prop> | TTypeObjAlt<Prop, TEmail<Prop>>;
-type TColorFullAlt<Prop> = TColor<Prop> | TTypeObjAlt<Prop, TColor<Prop>>;
-
-type TObjFulls<Prop> = {
-  type: TObj<Prop>,
-  props: TAllTestOptions<Prop>,
-  refine?: Refine<Prop>,
-  transform?: (Transform<Prop> | 'json'),
-}
-
-type TAllTestOptions<Prop> = (
-  Flatten<Prop> extends boolean
-  ? TBoolFullAlt<Prop>
-  : Flatten<Prop> extends number
-  ? TNumFullAlt<Prop>
-  : Flatten<Prop> extends string
-  ? (TStrFullAlt<Prop> | TEmailFullAlt<Prop> | TColorFullAlt<Prop>)
-  : Flatten<Prop> extends Date
-  ? TDateFullAlt<Prop>
-  : Flatten<Prop> extends object
-  ? TObjFulls<Prop>
-  : never
-)
+// **** Types for "test" function **** //
 
 export type TTestFnSchema<T> = {
-  [K in keyof T]: TAllTestOptions<T[K]>;
+  [K in keyof T]: Exclude<TModelSchemaOpts<T[K]>, 'default'>;
 };
