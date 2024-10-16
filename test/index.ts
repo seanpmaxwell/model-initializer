@@ -161,6 +161,8 @@ const user1 = User.new({
   rangeTest: 50,
   rangeTest2: 101,
   rangeTest3: 75,
+  email: 'asdf.asdf@asdf.com',
+  color: '#ffffff',
 });
 console.log(user1)
 

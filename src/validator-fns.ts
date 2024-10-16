@@ -94,6 +94,7 @@ export function validateProp(pObj: IProcessedType, val: unknown): boolean {
  */
 export function _validateCore(pObj: IProcessedType, val: unknown): boolean {
   const { propName } = pObj;
+
   // Check null 
   if (val === null) {
     if (!pObj.nullable) {

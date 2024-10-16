@@ -15,9 +15,9 @@ const TYPE_MAP = {
   ['num-']: 'number',
   obj: 'object',
   rec: 'object',
-  color: 'color',
-  email: 'email',
-  date: 'date',
+  color: 'string',
+  email: 'string',
+  date: 'object',
   pk: 'number',
   fk: 'number',
 } as const;
