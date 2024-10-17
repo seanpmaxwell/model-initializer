@@ -250,7 +250,7 @@ console.log(User.pick('nested').pick('horse').pick('name').default());
 User.pick('record')
 User.pick('recordTest')
 User.pick('anyTest2').default;
-User.pick('anyTest3').pick('data') // <-- Possible unsafe
+console.log(User.pick('anyTest3').pick('data')) // <-- Possible unsafe
 if (User.pick('nested').pick('foo')) {
 
 }
