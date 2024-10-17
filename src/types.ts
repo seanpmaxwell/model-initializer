@@ -97,6 +97,7 @@ type TAnyFull<Prop> = ({
 type TEnumFull<Prop> = NonNullable<Prop> extends (string | number) ? {
   type: 'enum' | '?enum',
   refine: TEnum,
+  default?: Prop,
 } : never;
 
 // Combine all types

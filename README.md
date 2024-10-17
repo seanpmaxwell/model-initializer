@@ -114,17 +114,17 @@ const validateAvatar = User.pick('avatar').vldt;
 {
   type: 'string' | 'number' ...etc;
   default?: YourModel[keyof YourModel];
-  refine?: (arg: unknown) => arg is YourModel[keyof YourModel] OR you can pass a string or number array;
+  refine?: Function, Array (strings and numbers), or Object (enums only);
   trans?: (arg: unknown) => T
-  range?: (arg: unknown) => boolean; // Numbers only
+  range?: [string | number, number] | '+' | '-'; // Numbers only
 }
 ```
-- `type`: The root types are `'str' | 'num' | 'bool' | 'date' | obj | any`
-  - Each one has an array counterpart: i.e. `str[]` and can be prepending with `?` to make it optional i.e. `?str[]`.
-  - Every property can be appended with ` | null` to make it nullable.
+- `type`: The root types are `'str' | 'num' | 'bool' | 'date' | obj | any | enum`
+  - Each one has an array counterpart (except `any` and `enum`): i.e. `str[]` and can be prepending with `?` to make it optional i.e. `?str[]`.
+  - Every property can be appended with ` | null` to make it nullable (except `any` and `enum`).
   - There is also `pk` (primary-key) and `fk` (foreign-key).
 - `default`: optional (except for `objects`'s which are not optional, nullable, or an array), a value passed to `new()` if the key is absent from the partial being passed.
-- `refine`: optional for all types but required for objects without a `props` property.
+- `refine`: optional for all types except (`any` and `enum`).
   - This function will always be called if truthy and will be used in `new` and `isValid` to validate a value.
   - For each `str` or `num` type, you can also pass string or number array to `refine` instead of a function. The validation check will make sure that the value is included in the array.
 - `trans` (short for transform): you might want to transform a value before validating it or setting in the new function. You can pass the optional `trans` property. Transform will run before validation is done and manipulate the original object being passed with a new value. If the key is absent from the object, then `trans` will be skipped. To give an example, maybe you received a string value over an API call and you want it transformed into a `number` or you want to run `JSON.parse`.
@@ -164,6 +164,11 @@ const validateAvatar = User.pick('avatar').vldt;
 - `refine` and `default` are both required with `any` (although `default` is not required for `?any`) and must still return a type-safe value. The `refine` function will be all that is used for validation (but for the `default` value and the `new`/`isValid` functions).
 - `?any` exists and will allow an optional type.
 - `null` is always a valid value for `any` items. If you don't want to allow null check for it in the `refine` function.
+
+### Enums
+- For enum types you can set the type to `enum` and pass an enum-object to the refine prop. This will make sure that the value is a value in the enum and it will also set the first value in the `enum` as the default value when `new` is called.
+- Technically you can pass any object to `refine` when the type is an enum. With typescript generics there was not way (that I could find) to enforce a particular enum type. So make sure you use the correct enum object when using this feature.
+`{ type: 'enum', refine: SomeEnum }`
 
 ### Arrays, Dates, and String formats
 - Validation only works for one-dimensional arrays. If you have nested arrays set the type to `object` and write your own `refine` function.

@@ -214,7 +214,7 @@ const User = MI.init<IUser>({
     default: { },
   },
   enumTest1: { type: 'enum', refine: Status },
-  enumTest2: { type: 'enum', refine: Fruit }
+  enumTest2: { type: 'enum', refine: Fruit, default: Fruit.Orange }
 });
 
 

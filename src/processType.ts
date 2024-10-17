@@ -121,10 +121,15 @@ function processType(
         refine = refine_;
       } else if (Array.isArray(refine_) && refine_.length > 0) {
         refine = (arg: unknown) => refine_.some(item => item === arg);
+      // Process enum stuff
       } else if (type === 'enum' && nonArrObj(refine_)) {
         const values = getEnumVals(refine_);
         refine = (arg: unknown) => values.some(item => item === arg);
-        getDefault = () => values[0];
+        if (!!typeProp.default) {
+          getDefault = () => typeProp.default;
+        } else {
+          getDefault = () => values[0];
+        }
       }
     }
     // Setup range
