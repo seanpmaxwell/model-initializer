@@ -10,15 +10,9 @@ import { TRange, } from './types';
 const TYPE_MAP = {
   bool: 'boolean',
   str: 'string',
-  strf: 'string',
   num: 'number',
-  ['num+']: 'number',
-  ['num-']: 'number',
   obj: 'object',
-  rec: 'object',
-  color: 'string',
-  email: 'string',
-  date: 'object',
+  date: 'Date',
   pk: 'number',
   fk: 'number',
   any: 'any',
@@ -76,11 +70,10 @@ function processType(
     optional = false,
     refine,
     _refine,
-    getDefault = () => {},
+    getDefault,
     range,
     pick,
     transform,
-    skipDefaultSetup = false,
     _schema: any = null;
   // Type could be string or object
   if (typeof typeProp === 'string') {
@@ -144,7 +137,7 @@ function processType(
           transform = (arg: any) => Number(arg);
         } else if (type === 'boolean') {
           transform = (arg: any) => Boolean(arg);
-        } else if (rootType === 'date') {
+        } else if (type === 'Date') {
           transform = (arg: any) => new Date(arg);
         }
       } else if (typeProp.transform === 'json') {
@@ -152,8 +145,7 @@ function processType(
       }
     }
     // Process nested schemas type
-    if (rootType === 'obj' && !!typeProp.props) {
-      skipDefaultSetup = true;
+    if (type === 'object' && !!typeProp.props) {
       _schema = new ModelInitializer().init(typeProp.props);
       getDefault = () => _schema.new();
       refine = _schema.isValid;
@@ -167,7 +159,7 @@ function processType(
     }
   }
   // Setup default val
-  if (!skipDefaultSetup) {
+  if (getDefault === undefined) {
     if (isObj(typeProp) && typeProp.default !== undefined) {
       getDefault = () => cloneFn(typeProp.default, isDate);
     } else if (type === 'object' && nullable) {

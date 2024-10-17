@@ -119,7 +119,7 @@ const validateAvatar = User.pick('avatar').vldt;
   range?: (arg: unknown) => boolean; // Numbers only
 }
 ```
-- `type`: The root types are `'str' | 'num' | 'bool' | 'date' | obj | email | color`
+- `type`: The root types are `'str' | 'num' | 'bool' | 'date' | obj | any`
   - Each one has an array counterpart: i.e. `str[]` and can be prepending with `?` to make it optional i.e. `?str[]`.
   - Every property can be appended with ` | null` to make it nullable.
   - There is also `pk` (primary-key) and `fk` (foreign-key).
