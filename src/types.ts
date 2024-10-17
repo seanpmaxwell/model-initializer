@@ -19,7 +19,7 @@ export type TTypeObj<Prop, TType> = {
     ? (Refine<Prop> | number[])
     : Refine<Prop>
   );
-  transform?: (
+  trans?: (
     NonNullable<Prop> extends string 
     ? (Transform<Prop> | 'auto' | 'json')
     : NonNullable<Prop> extends number 
@@ -75,14 +75,14 @@ type TRelKeyFull<Prop> = 'pk' | (null extends Prop ? ('fk | null' | { type: 'fk 
 // Object types
 type TObjFull<Prop> = ({
   type: TObj<Prop>,
-  transform?: (Transform<Prop> | 'json'),
+  trans?: (Transform<Prop> | 'json'),
   props: TModelSchema<Flatten<Prop>>,
 });
 
 // The 'any' type
 type TAnyFull<Prop> = ({
   type: 'any' | '?any',
-  transform?: (Transform<Prop> | 'json'),
+  trans?: (Transform<Prop> | 'json'),
   props?: TModelSchema<Prop>,
   refine: Refine<Prop>,
 }) & ({

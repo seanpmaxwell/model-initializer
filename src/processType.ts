@@ -23,7 +23,7 @@ const TYPE_MAP = {
 
 interface ITypeObj {
   type: string;
-  transform?: ((arg: unknown) => typeof arg) | 'auto' | 'json';
+  trans?: ((arg: unknown) => typeof arg) | 'auto' | 'json';
   refine?: ((arg: unknown) => boolean) | string[] | number[];
   range?: TRange;
   default?: unknown;
@@ -127,10 +127,10 @@ function processType(
       range = _processRange(typeProp.range)
     }
     // Transform
-    if (typeProp.transform) {
-      if (typeof typeProp.transform === 'function') {
-        transform = typeProp.transform; 
-      } else if (typeProp.transform === 'auto') {
+    if (!!typeProp.trans) {
+      if (typeof typeProp.trans === 'function') {
+        transform = typeProp.trans; 
+      } else if (typeProp.trans === 'auto') {
         if (type === 'string') {
           transform = (arg: any) => String(arg);
         } else if (type === 'number') {
@@ -140,7 +140,7 @@ function processType(
         } else if (type === 'Date') {
           transform = (arg: any) => new Date(arg);
         }
-      } else if (typeProp.transform === 'json') {
+      } else if (typeProp.trans === 'json') {
         transform = (arg: any) => JSON.parse(arg);
       }
     }

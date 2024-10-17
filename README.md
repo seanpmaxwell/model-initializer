@@ -115,7 +115,7 @@ const validateAvatar = User.pick('avatar').vldt;
   type: 'string' | 'number' ...etc;
   default?: YourModel[keyof YourModel];
   refine?: (arg: unknown) => arg is YourModel[keyof YourModel] OR you can pass a string or number array;
-  transform?: (arg: unknown) => T
+  trans?: (arg: unknown) => T
   range?: (arg: unknown) => boolean; // Numbers only
 }
 ```
@@ -127,11 +127,11 @@ const validateAvatar = User.pick('avatar').vldt;
 - `refine`: optional for all types but required for objects without a `props` property.
   - This function will always be called if truthy and will be used in `new` and `isValid` to validate a value.
   - For each `str` or `num` type, you can also pass string or number array to `refine` instead of a function. The validation check will make sure that the value is included in the array.
-- `transform`: you might want to transform a value before validating it or setting in the new function. You can pass the optional `transform` property. Transform will run before validation is done and manipulate the original object being passed with a new value. If the key is absent from the object, then `transform` will be skipped. To give an example, maybe you received a string value over an API call and you want it transformed into a `number` or you want to run `JSON.parse`.
-  - `transform` can be a a function `(arg: unknown) => "typesafe value"`, `auto` or `json`.
+- `trans` (short for transform): you might want to transform a value before validating it or setting in the new function. You can pass the optional `trans` property. Transform will run before validation is done and manipulate the original object being passed with a new value. If the key is absent from the object, then `trans` will be skipped. To give an example, maybe you received a string value over an API call and you want it transformed into a `number` or you want to run `JSON.parse`.
+  - `trans` can be a a function `(arg: unknown) => "typesafe value"`, `auto` or `json`.
   - `auto` can work for `num`, `str`, `bool`, `date` base-types and is short for doing `(arg: unknown) => "Base-Type i.e. Number"(arg)` 
   - `json` can be applied to any type and is short for doing `(arg: unknown) => JSON.parse(arg)`
-  - Note that transform will NOT be applied to the default values.
+  - Note that `trans` will NOT be applied to the default values.
 - Number types can also have the `range` prop. The values are:
   - `+`: any positive number
   - `-`: any negative number
@@ -167,7 +167,7 @@ const validateAvatar = User.pick('avatar').vldt;
 
 ### Arrays, Dates, and String formats
 - Validation only works for one-dimensional arrays. If you have nested arrays set the type to `object` and write your own `refine` function.
-- Any validate date whether string or number will pass the date validation test. If you want it converted to a `Date` (or some other) object use the `transform` function.
+- Any validate date whether string or number will pass the date validation test. If you want it converted to a `Date` (or some other) object use the `trans` function.
 - If you want to set a format for strings use can use the optional `format` property. Each format also includes a default value as well. The current formats and their defaults are:
   - `email`: `''` (Note that an empty string counts as a valid email)
   - `color` (a hexcode) `'#ffffff'`

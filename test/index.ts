@@ -109,7 +109,7 @@ const User = MI.init<IUser>({
   avatar5: {
     type: 'obj[]',
     props: { fileName: 'str', data: 'str' },
-    transform: 'json',
+    trans: 'json',
   },
   children: 'str[]',
   parentId: { type: 'fk | null', default: null },
@@ -120,12 +120,12 @@ const User = MI.init<IUser>({
   },
   orderDir: { type: 'str', refine: ['asc', 'desc', ''] },
   adminType: { type: 'num', refine: [1, 2, 0] },
-  page: { type: 'num', transform: 'auto' },
+  page: { type: 'num', trans: 'auto' },
   status: 'num',
   statuses: '?num[]',
-  boo: { type: 'bool', transform: arg => Boolean(arg) },
-  booOpt: { type: '?bool | null', transform: 'auto' },
-  booArr: { type: 'bool[]', transform: () => [] },
+  boo: { type: 'bool', trans: arg => Boolean(arg) },
+  booOpt: { type: '?bool | null', trans: 'auto' },
+  booArr: { type: 'bool[]', trans: () => [] },
   address: {
     type: '?obj',
     props: {
@@ -195,7 +195,8 @@ const User = MI.init<IUser>({
   },
   anyTest3: {
     type: 'any',
-    refine: (undefined) as any,
+    // refine: (undefined) as any,
+    refine: (() => true) as any,
     default: { fileName: 'str', data: 'str' },
   },
   anyTest4: {
