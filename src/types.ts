@@ -58,7 +58,7 @@ type TDate<Prop> = TSetupTypes<Prop, '?date[] | null', 'date[] | null', '?date |
 type TEmail<Prop> = TSetupTypes<Prop, '?email[] | null', 'email[] | null', '?email | null', 'email | null', '?email[]', '?email', 'email[]', 'email'>;
 type TColor<Prop> = TSetupTypes<Prop, '?color[] | null', 'color[] | null', '?color | null', 'color | null', '?color[]', '?color', 'color[]', 'color'>;
 type TObj<Prop> = TSetupTypes<Prop, '?obj[] | null', 'obj[] | null', '?obj | null', 'obj | null', '?obj[]', '?obj', 'obj[]', 'obj'>;
-type TRec<Prop> = TSetupTypes<Prop, '?rec[] | null', 'rec[] | null', '?rec | null', 'rec | null', '?rec[]', '?rec', 'rec[]', never>;
+type TObjWithoutBase<Prop> = TSetupTypes<Prop, '?obj[] | null', 'obj[] | null', '?obj | null', 'obj | null', '?obj[]', '?obj', 'obj[]', never>;
 
 
 // **** Types for "init" function **** //
@@ -76,19 +76,16 @@ type TObjFull<Prop> = {
   type: TObj<Prop>,
   props: TModelSchema<Prop>,
   transform?: (Transform<Prop> | 'json'),
-};
-
-type TRecord<Prop> = {
-  type: TRec<Prop>,
+} | {
+  type: TObjWithoutBase<Prop>,
   refine: Refine<Prop>,
-  default?: Prop,
   transform?: (Transform<Prop> | 'json'),
 } | {
-  type: 'rec',
+  type: 'obj',
   refine: Refine<Prop>,
   default: Prop,
   transform?: (Transform<Prop> | 'json'),
-}
+};
 
 type TModelSchemaOpts<Prop> = (
   Flatten<Prop> extends boolean
@@ -100,7 +97,7 @@ type TModelSchemaOpts<Prop> = (
   : Flatten<Prop> extends Date
   ? TDateFull<Prop>
   : Flatten<Prop> extends object
-  ? (TObjFull<Prop> | TRecord<Prop>)
+  ? TObjFull<Prop>
   : never
 )
 
@@ -112,8 +109,7 @@ export type TModelSchema<T> = {
 export type TPickRet<T> = ({
   vldt: (arg: unknown) => arg is Exclude<T, undefined>,
   default: () => Exclude<T, undefined>,
-  // Make sure neste value is an object but not a generic "record"
-}) & (string extends keyof T ? {} : number extends keyof T ? {} : symbol extends keyof T ? {} : T extends Record<string, unknown> ? {
+}) & (T extends Record<string, unknown> ? {
   pick: <K extends keyof T>(k: K) => TPickRet<T[K]>,
 } : {});
 

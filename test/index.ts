@@ -52,11 +52,16 @@ export interface IUser {
     foo: string;
     bar: number;
     blah: boolean;
-    horse: { name: string };
+    horse: {
+      name: string;
+      owner: {
+        name: string;
+      }
+    };
     // horsee: object;
   };
-  record: Record<string, unknown>;
-  // record: object; // don't need to worry about cause the readme says only use Interfaces, Mapped types, and Record<string, something>;
+  record: object;
+  recordTest?: Record<string, unknown>[];
 }
 
 type IAvatar = {
@@ -137,15 +142,29 @@ const User = MI.init<IUser>({
       },
       horse: {
         type: 'obj',
-        props: { name: 'str' },
+        props: {
+          name: 'str',
+          owner: {
+            type: 'obj',
+            props: { name: 'str' },
+          }
+        },
       },
       // horsee: null,
     },
   },
   record: {
-    type: 'rec',
+    type: 'obj',
     refine: (arg: unknown): arg is Record<string, unknown> => { return true; },
     default: {},
+  },
+  recordTest: {
+    type: '?obj[]',
+    // props: {
+    //   // dude: 'asdf'
+    // },
+    refine: (() => {}) as any,
+    // default: {},
   }
 });
 
@@ -204,10 +223,12 @@ User.pick('active')
 User.pick('age')
 // User.pick('orderDir').pick()
 User.pick('avatar5').pick('data')
-User.pick('avatar5').pick('fileName').vldt
+User.pick('avatar5').pick('fileName').default
 User.pick('nested').pick('bar')
 User.pick('nested').pick('horse').pick('name')
+// User.pick('nested').pick('horse').pick('name')
 User.pick('record')
+User.pick('recordTest')
 if (User.pick('nested').pick('foo')) {
 
 }
