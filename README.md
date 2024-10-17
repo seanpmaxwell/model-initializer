@@ -7,7 +7,7 @@
 - To call `init` you must pass a generic and an object used to represent your schema (i.e. `init<IUser>({ name: 'string' })`) it gives you back an object with 3 functions: `new`, `isValid`, and `pick`. For all 3, typesafety is enforced by the generic you passed.
   - `new` let's us create new object using a partial of your model and returns a full complete object. For missing keys, values are supplied by defaults which you can optionally configure. Defaults are deep-cloned before being added.
   - `isValid` accepts an unknown argument and throws errors if they do not match the schema requirements.
-  - `pick("prop")` extracts the validation logic and default value for a single property and returns an object `{ default: fn, vldt: fn }`. The property passed must be a key of the the generic passed to `init`. However, one difference with the `vldt` function is that `undefined` will not be accepted as a valid value even if the property is optional. `default()` returns a deepClone of the default value. If the property is an nested object whose `type` is object, you can also chain the `pick` method to select its values as well. 
+  - `pick("prop")` extracts the validation logic and default value for a single property and returns an object `{ default: fn, vldt: fn }`. The property passed must be a key of the the generic passed to `init`. However, one difference with the `vldt` function is that `undefined` will not be accepted as a valid value even if the property is optional. `default()` returns a deepClone of the default value. If the property is an nested object whose `type` is object, you can also chain the `pick` method to select its values as well.
 - Just to point out I know there are tons of schema validation libraries out there, but I wanted something that would both validate a schema, let me setup new instances using partials and defaults, and which would allow me to typesafe any properties I tried to add to the schema using an `interface`.
 - By default `structuredClone()` is used for deep cloning values. I know some older versions of node don't supported `structuredClone()`, so you can set your own clone function if you want: see the last section.
 <br/>
@@ -138,8 +138,10 @@ const validateAvatar = User.pick('avatar').vldt;
   - `color`: `#FFFFFF` that's the hex code for white
   - `pk` and `fk`: `-1`
 
-### Objects
-- If you have an an object with a distinct set of properties you should use the `props` key. If you have a dynamic object, you can leave `props` off but must use `refine`.
+### Objects and the "any" type
+- If you have an an object with a distinct set of properties you should use the `obj` type which requires the `props` key. 
+- If you have a dynamic object you might want to use the `any` type. Technically it can be used for any type but beyond dynamic objects there's really no point. If you pass a named type-map with the props key with `any` you will still have typesafe `pick` functions **BUT** Using `pick` with the `any` type is unsafe cause `props` is not a required property. If you want to use `pick` with an `any` you need to know based on context if pick is safe to use.
+- `refine` and `default` are both required with `any` and must still return a type-safe value.
 
 ### Arrays/Emails/Colors
 - Validation only works for one-dimensional arrays. If you have nested arrays set the type to `object` and write your own `refine` function.

@@ -58,7 +58,6 @@ type TDate<Prop> = TSetupTypes<Prop, '?date[] | null', 'date[] | null', '?date |
 type TEmail<Prop> = TSetupTypes<Prop, '?email[] | null', 'email[] | null', '?email | null', 'email | null', '?email[]', '?email', 'email[]', 'email'>;
 type TColor<Prop> = TSetupTypes<Prop, '?color[] | null', 'color[] | null', '?color | null', 'color | null', '?color[]', '?color', 'color[]', 'color'>;
 type TObj<Prop> = TSetupTypes<Prop, '?obj[] | null', 'obj[] | null', '?obj | null', 'obj | null', '?obj[]', '?obj', 'obj[]', 'obj'>;
-type TObjWithoutBase<Prop> = TSetupTypes<Prop, '?obj[] | null', 'obj[] | null', '?obj | null', 'obj | null', '?obj[]', '?obj', 'obj[]', never>;
 
 
 // **** Types for "init" function **** //
@@ -72,20 +71,19 @@ type TEmailFull<Prop> = TEmail<Prop> | TTypeObj<Prop, TEmail<Prop>>;
 type TColorFull<Prop> = TColor<Prop> | TTypeObj<Prop, TColor<Prop>>;
 type TRelKeyFull<Prop> = 'pk' | (null extends Prop ? ('fk | null' | { type: 'fk | null', default: null }) : 'fk');
 
-type TObjFull<Prop> = {
+type TObjFull<Prop> = ({
   type: TObj<Prop>,
-  props: TModelSchema<Prop>,
   transform?: (Transform<Prop> | 'json'),
-} | {
-  type: TObjWithoutBase<Prop>,
-  refine: Refine<Prop>,
+  props: TModelSchema<Flatten<Prop>>,
+});
+
+type TAnyFull<Prop> = ({
+  type: 'any',
   transform?: (Transform<Prop> | 'json'),
-} | {
-  type: 'obj',
+  props?: TModelSchema<Prop>,
   refine: Refine<Prop>,
   default: Prop,
-  transform?: (Transform<Prop> | 'json'),
-};
+});
 
 type TModelSchemaOpts<Prop> = (
   Flatten<Prop> extends boolean
@@ -97,19 +95,19 @@ type TModelSchemaOpts<Prop> = (
   : Flatten<Prop> extends Date
   ? TDateFull<Prop>
   : Flatten<Prop> extends object
-  ? TObjFull<Prop>
+  ? (TObjFull<Prop>)
   : never
 )
 
 export type TModelSchema<T> = {
-  [K in keyof T]: TModelSchemaOpts<T[K]>;
+  [K in keyof T]: (TModelSchemaOpts<T[K]> | TAnyFull<T[K]>);
 };
 
 // Return value for the pick function
 export type TPickRet<T> = ({
   vldt: (arg: unknown) => arg is Exclude<T, undefined>,
   default: () => Exclude<T, undefined>,
-}) & (T extends Record<string, unknown> ? {
+}) & ([] extends T ? {} : T extends Record<string, unknown> ? {
   pick: <K extends keyof T>(k: K) => TPickRet<T[K]>,
 } : {});
 

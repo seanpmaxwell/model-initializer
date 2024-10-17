@@ -1,3 +1,4 @@
+import Errors from './Errors';
 import { isNum, isObj } from './misc';
 import ModelInitializer from './ModelInitializer';
 import Regexes from './Regexes';
@@ -177,6 +178,18 @@ function processType(
       getDefault = () => _getDefault(rootType, isArr);
     }
   }
+  // Failsafe for pick function
+  if (pick === undefined) {
+    const pick_ = ((arg: string) => {
+      console.error(Errors.noPropsKey(arg));
+      return {
+        default: () => ({}),
+        vldt: () => false,
+        pick: (arg: string) => pick_(arg),
+      }
+    });
+    pick = pick_;
+  }
   // Return
   return {
     propName: key,
@@ -196,6 +209,13 @@ function processType(
     _schema,
   };
 }
+
+function infiniteNest() {
+  return function() {
+    return infiniteNest();
+  };
+}
+
 
 /**
  * Get the default value non including relational keys.

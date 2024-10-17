@@ -39,4 +39,7 @@ export default {
   rangeValidationFailed(propName: string) {
     return `Property "${propName}" failed range validation.`;
   },
+  noPropsKey(propName: string) {
+    return `Trying to access property "${propName}" when no props was provided for it`;
+  }
 } as const;

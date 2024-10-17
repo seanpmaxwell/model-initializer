@@ -27,7 +27,7 @@ export interface IUser {
   avatar2: IAvatar | null;
   avatar3?: IAvatar | null;
   avatar4: IAvatar;
-  avatar5: IAvatar;
+  avatar5: IAvatar[];
   parentId: number | null;
   color: string;
   color2: string;
@@ -60,8 +60,11 @@ export interface IUser {
     };
     // horsee: object;
   };
-  record: object;
+  record: Record<string, unknown>;
   recordTest?: Record<string, unknown>[];
+  anyTest: string;
+  anyTest2: object;
+  anyTest3: IAvatar;
 }
 
 type IAvatar = {
@@ -100,7 +103,7 @@ const User = MI.init<IUser>({
     props: { fileName: 'str', data: 'str' },
   },
   avatar5: {
-    type: 'obj',
+    type: 'obj[]',
     props: { fileName: 'str', data: 'str' },
     transform: 'json',
   },
@@ -143,7 +146,7 @@ const User = MI.init<IUser>({
       horse: {
         type: 'obj',
         props: {
-          name: 'str',
+          name: { type: 'str', default: 'ed' },
           owner: {
             type: 'obj',
             props: { name: 'str' },
@@ -155,17 +158,33 @@ const User = MI.init<IUser>({
   },
   record: {
     type: 'obj',
-    refine: (arg: unknown): arg is Record<string, unknown> => { return true; },
-    default: {},
+    props: { },
   },
   recordTest: {
     type: '?obj[]',
+    props: {},
     // props: {
     //   // dude: 'asdf'
     // },
-    refine: (() => {}) as any,
+    // refine: (() => {}) as any,
     // default: {},
-  }
+    // default: [],
+  },
+  anyTest: {
+    type: 'any',
+    refine: (() => true) as any,
+    default: '',
+  },
+  anyTest2: {
+    type: 'any',
+    refine: (() => true) as any,
+    default: {},
+  },
+  anyTest3: {
+    type: 'any',
+    refine: (() => true) as any,
+    default: { fileName: 'str', data: 'str' },
+  },
 });
 
 
@@ -222,13 +241,16 @@ console.log(result)
 User.pick('active')
 User.pick('age')
 // User.pick('orderDir').pick()
-User.pick('avatar5').pick('data')
-User.pick('avatar5').pick('fileName').default
+User.pick('avatar4').pick('data')
+User.pick('avatar4').pick('fileName').default().length.toFixed()
+// User.pick('avatar5').pick('data')
 User.pick('nested').pick('bar')
-User.pick('nested').pick('horse').pick('name')
+console.log(User.pick('nested').pick('horse').pick('name').default());
 // User.pick('nested').pick('horse').pick('name')
 User.pick('record')
 User.pick('recordTest')
+User.pick('anyTest2').default;
+User.pick('anyTest3').pick('data') // <-- Possible unsafe
 if (User.pick('nested').pick('foo')) {
 
 }
