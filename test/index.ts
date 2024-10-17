@@ -7,7 +7,14 @@ enum Status {
   NA,
   Active,
   Suspended,
+  Foo
 }
+
+enum Fruit {
+  Apple = 'Apple',
+  Orange = 'Orange',
+}
+
 
 // User as it appears in the database
 export interface IUser {
@@ -69,6 +76,8 @@ export interface IUser {
   anyTest2: object;
   anyTest3: IAvatar;
   anyTest4: Record<string, unknown>;
+  enumTest1: Status;
+  enumTest2: Fruit;
 }
 
 type IAvatar = {
@@ -204,6 +213,8 @@ const User = MI.init<IUser>({
     refine: (() => true) as any,
     default: { },
   },
+  enumTest1: { type: 'enum', refine: Status },
+  enumTest2: { type: 'enum', refine: Fruit }
 });
 
 
@@ -223,6 +234,8 @@ const user1 = User.new({
   email: 'asdf.asdf@asdf.com',
   color: '#ffffff',
   created: '2024-10-16T23:01:37.919Z' as any,
+  // enumTest1: Status.Active,
+  // enumTest2: Fruit.Apple,
 });
 console.log(user1)
 

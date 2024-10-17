@@ -3,6 +3,7 @@ import StringFormats from './StringFormats';
 
 // **** Model-Schema Types **** //
 
+export type TEnum = Record<string, string | number>;
 type Flatten<T> = (T extends unknown[] ? T[number] : NonNullable<T>);
 type Refine<Prop> = (arg: unknown) => arg is Prop;
 type Transform<Prop> = (arg: unknown) => Prop;
@@ -93,6 +94,11 @@ type TAnyFull<Prop> = ({
   default?: Prop,
 });
 
+type TEnumFull<Prop> = NonNullable<Prop> extends (string | number) ? {
+  type: 'enum' | '?enum',
+  refine: TEnum,
+} : never;
+
 // Combine all types
 type TModelSchemaOpts<Prop> = (
   Flatten<Prop> extends boolean
@@ -110,7 +116,7 @@ type TModelSchemaOpts<Prop> = (
 
 // Map the schema to the incoming type
 export type TModelSchema<T> = {
-  [K in keyof T]: (TModelSchemaOpts<T[K]> | TAnyFull<T[K]>);
+  [K in keyof T]: (TModelSchemaOpts<T[K]> | TAnyFull<T[K]> | TEnumFull<T[K]>);
 };
 
 // Return value for the pick function

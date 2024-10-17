@@ -142,7 +142,10 @@ export function _validateCore(pObj: IProcessedType, val: unknown): boolean {
       throw new Error(Errors.rangeValidationFailed(propName));
     }
   // Check "typeof" type
-  } else if (pObj.type !== 'any' && typeof val !== pObj.type) {
+  } else if (
+    !['any', 'enum'].includes(pObj.type) &&
+    (typeof val !== pObj.type)
+  ) {
     throw new Error(Errors.default(propName));
   }
   // Must always check "refine" functions if there

@@ -1,8 +1,8 @@
 import Errors from './Errors';
-import { isNum, isObj } from './misc';
+import { getEnumVals, isNum, isObj, nonArrObj } from './misc';
 import ModelInitializer from './ModelInitializer';
 import StringFormats from './StringFormats';
-import { TRange, } from './types';
+import { TRange, TEnum } from './types';
 
 
 // **** Type Map **** //
@@ -16,6 +16,7 @@ const TYPE_MAP = {
   pk: 'number',
   fk: 'number',
   any: 'any',
+  enum: 'enum',
 } as const;
 
 
@@ -24,7 +25,7 @@ const TYPE_MAP = {
 interface ITypeObj {
   type: string;
   trans?: ((arg: unknown) => typeof arg) | 'auto' | 'json';
-  refine?: ((arg: unknown) => boolean) | string[] | number[];
+  refine?: ((arg: unknown) => boolean) | string[] | number[] | TEnum;
   range?: TRange;
   default?: unknown;
   props?: object;
@@ -120,6 +121,10 @@ function processType(
         refine = refine_;
       } else if (Array.isArray(refine_) && refine_.length > 0) {
         refine = (arg: unknown) => refine_.some(item => item === arg);
+      } else if (type === 'enum' && nonArrObj(refine_)) {
+        const values = getEnumVals(refine_);
+        refine = (arg: unknown) => values.some(item => item === arg);
+        getDefault = () => values[0];
       }
     }
     // Setup range
