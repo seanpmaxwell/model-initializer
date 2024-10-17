@@ -259,10 +259,11 @@ console.log(User.pick('nested').pick('horse').pick('name').default());
 // User.pick('nested').pick('horse').pick('name')
 User.pick('record')
 User.pick('recordTest')
-User.pick('anyTest2').default;
+User.pick('anyTest2').default();
 console.log(User.pick('anyTest3').pick('data')) // <-- Possibly unsafe
 if (User.pick('nested').pick('foo')) {
   const val = User.pick('nested').pick('foo').default();
   console.log(val)
 }
 
+console.log(MI.StringFormats.color.test('asdf'));

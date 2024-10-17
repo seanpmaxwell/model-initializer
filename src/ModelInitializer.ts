@@ -1,7 +1,7 @@
 import Errors from './Errors';
 import { isObj } from './misc';
 import processType, { IProcessedType } from './processType';
-import Regexes from './StringFormats';
+import StringFormats from './StringFormats';
 import { TModelSchema, TPickRet, TTestFnSchema } from './types';
 import { validateDefaults, validateObj, validateProp } from './validator-fns';
 
@@ -10,7 +10,8 @@ import { validateDefaults, validateObj, validateProp } from './validator-fns';
 
 export class ModelInitializer {
 
-  public readonly rgxs = { ...Regexes };
+  public static readonly STRING_FORMATS = { ...StringFormats };
+  public readonly StringFormats = { ...StringFormats };
 
   /**
    * Constructor

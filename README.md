@@ -172,7 +172,7 @@ const validateAvatar = User.pick('avatar').vldt;
   - `email`: `''` (Note that an empty string counts as a valid email)
   - `color` (a hexcode) `'#ffffff'`
   - `nonemp` (any non-empty string) `_`
-- All regexes used for validation can be accessed via the `rgxs` prop and you don't need to call `.test`: `MI.rgxs.email("some string")`
+- All functions for string validation (and the default values) can be accessed via the `StringFormats` prop i.e. `MI.StringFormats.email("some string")`.
 
 ### PK (primary-key) and FK (foreign-key)
 - These are used to represent relational database keys. The defaults are `-1`.
