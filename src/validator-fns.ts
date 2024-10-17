@@ -12,25 +12,33 @@ export function validateDefaults<T>(
   typeMap: Record<string, IProcessedType>,
 ): boolean {
   for (const schemaPropKey in schema) {
-    // Skip
-    const schemaPropVal = schema[schemaPropKey],
-      hasDefaultProp = schemaPropVal.hasOwnProperty('default');
-    if (!isObj(schemaPropVal) || !hasDefaultProp || schemaPropVal.type.includes('props')) {
-      continue;
+    // Init
+    const schemaPropVal = schema[schemaPropKey];
+    let hasRefine = false,
+      default_,
+      type = '';
+    if (isObj(schemaPropVal) && ('default' in schemaPropVal)) {
+      if ('default' in schemaPropVal) {
+        default_ = schemaPropVal.default;
+      }
+      if ('type' in schemaPropVal && typeof schemaPropVal.type === 'string') {
+        type = schemaPropVal.type;
+      } else {
+        throw new Error('Type should be a string on the object.');
+      }
+      hasRefine = schemaPropVal.hasOwnProperty('refine');
+    } else if (isStr(schemaPropVal)) {
+      type = schemaPropVal;
     }
-    // Get type
-    const propName = schemaPropKey,
-      type = schemaPropVal.type,
-      hasRefine = ('refine' in schemaPropVal);
     // Check requirements
-    if ((type.includes('obj') || type.includes('any')) && !hasRefine) {
+    if (type.includes('any') && !hasRefine) {
       throw new Error(Errors.refineMissing(schemaPropKey));
-    } else if ((type === 'obj' || type.includes('any')) && !hasDefaultProp) {
-      throw new Error(Errors.defaultNotFoundForObj(propName));
+    } else if (type.includes('any') && default_ === undefined) {
+      throw new Error(Errors.defaultNotFoundForObj(schemaPropKey));
     }
     // Validate default if there
-    if ('default' in schemaPropVal) {
-      _wrapErr(typeMap[schemaPropKey], schemaPropVal.default);
+    if (default_ !== undefined) {
+      _wrapErr(typeMap[schemaPropKey], default_);
     }
   }
   return true;

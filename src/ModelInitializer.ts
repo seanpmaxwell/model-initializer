@@ -33,31 +33,24 @@ export class ModelInitializer {
     }
     // Validate the defaults
     validateDefaults(schema, typeMap);
-    // Setup functions
-    const isValid = validateObj<T>(schema, typeMap),
-      getNew = this.setupGetNew<T>(schema, typeMap);
     // Return
     return {
-      isValid,
-      new: (arg?: Partial<T>) => getNew(arg),
-      pick: (<K extends keyof T>(prop: K) => {
-        const pObj: IProcessedType = typeMap[prop];
-        // Return
-        return {
-          default(): Exclude<T[K], undefined> {
-            return pObj.getDefault() as Exclude<T[K], undefined>;
-          },
-          vldt(arg: unknown): arg is Exclude<T[K], undefined> {
-            if (arg === undefined) {
-              throw new Error(Errors.propMissing(String(prop)))
-            }
-            return validateProp(pObj, arg);
-          },
-          ...(!!pObj.pick ? {
-            pick: pObj.pick,
-          } : {}),
-        } as TPickRet<T[K]>;
-      }),
+      isValid: validateObj<T>(schema, typeMap),
+      new: this.setupGetNew<T>(schema, typeMap),
+      pick: (<K extends keyof T>(prop: K) => ({
+        default(): Exclude<T[K], undefined> {
+          return typeMap[prop].getDefault() as Exclude<T[K], undefined>;
+        },
+        vldt(arg: unknown): arg is Exclude<T[K], undefined> {
+          if (arg === undefined) {
+            throw new Error(Errors.propMissing(String(prop)))
+          }
+          return validateProp(typeMap[prop], arg);
+        },
+        ...(!!typeMap[prop].pick ? {
+          pick: typeMap[prop].pick,
+        } : {}),
+      }) as TPickRet<T[K]>),
     };
   }
 

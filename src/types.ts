@@ -1,6 +1,9 @@
+import StringFormats from './StringFormats';
+
+
 // **** Model-Schema Types **** //
 
-type Flatten<T> = (T extends any[] ? T[number] : NonNullable<T>);
+type Flatten<T> = (T extends unknown[] ? T[number] : NonNullable<T>);
 type Refine<Prop> = (arg: unknown) => arg is Prop;
 type Transform<Prop> = (arg: unknown) => Prop;
 export type TRange = ['<' | '>' | '<=' | '>=', number] | [number, number] | '+' | '-';
@@ -33,12 +36,12 @@ export type TTypeObj<Prop, TType> = {
 } : {}) &
 // Add format
 (Flatten<Prop> extends string ? {
-  format?: 'email' | 'color' | 'nonemp',
+  format?: keyof typeof StringFormats,
 } : {});
 
 // Setup Utility Types
 type TSetupArr<Prop, ArrType, Base> = 
-  [] extends Prop 
+  Prop extends unknown[]
     ? ArrType
     : Base
 
@@ -54,9 +57,9 @@ type TSetupTypes<Prop, NullAndOptAndArr, NullAndArr, NullAndOpt, Null, OptAndArr
 
 // Setup Base-Types
 type TBool<Prop> = TSetupTypes<Prop, '?bool[] | null', 'bool[] | null', '?bool | null', 'bool | null', '?bool[]', '?bool', 'bool[]', 'bool'>;
+type TDate<Prop> = TSetupTypes<Prop, '?date[] | null', 'date[] | null', '?date | null', 'date | null', '?date[]', '?date', 'date[]', 'date'>;
 type TNum<Prop> = TSetupTypes<Prop, '?num[] | null', 'num[] | null', '?num | null', 'num | null', '?num[]', '?num', 'num[]', 'num'>;
 type TStr<Prop> = TSetupTypes<Prop, '?str[] | null', 'str[] | null', '?str | null', 'str | null', '?str[]', '?str', 'str[]', 'str'>;
-type TDate<Prop> = TSetupTypes<Prop, '?date[] | null', 'date[] | null', '?date | null', 'date | null', '?date[]', '?date', 'date[]', 'date'>;
 type TObj<Prop> = TSetupTypes<Prop, '?obj[] | null', 'obj[] | null', '?obj | null', 'obj | null', '?obj[]', '?obj', 'obj[]', 'obj'>;
 
 
@@ -101,7 +104,7 @@ type TModelSchemaOpts<Prop> = (
   : Flatten<Prop> extends Date
   ? TDateFull<Prop>
   : Flatten<Prop> extends object
-  ? (TObjFull<Prop>)
+  ? TObjFull<Prop>
   : never
 )
 
@@ -114,7 +117,7 @@ export type TModelSchema<T> = {
 export type TPickRet<T> = ({
   vldt: (arg: unknown) => arg is Exclude<T, undefined>,
   default: () => Exclude<T, undefined>,
-}) & ([] extends T ? {} : T extends Record<string, unknown> ? {
+}) & (string extends keyof T ? {} : T extends Record<string, unknown> ? {
   pick: <K extends keyof T>(k: K) => TPickRet<T[K]>,
 } : {});
 

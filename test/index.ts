@@ -63,6 +63,7 @@ export interface IUser {
   };
   record: Record<string, unknown>;
   recordTest?: Record<string, unknown>[];
+  recordTest2: object;
   anyTest: string;
   anyTest2: object;
   anyTest3: IAvatar;
@@ -159,7 +160,7 @@ const User = MI.init<IUser>({
       // horsee: null,
     },
   },
-  record: {
+  record: { 
     type: 'obj',
     props: { },
   },
@@ -172,6 +173,10 @@ const User = MI.init<IUser>({
     // refine: (() => {}) as any,
     // default: {},
     // default: [],
+  },
+  recordTest2: {
+    type: 'obj',
+    props: { },
   },
   anyTest: {
     type: 'any',
