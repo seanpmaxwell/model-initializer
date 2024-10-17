@@ -63,7 +63,7 @@ export interface IUser {
   };
   record: Record<string, unknown>;
   recordTest?: Record<string, unknown>[];
-  recordTest2: object;
+  recordTestObject: object;
   recordTest3: Record<number, unknown>;
   anyTest: string;
   anyTest2: object;
@@ -175,7 +175,7 @@ const User = MI.init<IUser>({
     // default: {},
     // default: [],
   },
-  recordTest2: {
+  recordTestObject: {
     type: 'obj',
     props: { horse: 'str' }, // Hack but "pick" should be protected from being accessed
   },
@@ -264,7 +264,7 @@ console.log(User.pick('nested').pick('horse').pick('name').default());
 // User.pick('nested').pick('horse').pick('name')
 User.pick('record')
 User.pick('recordTest')
-User.pick('recordTest2')
+User.pick('recordTestObject')
 User.pick('recordTest3')
 
 User.pick('anyTest2').default();
