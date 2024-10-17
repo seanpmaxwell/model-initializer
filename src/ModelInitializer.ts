@@ -1,7 +1,7 @@
 import Errors from './Errors';
 import { isObj } from './misc';
 import processType, { IProcessedType } from './processType';
-import Regexes from './Regexes';
+import Regexes from './StringFormats';
 import { TModelSchema, TPickRet, TTestFnSchema } from './types';
 import { validateDefaults, validateObj, validateProp } from './validator-fns';
 

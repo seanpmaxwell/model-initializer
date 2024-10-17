@@ -26,7 +26,7 @@ export default {
       'it\'s nullable.';
   },
   refineMissing(propName: string) {
-    return `A refine function is required for object "${propName}".`;
+    return `A refine function is required for object/any "${propName}".`;
   },
   notValidArr(propName: string) {
     return `An array type was specified but "${propName}" is not a valid ` + 

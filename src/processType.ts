@@ -1,7 +1,7 @@
 import Errors from './Errors';
 import { isNum, isObj } from './misc';
 import ModelInitializer from './ModelInitializer';
-import Regexes from './Regexes';
+import StringFormats from './StringFormats';
 import { TRange, } from './types';
 
 
@@ -21,6 +21,7 @@ const TYPE_MAP = {
   date: 'object',
   pk: 'number',
   fk: 'number',
+  any: 'any',
 } as const;
 
 
@@ -33,6 +34,7 @@ interface ITypeObj {
   range?: TRange;
   default?: unknown;
   props?: object;
+  format?: keyof typeof StringFormats;
 }
 
 export interface IProcessedType {
@@ -108,24 +110,14 @@ function processType(
     type = type.slice(0, type.length - 2);
     rootType = type;
   }
-  // Check some special types
-  if (type === 'num+') {
-    _refine = _processRange(['>=', 0]);
-  } else if (type === 'num-') {
-    _refine = _processRange(['<', 0]);
-  } else if (type === 'strf') {
-    _refine = (arg: unknown) => arg !== '';
-  } else if (type === 'email') {
-    _refine = Regexes.email;
-  } else if (type === 'date') {
-    isDate = true;
-  } else if (type === 'color') {
-    _refine = Regexes.color;
-  } else if (['pk', 'fk'].includes(type)) {
-    _refine = _processRange(['>=', -1]);
-  }
   // Get non-abbreviated type
   type = (TYPE_MAP as any)[type];
+  // Check some special types
+  if (rootType === 'date') {
+    isDate = true;
+  } if (rootType === 'any') {
+    nullable = true;
+  }
   // Setup transform
   if (isObj(typeProp)) {
     // Setup refine
@@ -152,7 +144,7 @@ function processType(
           transform = (arg: any) => Number(arg);
         } else if (type === 'boolean') {
           transform = (arg: any) => Boolean(arg);
-        } else if (type === 'Date') {
+        } else if (rootType === 'date') {
           transform = (arg: any) => new Date(arg);
         }
       } else if (typeProp.transform === 'json') {
@@ -161,11 +153,17 @@ function processType(
     }
     // Process nested schemas type
     if (rootType === 'obj' && !!typeProp.props) {
-      skipDefaultSetup = true
+      skipDefaultSetup = true;
       _schema = new ModelInitializer().init(typeProp.props);
       getDefault = () => _schema.new();
       refine = _schema.isValid;
       pick = _schema.pick;
+    }
+    // Check string formats
+    if (type === 'string' && !!typeProp.format) {
+      const { test, default: _default } = StringFormats[typeProp.format];
+      _refine = test;
+      getDefault = () => _default;
     }
   }
   // Setup default val
@@ -210,13 +208,6 @@ function processType(
   };
 }
 
-function infiniteNest() {
-  return function() {
-    return infiniteNest();
-  };
-}
-
-
 /**
  * Get the default value non including relational keys.
  */
@@ -225,8 +216,6 @@ function _getDefault(rootType: string, isArr: boolean) {
     return [];
   } else if (rootType === 'date') {
     return new Date();
-  } else if (rootType === 'strf') {
-    return '~';
   } else if (rootType === 'email') {
     return '';
   } else if (rootType === 'num') {
@@ -247,7 +236,11 @@ function _getDefault(rootType: string, isArr: boolean) {
  */
 function _processRange(range: TRange): (arg: unknown) => boolean {
   const left = range[0], right = range[1];
-  if (isNum(left) && isNum(right)) {
+  if (range === '+') {
+    return (arg: unknown) => isNum(arg) && arg >= 0;
+  } else if (range === '-') {
+    return (arg: unknown) => isNum(arg) && arg < 0;
+  } else if (isNum(left) && isNum(right)) {
     if (left < right) {
       return (arg: unknown) => isNum(arg) && (arg >= left && arg <= right);
     } else {

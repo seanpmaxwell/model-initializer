@@ -7,11 +7,17 @@
 - To call `init` you must pass a generic and an object used to represent your schema (i.e. `init<IUser>({ name: 'string' })`) it gives you back an object with 3 functions: `new`, `isValid`, and `pick`. For all 3, typesafety is enforced by the generic you passed.
   - `new` let's us create new object using a partial of your model and returns a full complete object. For missing keys, values are supplied by defaults which you can optionally configure. Defaults are deep-cloned before being added.
   - `isValid` accepts an unknown argument and throws errors if they do not match the schema requirements.
-  - `pick("prop")` extracts the validation logic and default value for a single property and returns an object `{ default: fn, vldt: fn }`. The property passed must be a key of the the generic passed to `init`. However, one difference with the `vldt` function is that `undefined` will not be accepted as a valid value even if the property is optional. `default()` returns a deepClone of the default value. If the property is an nested object whose `type` is object, you can also chain the `pick` method to select its values as well.
-- Just to point out I know there are tons of schema validation libraries out there, but I wanted something that would both validate a schema, let me setup new instances using partials and defaults, and which would allow me to typesafe any properties I tried to add to the schema using an `interface`.
+  - `pick("prop")` extracts the validation logic and default value for a single property and returns an object with the format: `{ default: fn, vldt: fn }`. The property passed must be a key of the the generic passed to `init`. However, one difference with the `vldt` function is that `undefined` will not be accepted as a valid value even if the property is optional. `default()` returns a deep-clone of the default value. If the property is an nested object whose `type` is object, you can also chain the `pick` method to select its values as well.
 - By default `structuredClone()` is used for deep cloning values. I know some older versions of node don't supported `structuredClone()`, so you can set your own clone function if you want: see the last section.
 <br/>
 
+## Why Model-Initializer
+- TypeScript first!
+- Super easy to use and learn.
+- Works will both runtime and compile-time validation including `ts-node` (unlike `typia`).
+- Super small, fast, and lightweight compared to some other libraries like `zod` or `typebox`.
+- No it does not generate types for you BUT, I like modeling my data with interfaces and schema-libraries cause iterfaces also help to act as kind of a documentation for my database model properties without having to dig through some long nested function. If you want something that does both a library like `zod` or `typebox` might be better.
+<br/>
 
 ## Quick Start
 - Installation: `npm i -s modal-initializer`.
@@ -33,7 +39,14 @@ export interface IUser {
   boss: number;
   children: string[];
   avatar?: { fileName: string; data: string };
-  address: { street: string, city: string };
+  address: {
+    street: string;
+    city: string;
+    country: {
+      name: string;
+      code: number;
+    }
+  };
 }
 
 // Setup "User schema"
@@ -42,7 +55,7 @@ const User = MI.init<IUser>({
   name: 'str',
   email: '?email', // Use '?' for optional types
   displayName: { type: '?str', default: '' },
-  age: 'num+',
+  age: 'num',
   lastLogin: 'date | null',
   created: 'date',
   active: 'bool',
@@ -56,7 +69,14 @@ const User = MI.init<IUser>({
   children: 'str[]',
   address: {
     type: 'obj',
-    props: { street: 'str', city: 'str' },
+    props: {
+      street: 'str',
+      city: 'str',
+      country: {
+        type: 'obj',
+        props: { name: 'str', code: 'num' },
+      }
+    },
   },
 });
 
@@ -113,9 +133,10 @@ const validateAvatar = User.pick('avatar').vldt;
   - `json` can be applied to any type and is short for doing `(arg: unknown) => JSON.parse(arg)`
   - Note that transform will NOT be applied to the default values.
 - Number types can also have the `range` prop. The values are:
+  - `+`: any positive number
+  - `-`: any negative number
   - `[number, number]`: if the first value is less than the second value, range will check value is `>=` than the first value AND `<=` the second value. If the first value is greater than the second value, range will check value is `>=` than the first value OR `<=` the second value. 
   - `['<' | '>' | '<=' | '>=', number]`: Will perform a comparison against the provided number `['<=', 100]`
-  - Two alternate `num` types are `num+`: any positive number including 0, and `num-`: any negative number.
 
 ### Nullable 
 - `| null` means that null is a valid value regardless of what's set by type.
@@ -126,7 +147,7 @@ const validateAvatar = User.pick('avatar').vldt;
 - When using `new`, if you supply a default then that will be always be used regardless if the value is optional or not. 
 - If there is no value passed to `new()` and the property is optional, then that key/value pair will be skipped in the object returned from `new()`.
 - If a property is not optional and you do not supply a value in the partial to `new`, then the following defaults will be used:
-  - `str`: empty string `''`, `strf` will be `~` since cannot be empty.
+  - `str`: empty string `''`.
   - `num`: `0`
   - `bool`: `false`
   - `date`: the current datetime as a `Date` object.
@@ -134,27 +155,32 @@ const validateAvatar = User.pick('avatar').vldt;
   - `obj`: 
     - If there is a props key: The default value will be an object generated by the `props` key.
     - If there is no prop key: If an object type is not optional, nullable, or an array, then you must supply a valid default to prevent a bad object from getting attached. Object arrays will just use an empty array as the default. If an object is nullable then `null` will be used as the default.
-  - `email`: empty string
-  - `color`: `#FFFFFF` that's the hex code for white
   - `pk` and `fk`: `-1`
 
-### Objects and the "any" type
+### `obj` and `any` types
 - If you have an an object with a distinct set of properties you should use the `obj` type which requires the `props` key. 
-- If you have a dynamic object you might want to use the `any` type. Technically it can be used for any type but beyond dynamic objects there's really no point. If you pass a named type-map with the props key with `any` you will still have typesafe `pick` functions **BUT** Using `pick` with the `any` type is unsafe cause `props` is not a required property. If you want to use `pick` with an `any` you need to know based on context if pick is safe to use.
-- `refine` and `default` are both required with `any` and must still return a type-safe value.
+- If you have a dynamic object you might want to use the `any` type. Technically it can be used for any type but beyond dynamic objects there's really no point. If you use a named type-map with `any` type in the schema you will still have typesafe (but not necessarily runtime safe) `pick` functions.
+- **IMPORTANT, DANGER** Using `pick` with the `any` type is potentially unsafe cause `props` is not a required property. If you want to use `pick` with an `any` you need to know -based on your particular context- if `pick` is safe to use.
+- `refine` and `default` are both required with `any` (although `default` is not required for `?any`) and must still return a type-safe value. The `refine` function will be all that is used for validation (but for the `default` value and the `new`/`isValid` functions).
+- `?any` exists and will allow an optional type.
+- `null` is always a valid value for `any` items. If you don't want to allow null check for it in the `refine` function.
 
-### Arrays/Emails/Colors
+### Arrays, Dates, and String formats
 - Validation only works for one-dimensional arrays. If you have nested arrays set the type to `object` and write your own `refine` function.
-- There is a built-in regex to check the email and color formats. If you want to use your own, set the type to string and pass your own `refine` function. Note that an empty string counts as a valid email and will be used as the default value if the email is not optional.
+- Any validate date whether string or number will pass the date validation test. If you want it converted to a `Date` (or some other) object use the `transform` function.
+- If you want to set a format for strings use can use the optional `format` property. Each format also includes a default value as well. The current formats and their defaults are:
+  - `email`: `''` (Note that an empty string counts as a valid email)
+  - `color` (a hexcode) `'#ffffff'`
+  - `nonemp` (any non-empty string) `_`
 - All regexes used for validation can be accessed via the `rgxs` prop and you don't need to call `.test`: `MI.rgxs.email("some string")`
 
 ### PK (primary-key) and FK (foreign-key)
-- These are used to represent relational database keys. The defaults are `-1` and the range is automatically `> -1`.
+- These are used to represent relational database keys. The defaults are `-1`.
   - `pk` cannot have any properties set on it.
   - For `fk` the only properties you can set are `type`, and `default`. You can set `default` ONLY if `nullable` in which cause you can set the default to be `-1` or `null` only.
   - There reason defaults are `-1` is cause primary keys should be set to a positive number by the database, so `-1` is used to represent a record that has not been saved in the database yet. I use postgres where convention is to use the `SERIAL` type for database keys.
 
-### Validation
+### Some special notes on validation
 - Validation of values and not just types will be done both in the `isValid` function and in the `new` function before setting a value passed from a partial. Default values (if you passed your own custom default) will also be validated. The reason I decided to make it throw errors instead of just return a boolean is so we can read the name of the property that failed and see exactly where the validation failed. If you don't want it throw errors you should wrap `isValid` and `new` in `try/catch` blocks and handle the error message and values manually.
 
 #### The `MI.test()` function

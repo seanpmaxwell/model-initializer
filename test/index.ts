@@ -48,6 +48,7 @@ export interface IUser {
   rangeTest: number;
   rangeTest2: number;
   rangeTest3: number;
+  rangeTest4: number;
   nested: {
     foo: string;
     bar: number;
@@ -65,6 +66,7 @@ export interface IUser {
   anyTest: string;
   anyTest2: object;
   anyTest3: IAvatar;
+  anyTest4: Record<string, unknown>;
 }
 
 type IAvatar = {
@@ -85,10 +87,10 @@ const a: TObjSchema<IAvatar> = {
 // User schema
 const User = MI.init<IUser>({
   id: 'pk',
-  age: 'num+',
-  name: 'strf',
-  lname: 'strf',
-  email: '?email',
+  age: { type: 'num', range: '+' },
+  name: 'str',
+  lname: { type: 'str', format: 'nonemp' },
+  email: { type: '?str', format: 'email' },
   displayName: { type: '?str', default: '' },
   lastLogin: 'date',
   created: 'date',
@@ -109,7 +111,7 @@ const User = MI.init<IUser>({
   },
   children: 'str[]',
   parentId: { type: 'fk | null', default: null },
-  color: 'color',
+  color: { type: 'str', format: 'color' },
   color2: {
     type: 'str',
     refine: (arg: unknown) => typeof arg === 'string',
@@ -134,6 +136,7 @@ const User = MI.init<IUser>({
   rangeTest: { type: 'num', range: [1, 100] },
   rangeTest2: { type: 'num', range: [100, 1] },
   rangeTest3: { type: 'num', range: ['>=', 35] },
+  rangeTest4: { type: 'num', range: '-' },
   nested: {
     type: 'obj',
     props: {
@@ -185,6 +188,11 @@ const User = MI.init<IUser>({
     refine: (() => true) as any,
     default: { fileName: 'str', data: 'str' },
   },
+  anyTest4: {
+    type: 'any',
+    refine: (() => true) as any,
+    default: { },
+  },
 });
 
 
@@ -194,12 +202,13 @@ const user1 = User.new({
   name: 'jose',
   age: 4,
   avatar3: null,
-  avatar5: JSON.stringify({ fileName: 'foo', data: 'bar' }) as any,
+  avatar5: JSON.stringify([{ fileName: 'foo', data: 'bar' }]) as any,
   page: '1234' as any,
   boo: null as any,
   rangeTest: 50,
   rangeTest2: 101,
   rangeTest3: 75,
+  rangeTest4: -55,
   email: 'asdf.asdf@asdf.com',
   color: '#ffffff',
   created: '2024-10-16T23:01:37.919Z' as any,
@@ -234,10 +243,6 @@ console.log(result)
 
 
 // ** Test nested ** //
-// User.pick('active').pick('horse')
-// User.pick('orderDir').pick('orderDir')
-
-
 User.pick('active')
 User.pick('age')
 // User.pick('orderDir').pick()
@@ -250,51 +255,9 @@ console.log(User.pick('nested').pick('horse').pick('name').default());
 User.pick('record')
 User.pick('recordTest')
 User.pick('anyTest2').default;
-console.log(User.pick('anyTest3').pick('data')) // <-- Possible unsafe
+console.log(User.pick('anyTest3').pick('data')) // <-- Possibly unsafe
 if (User.pick('nested').pick('foo')) {
-
+  const val = User.pick('nested').pick('foo').default();
+  console.log(val)
 }
 
-
-// Test errors
-
-// const UserBad = MI.init<IUser>({
-//   id: { type: 'pk', default: -1 },
-//   age: '?number',
-//   name: 'string | null',
-//   email: 'email',
-//   displayName: { type: 'string', default: 123 },
-//   lastLogin: 'asdfadsf',
-//   created: '?date',
-//   active: 'boolean[]',
-//   boss: 'fk',
-//   foo: 'string | null',
-//   avatar: null,
-//   avatar2: { type: 'object | null' },
-//   avatar3: { type: '?object | null', default: {}, refine: checkAvatar },
-//   avatar4: { type: '?object', default: { fileName: '', data: '' }, refine: checkAvatar },
-//   children: 'string',
-//   parentId: 'fk',
-//   color: 'string[]',
-//   color2: {
-//     type: 'string',
-//     refine: ['horse'],
-//   },
-//   orderDir: { type: 'string', refine: ['asc', 'desc', 0] },
-//   adminType: { type: 'number', refine: [1, 2, 'horse'] }
-// });
-
-// const MIx = new ModelInitializer(arg => arg)
-
-// const Dog = MIx.init<{ name: string, bday: Date }>({
-//   name: 'string',
-//   bday: 'date',
-// })
-
-// Dog.new({ name: 'fido', bday: 'horse' as any })
-// User.new({ id: 1234, orderDir: 'cheese' });
-
-
-// const badValue = JSON.stringify([1,2,'horse']),
-//   badTransformed = MI.test.val<number[]>(badValue, { type: 'number[]', transform: 'json' })
-// console.log(badTransformed)

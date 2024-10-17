@@ -1,7 +1,7 @@
 import Errors from './Errors';
 import { TModelSchema, TTestFnSchema } from './types';
 import { IProcessedType } from './processType';
-import { isObj } from './misc';
+import { isObj, isStr } from './misc';
 
 
 /**
@@ -18,21 +18,41 @@ export function validateDefaults<T>(
     if (!isObj(schemaPropVal) || !hasDefaultProp || schemaPropVal.type.includes('props')) {
       continue;
     }
-    // Make sure its there for default/refine are there
+    // Get type
     const propName = schemaPropKey,
-      type = schemaPropVal.type;
-    if ((type.includes('obj') || type.includes('record')) && !schemaPropVal.hasOwnProperty('refine')) {
+      type = schemaPropVal.type,
+      hasRefine = ('refine' in schemaPropVal);
+    // Check requirements
+    if ((type.includes('obj') || type.includes('any')) && !hasRefine) {
       throw new Error(Errors.refineMissing(schemaPropKey));
-    } else if (type === 'obj' && !hasDefaultProp) {
-      const msg = Errors.defaultNotFoundForObj(propName);
-      throw new Error(msg);
+    } else if ((type === 'obj' || type.includes('any')) && !hasDefaultProp) {
+      throw new Error(Errors.defaultNotFoundForObj(propName));
     }
     // Validate default if there
     if ('default' in schemaPropVal) {
-      validateProp(typeMap[schemaPropKey], schemaPropVal.default)
+      _wrapErr(typeMap[schemaPropKey], schemaPropVal.default);
     }
   }
   return true;
+}
+
+/**
+ * Wrapper error object.
+ */
+function _wrapErr(pObj: IProcessedType, defaultVal: unknown): void {
+  try {
+    validateProp(pObj, defaultVal)
+  } catch (err) {
+    let errStr;
+    if (err instanceof Error) {
+      errStr = err.message;
+    } else if (isStr(err)) {
+      errStr = err;
+    } else {
+      errStr = String(err);
+    }
+    throw new Error('Error was thrown when checking defaults: ' + errStr);
+  }
 }
 
 /**
@@ -113,8 +133,8 @@ export function _validateCore(pObj: IProcessedType, val: unknown): boolean {
     if (!!pObj.range && !pObj.range(val)) {
       throw new Error(Errors.rangeValidationFailed(propName));
     }
-  // Check rest
-  } else if (typeof val !== pObj.type) {
+  // Check "typeof" type
+  } else if (pObj.type !== 'any' && typeof val !== pObj.type) {
     throw new Error(Errors.default(propName));
   }
   // Must always check "refine" functions if there
