@@ -13,9 +13,9 @@ export default {
   default(propName: string) {
     return `Property "${propName}" does not satisfy the constraints.`;
   },
-  defaultNotFoundForObj(propName: string) {
-    return `If "${propName}" is an object, required, and not nullable then ` + 
-      'a default value must be provided.';
+  defaultNotFound(propName: string) {
+    return `If "${propName}" is any and required then a default value ` + 
+      'must be provided.';
   },
   typeInvalid(propName: string) {
     return `"${propName}" must be string, number, boolean, date, object, ` + 
@@ -26,7 +26,7 @@ export default {
       'it\'s nullable.';
   },
   refineMissing(propName: string) {
-    return `A refine function is required for object/any "${propName}".`;
+    return `A refine function is required for "any" types: propName => "${propName}".`;
   },
   notValidArr(propName: string) {
     return `An array type was specified but "${propName}" is not a valid ` + 

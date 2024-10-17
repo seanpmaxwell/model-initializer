@@ -26,15 +26,15 @@ export function validateDefaults<T>(
       } else {
         throw new Error('Type should be a string on the object.');
       }
-      hasRefine = schemaPropVal.hasOwnProperty('refine');
+      hasRefine = (('refine' in schemaPropVal) && schemaPropVal.refine !== undefined);
     } else if (isStr(schemaPropVal)) {
       type = schemaPropVal;
     }
     // Check requirements
     if (type.includes('any') && !hasRefine) {
       throw new Error(Errors.refineMissing(schemaPropKey));
-    } else if (type.includes('any') && default_ === undefined) {
-      throw new Error(Errors.defaultNotFoundForObj(schemaPropKey));
+    } else if (type === 'any' && default_ === undefined) {
+      throw new Error(Errors.defaultNotFound(schemaPropKey));
     }
     // Validate default if there
     if (default_ !== undefined) {

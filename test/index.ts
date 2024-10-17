@@ -195,7 +195,7 @@ const User = MI.init<IUser>({
   },
   anyTest3: {
     type: 'any',
-    refine: (() => true) as any,
+    refine: (undefined) as any,
     default: { fileName: 'str', data: 'str' },
   },
   anyTest4: {
