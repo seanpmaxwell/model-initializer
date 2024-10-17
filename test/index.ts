@@ -177,11 +177,11 @@ const User = MI.init<IUser>({
   },
   recordTest2: {
     type: 'obj',
-    props: { },
+    props: { horse: 'str' }, // Hack but "pick" should be protected from being accessed
   },
   recordTest3: {
     type: 'obj',
-    props: {},
+    props: { },
   },
   anyTest: {
     type: 'any',
@@ -266,6 +266,7 @@ User.pick('record')
 User.pick('recordTest')
 User.pick('recordTest2')
 User.pick('recordTest3')
+
 User.pick('anyTest2').default();
 console.log(User.pick('anyTest3').pick('data')) // <-- Possibly unsafe
 if (User.pick('nested').pick('foo')) {
