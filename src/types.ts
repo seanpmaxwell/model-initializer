@@ -117,7 +117,8 @@ export type TModelSchema<T> = {
 export type TPickRet<T> = ({
   vldt: (arg: unknown) => arg is Exclude<T, undefined>,
   default: () => Exclude<T, undefined>,
-}) & (string extends keyof T ? {} : T extends Record<string, unknown> ? {
+// This stops general Record types from using "pick"
+}) & (symbol extends keyof T ? {} : number extends keyof T ? {} : string extends keyof T ? {} : T extends Record<string, unknown> ? {
   pick: <K extends keyof T>(k: K) => TPickRet<T[K]>,
 } : {});
 

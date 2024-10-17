@@ -64,6 +64,7 @@ export interface IUser {
   record: Record<string, unknown>;
   recordTest?: Record<string, unknown>[];
   recordTest2: object;
+  recordTest3: Record<number, unknown>;
   anyTest: string;
   anyTest2: object;
   anyTest3: IAvatar;
@@ -178,6 +179,10 @@ const User = MI.init<IUser>({
     type: 'obj',
     props: { },
   },
+  recordTest3: {
+    type: 'obj',
+    props: {},
+  },
   anyTest: {
     type: 'any',
     refine: (() => true) as any,
@@ -259,6 +264,8 @@ console.log(User.pick('nested').pick('horse').pick('name').default());
 // User.pick('nested').pick('horse').pick('name')
 User.pick('record')
 User.pick('recordTest')
+User.pick('recordTest2')
+User.pick('recordTest3')
 User.pick('anyTest2').default();
 console.log(User.pick('anyTest3').pick('data')) // <-- Possibly unsafe
 if (User.pick('nested').pick('foo')) {

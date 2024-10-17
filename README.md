@@ -160,7 +160,7 @@ const validateAvatar = User.pick('avatar').vldt;
 ### `obj` and `any` types
 - If you have an an object with a distinct set of properties you should use the `obj` type which requires the `props` key. 
 - If you have a dynamic object you might want to use the `any` type. Technically it can be used for any type but beyond dynamic objects there's really no point. If you use a named type-map with `any` type in the schema you will still have typesafe (but not necessarily runtime safe) `pick` functions.
-- **IMPORTANT, DANGER** Using `pick` with the `any` type is potentially unsafe cause `props` is not a required property. If you want to use `pick` with an `any` you need to know -based on your particular context- if `pick` is safe to use.
+- **IMPORTANT, DANGER** Using `pick` with the `any` type is potentially unsafe cause `props` is not a required property. If you want to use `pick` with an `any` you need to know (based on your particular context) if `pick` is safe to use.
 - `refine` and `default` are both required with `any` (although `default` is not required for `?any`) and must still return a type-safe value. The `refine` function will be all that is used for validation (but for the `default` value and the `new`/`isValid` functions).
 - `?any` exists and will allow an optional type.
 - `null` is always a valid value for `any` items. If you don't want to allow null check for it in the `refine` function.
