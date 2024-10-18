@@ -1,13 +1,13 @@
 # About model-initializer
-<h3>Quick, easy, typescript-first library for initializing and validating objects. Works client or server side and much simpler than other schema validation tools like <b>zod</b>. Unlike typia, doesn't require an extra compilation step so still works with ts-node.</h3>
+<h3>Quick, easy-to-learn, schema-validation (and initialization) library.</h3>
 
 
 ## Why Model-Initializer
 - TypeScript first!
-- Super easy to use and learn.
+- Works client or server side.
 - Works will both runtime and compile-time validation including `ts-node` (unlike `typia`).
-- Super small, fast, and lightweight compared to some other libraries like `zod` or `typebox`.
-- No it does not generate types for you BUT, I like modeling my data with interfaces and schema-libraries cause iterfaces also help to act as kind of a documentation for my database model properties without having to dig through some long nested function. If you want something that does both a library like `zod` or `typebox` might be better.
+- Super small, fast, and lightweight compared to some other schema-validation libraries.
+- No it does not generate types for you BUT, I like modeling my data with interfaces cause they help to act as kind of a documentation for my model properties without having to dig through some long nested schema definitions. If you want something that does both, a library like `zod` or `typebox` might be better.
 - Size comparison to other popular schema validators
   - TypeBox: `1.28 MB`
   - Ajv: `676 kB`
@@ -116,7 +116,7 @@ const validateAvatar = User.pick('avatar').vldt;
 ```typescript
 {
   type: 'string' | 'number' ...etc;
-  default?: YourModel[keyof YourModel];
+  default?: the value of the property;
   refine?: Function, Array (strings and numbers), or Object (enums only);
   trans?: (arg: unknown) => T
   range?: [string | number, number] | '+' | '-'; // Numbers only
@@ -166,8 +166,6 @@ const validateAvatar = User.pick('avatar').vldt;
 
 ### Enums
 - For enum types you can set the type to `enum` and pass an enum-object to the `refine` prop. This will make sure that the value is a value in the enum and it will also set the first value in the `enum` as the default value when `new` is called.
-- Technically you can pass any object to `refine` when the type is an enum. With typescript generics there was not way (that I could find) to enforce a particular enum type. So make sure you use the correct enum object when using this feature.
-`{ type: 'enum', refine: SomeEnum }`
 
 ### Arrays, Dates, and String formats
 - Validation only works for one-dimensional arrays. If you have nested arrays set the type to `object` and write your own `refine` function.
