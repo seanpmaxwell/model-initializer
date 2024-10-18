@@ -2,14 +2,6 @@
 <h3>Quick, easy, typescript-first library for initializing and validating objects. Works client or server side and much simpler than other schema validation tools like <b>zod</b>. Unlike typia, doesn't require an extra compilation step so still works with ts-node.</h3>
 <br/>
 
-## Summary
-- This library's default export is an object that holds several properties. The main one `init` is the heart of the library, we'll talk about the other ones later.
-- To call `init` you must pass a generic and an object used to represent your schema (i.e. `init<IUser>({ name: 'string' })`) it gives you back an object with 3 functions: `new`, `isValid`, and `pick`. For all 3, typesafety is enforced by the generic you passed.
-  - `new` let's us create new object using a partial of your model and returns a full complete object. For missing keys, values are supplied by defaults which you can optionally configure. Defaults are deep-cloned before being added.
-  - `isValid` accepts an unknown argument and throws errors if they do not match the schema requirements.
-  - `pick("prop")` extracts the validation logic and default value for a single property and returns an object with the format: `{ default: fn, vldt: fn }`. The property passed must be a key of the the generic passed to `init`. However, one difference with the `vldt` function is that `undefined` will not be accepted as a valid value even if the property is optional. `default()` returns a deep-clone of the default value. If the property is an nested object whose `type` is object, you can also chain the `pick` method to select its values as well.
-- By default `structuredClone()` is used for deep cloning values. I know some older versions of node don't supported `structuredClone()`, so you can set your own clone function if you want: see the last section.
-<br/>
 
 ## Why Model-Initializer
 - TypeScript first!
@@ -17,6 +9,22 @@
 - Works will both runtime and compile-time validation including `ts-node` (unlike `typia`).
 - Super small, fast, and lightweight compared to some other libraries like `zod` or `typebox`.
 - No it does not generate types for you BUT, I like modeling my data with interfaces and schema-libraries cause iterfaces also help to act as kind of a documentation for my database model properties without having to dig through some long nested function. If you want something that does both a library like `zod` or `typebox` might be better.
+- Size comparison to other popular schema validators
+  - TypeBox: `1.28 MB`
+  - Ajv: `676 kB`
+  - Zod: `570 kB`
+  - Joi: `149 kB`
+  - Model-Initializer: `44.9 kB` 😊
+
+<br/>
+
+## Summary
+- This library's default export is an object that holds several properties. The main one `init` is the heart of the library, we'll talk about the other ones later.
+- To call `init` you must pass a generic and an object used to represent your schema (i.e. `init<IUser>({ name: 'string' })`) it gives you back an object with 3 functions: `new`, `isValid`, and `pick`. For all 3, typesafety is enforced by the generic you passed.
+  - `new` let's us create new object using a partial of your model and returns a full complete object. For missing keys, values are supplied by defaults which you can optionally configure. Defaults are deep-cloned before being added.
+  - `isValid` accepts an unknown argument and throws errors if they do not match the schema requirements.
+  - `pick("prop")` extracts the validation logic and default value for a single property and returns an object with the format: `{ default: fn, vldt: fn }`. The property passed must be a key of the the generic passed to `init`. However, one difference with the `vldt` function is that `undefined` will not be accepted as a valid value even if the property is optional. `default()` returns a deep-clone of the default value. If the property is also a nested object, you can chain the `pick` method to select its values as well.
+- By default `structuredClone()` is used for deep cloning values. I know some older versions of node don't supported `structuredClone()`, so you can set your own clone function if you want: see the last section.
 <br/>
 
 ## Quick Start
@@ -117,19 +125,20 @@ const validateAvatar = User.pick('avatar').vldt;
   refine?: Function, Array (strings and numbers), or Object (enums only);
   trans?: (arg: unknown) => T
   range?: [string | number, number] | '+' | '-'; // Numbers only
+  props?: a nested object
 }
 ```
-- `type`: The root types are `'str' | 'num' | 'bool' | 'date' | obj | any | enum`
-  - Each one has an array counterpart (except `any` and `enum`): i.e. `str[]` and can be prepending with `?` to make it optional i.e. `?str[]`.
-  - Every property can be appended with ` | null` to make it nullable (except `any` and `enum`).
+- `type`: The root types are `'str' | 'num' | 'bool' | 'date' | obj | enum`
+  - Each one has an array counterpart (except `enum`): i.e. `str[]` and can be prepending with `?` to make it optional i.e. `?str[]`.
+  - Every property can be appended with ` | null` to make it nullable (except `enum`).
   - There is also `pk` (primary-key) and `fk` (foreign-key).
-- `default`: optional (except for `objects`'s which are not optional, nullable, or an array), a value passed to `new()` if the key is absent from the partial being passed.
-- `refine`: optional for all types except (`any` and `enum`).
+- `default`: optional, a value passed to `new()` if the key is absent from the partial being passed. There are some exceptions to it being optional with objects, see the <b>Objects</b> section below.
+- `refine`: optional for all types except `enum`.
   - This function will always be called if truthy and will be used in `new` and `isValid` to validate a value.
   - For each `str` or `num` type, you can also pass string or number array to `refine` instead of a function. The validation check will make sure that the value is included in the array.
 - `trans` (short for transform): you might want to transform a value before validating it or setting in the new function. You can pass the optional `trans` property. Transform will run before validation is done and manipulate the original object being passed with a new value. If the key is absent from the object, then `trans` will be skipped. To give an example, maybe you received a string value over an API call and you want it transformed into a `number` or you want to run `JSON.parse`.
   - `trans` can be a a function `(arg: unknown) => "typesafe value"`, `auto` or `json`.
-  - `auto` can work for `num`, `str`, `bool`, `date` base-types and is short for doing `(arg: unknown) => "Base-Type i.e. Number"(arg)` 
+  - `auto` can work for `num`, `str`, `bool`, `date` types and is short for doing `(arg: unknown) => "Base-Type i.e. Number"(arg)` 
   - `json` can be applied to any type and is short for doing `(arg: unknown) => JSON.parse(arg)`
   - Note that `trans` will NOT be applied to the default values.
 - Number types can also have the `range` prop. The values are:
@@ -152,27 +161,22 @@ const validateAvatar = User.pick('avatar').vldt;
   - `bool`: `false`
   - `date`: the current datetime as a `Date` object.
   - `for values ending with "[]"`: an empty array.
-  - `obj`: 
-    - If there is a props key: The default value will be an object generated by the `props` key.
-    - If there is no prop key: If an object type is not optional, nullable, or an array, then you must supply a valid default to prevent a bad object from getting attached. Object arrays will just use an empty array as the default. If an object is nullable then `null` will be used as the default.
+  - `obj`: See the objects section below.
   - `pk` and `fk`: `-1`
 
-### `obj` and `any` types
-- If you have an an object with a distinct set of properties you should use the `obj` type which requires the `props` key. 
-- If you have a dynamic object you might want to use the `any` type. Technically it can be used for any type but beyond dynamic objects there's really no point. If you use a named type-map with `any` type in the schema you will still have typesafe (but not necessarily runtime safe) `pick` functions.
-- **IMPORTANT, DANGER** Using `pick` with the `any` type is potentially unsafe cause `props` is not a required property. If you want to use `pick` with an `any` you need to know (based on your particular context) if `pick` is safe to use.
-- `refine` and `default` are both required with `any` (although `default` is not required for `?any`) and must still return a type-safe value. The `refine` function will be all that is used for validation (but for the `default` value and the `new`/`isValid` functions).
-- `?any` exists and will allow an optional type.
-- `null` is always a valid value for `any` items. If you don't want to allow null check for it in the `refine` function.
+### Objects (`type: 'obj'`)
+- Some terminology: <b>static-object</b> is for objects with a distinct set of properties (i.e. a mapped-type alias, interface, or object returned from an object-literal) while <b>dynamic-object</b> refers to objects without specified keys like `Record<string, unknown>`, `object` etc.
+- Typesafety enforces that static-objects must specify their properties in the `props` key while dynamic-objects must supply a `refine` function.
+- static-objects default value is defined in their schema, but for dynamic-objects you need to define your own default value. If a dynamic-object is not optional, then a default value is required.
 
 ### Enums
-- For enum types you can set the type to `enum` and pass an enum-object to the refine prop. This will make sure that the value is a value in the enum and it will also set the first value in the `enum` as the default value when `new` is called.
+- For enum types you can set the type to `enum` and pass an enum-object to the `refine` prop. This will make sure that the value is a value in the enum and it will also set the first value in the `enum` as the default value when `new` is called.
 - Technically you can pass any object to `refine` when the type is an enum. With typescript generics there was not way (that I could find) to enforce a particular enum type. So make sure you use the correct enum object when using this feature.
 `{ type: 'enum', refine: SomeEnum }`
 
 ### Arrays, Dates, and String formats
 - Validation only works for one-dimensional arrays. If you have nested arrays set the type to `object` and write your own `refine` function.
-- Any validate date whether string or number will pass the date validation test. If you want it converted to a `Date` (or some other) object use the `trans` function.
+- Any format for a date, such as string or number, will pass the date validation test if its a valid date. If you want it converted to a `Date` (or some other) object use the `trans` function.
 - If you want to set a format for strings use can use the optional `format` property. Each format also includes a default value as well. The current formats and their defaults are:
   - `email`: `''` (Note that an empty string counts as a valid email)
   - `color` (a hexcode) `'#ffffff'`

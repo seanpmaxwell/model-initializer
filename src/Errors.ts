@@ -14,7 +14,7 @@ export default {
     return `Property "${propName}" does not satisfy the constraints.`;
   },
   defaultNotFound(propName: string) {
-    return `If "${propName}" is any and required then a default value ` + 
+    return `If "${propName}" is a dynamic-object and required then a default value ` + 
       'must be provided.';
   },
   typeInvalid(propName: string) {
@@ -26,7 +26,7 @@ export default {
       'it\'s nullable.';
   },
   refineMissing(propName: string) {
-    return `A refine function is required for "any" types: propName => "${propName}".`;
+    return `A refine function is required for dynamic-objects: propName => "${propName}".`;
   },
   notValidArr(propName: string) {
     return `An array type was specified but "${propName}" is not a valid ` + 
@@ -39,7 +39,4 @@ export default {
   rangeValidationFailed(propName: string) {
     return `Property "${propName}" failed range validation.`;
   },
-  noPropsKey(propName: string) {
-    return `Trying to access property "${propName}" when no props was provided for it`;
-  }
 } as const;

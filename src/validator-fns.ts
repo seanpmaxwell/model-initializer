@@ -1,7 +1,7 @@
 import Errors from './Errors';
 import { TModelSchema, TTestFnSchema } from './types';
 import { IProcessedType } from './processType';
-import { isObj, isStr } from './misc';
+import { isObj, isStr } from './util';
 
 
 /**
@@ -14,53 +14,32 @@ export function validateDefaults<T>(
   for (const schemaPropKey in schema) {
     // Init
     const schemaPropVal = schema[schemaPropKey];
-    let hasRefine = false,
-      default_,
+    let default_,
       type = '';
     if (isObj(schemaPropVal) && ('default' in schemaPropVal)) {
-      if ('default' in schemaPropVal) {
         default_ = schemaPropVal.default;
-      }
       if ('type' in schemaPropVal && typeof schemaPropVal.type === 'string') {
         type = schemaPropVal.type;
       } else {
         throw new Error('Type should be a string on the object.');
       }
-      hasRefine = (('refine' in schemaPropVal) && schemaPropVal.refine !== undefined);
     } else if (isStr(schemaPropVal)) {
       type = schemaPropVal;
     }
     // Check requirements
-    if (type.includes('any') && !hasRefine) {
-      throw new Error(Errors.refineMissing(schemaPropKey));
-    } else if (type === 'any' && default_ === undefined) {
-      throw new Error(Errors.defaultNotFound(schemaPropKey));
+    if (type.includes('obj') && isObj(schemaPropVal) && !('props' in schemaPropVal)) {
+      if (!('refine' in schemaPropVal) || !schemaPropVal.refine) {
+        throw new Error(Errors.refineMissing(schemaPropKey));
+      } else if (type === 'obj' && default_ === undefined) {
+        throw new Error(Errors.defaultNotFound(schemaPropKey));
+      }
     }
     // Validate default if there
     if (default_ !== undefined) {
-      _wrapErr(typeMap[schemaPropKey], default_);
+      validateProp(typeMap[schemaPropKey], default_)
     }
   }
   return true;
-}
-
-/**
- * Wrapper error object.
- */
-function _wrapErr(pObj: IProcessedType, defaultVal: unknown): void {
-  try {
-    validateProp(pObj, defaultVal)
-  } catch (err) {
-    let errStr;
-    if (err instanceof Error) {
-      errStr = err.message;
-    } else if (isStr(err)) {
-      errStr = err;
-    } else {
-      errStr = String(err);
-    }
-    throw new Error('Error was thrown when checking defaults: ' + errStr);
-  }
 }
 
 /**
@@ -142,10 +121,7 @@ export function _validateCore(pObj: IProcessedType, val: unknown): boolean {
       throw new Error(Errors.rangeValidationFailed(propName));
     }
   // Check "typeof" type
-  } else if (
-    !['any', 'enum'].includes(pObj.type) &&
-    (typeof val !== pObj.type)
-  ) {
+  } else if (!pObj.type.includes('enum') && (typeof val !== pObj.type)) {
     throw new Error(Errors.default(propName));
   }
   // Must always check "refine" functions if there

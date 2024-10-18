@@ -1,8 +1,7 @@
-import Errors from './Errors';
-import { getEnumVals, isNum, isObj, nonArrObj } from './misc';
+import { getEnumVals, isNum, isObj, nonArrObj } from './util';
 import ModelInitializer from './ModelInitializer';
 import StringFormats from './StringFormats';
-import { TRange, TEnum } from './types';
+import { TEnum, TRange } from './types';
 
 
 // **** Type Map **** //
@@ -15,7 +14,6 @@ const TYPE_MAP = {
   date: 'Date',
   pk: 'number',
   fk: 'number',
-  any: 'any',
   enum: 'enum',
 } as const;
 
@@ -109,8 +107,6 @@ function processType(
   // Check some special types
   if (rootType === 'date') {
     isDate = true;
-  } if (rootType === 'any') {
-    nullable = true;
   }
   // Setup transform
   if (isObj(typeProp)) {
@@ -156,10 +152,16 @@ function processType(
     }
     // Process nested schemas type
     if (type === 'object' && !!typeProp.props) {
-      _schema = new ModelInitializer().init(typeProp.props);
-      getDefault = () => _schema.new();
-      refine = _schema.isValid;
-      pick = _schema.pick;
+      if (Object.keys(typeProp.props).length > 0) {
+        _schema = new ModelInitializer().init(typeProp.props);
+        getDefault = () => _schema.new();
+        refine = _schema.isValid;
+        pick = _schema.pick;
+      } else {
+        getDefault = () => {};
+        refine = (arg: unknown) => (!!arg && typeof arg === 'object' && Object.keys(arg).length === 0);
+        pick = () => undefined;
+      }
     }
     // Check string formats
     if (type === 'string' && !!typeProp.format) {
@@ -177,18 +179,6 @@ function processType(
     } else {
       getDefault = () => _getDefault(rootType, isArr);
     }
-  }
-  // Failsafe for pick function
-  if (pick === undefined) {
-    const pick_ = ((arg: string) => {
-      console.error(Errors.noPropsKey(arg));
-      return {
-        default: () => ({}),
-        vldt: () => false,
-        pick: (arg: string) => pick_(arg),
-      }
-    });
-    pick = pick_;
   }
   // Return
   return {

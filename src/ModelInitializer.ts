@@ -1,5 +1,5 @@
 import Errors from './Errors';
-import { isObj } from './misc';
+import { isObj } from './util';
 import processType, { IProcessedType } from './processType';
 import StringFormats from './StringFormats';
 import { TModelSchema, TPickRet, TTestFnSchema } from './types';
@@ -38,7 +38,7 @@ export class ModelInitializer {
     return {
       isValid: validateObj<T>(schema, typeMap),
       new: this.setupGetNew<T>(schema, typeMap),
-      pick: (<K extends keyof T>(prop: K) => ({
+      pick: <K extends keyof T>(prop: K) => (({
         default(): Exclude<T[K], undefined> {
           return typeMap[prop].getDefault() as Exclude<T[K], undefined>;
         },

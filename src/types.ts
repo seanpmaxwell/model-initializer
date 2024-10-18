@@ -1,7 +1,11 @@
 import StringFormats from './StringFormats';
 
 
-// **** Model-Schema Types **** //
+// **** Helpers **** //
+
+type TStaticObj<Prop> = string extends keyof Flatten<Prop> ? never : {
+  [key: string]: string | number | boolean | TStaticObj<Prop>,
+};
 
 export type TEnum = Record<string, string | number>;
 type Flatten<T> = (T extends unknown[] ? T[number] : NonNullable<T>);
@@ -9,8 +13,11 @@ type Refine<Prop> = (arg: unknown) => arg is Prop;
 type Transform<Prop> = (arg: unknown) => Prop;
 export type TRange = ['<' | '>' | '<=' | '>=', number] | [number, number] | '+' | '-';
 
+
+// **** Setup Schema Types **** //
+
 // Setup the type object
-export type TTypeObj<Prop, TType> = {
+export type TPrimTypeObj<Prop, TType> = {
   type: TType;
   default?: Prop;
   refine?: (
@@ -63,38 +70,28 @@ type TNum<Prop> = TSetupTypes<Prop, '?num[] | null', 'num[] | null', '?num | nul
 type TStr<Prop> = TSetupTypes<Prop, '?str[] | null', 'str[] | null', '?str | null', 'str | null', '?str[]', '?str', 'str[]', 'str'>;
 type TObj<Prop> = TSetupTypes<Prop, '?obj[] | null', 'obj[] | null', '?obj | null', 'obj | null', '?obj[]', '?obj', 'obj[]', 'obj'>;
 
-
-// **** Types for "init" function **** //
-
 // Primitive types
-type TBoolFull<Prop> = TBool<Prop> | TTypeObj<Prop, TBool<Prop>>;
-type TNumFull<Prop> = TNum<Prop> | TTypeObj<Prop, TNum<Prop>>;
-type TStrFull<Prop> = TStr<Prop> | TTypeObj<Prop, TStr<Prop>>;
-type TDateFull<Prop> = TDate<Prop> | TTypeObj<Prop, TDate<Prop>>;
+type TBoolFull<Prop> = TBool<Prop> | TPrimTypeObj<Prop, TBool<Prop>>;
+type TNumFull<Prop> = TNum<Prop> | TPrimTypeObj<Prop, TNum<Prop>>;
+type TStrFull<Prop> = TStr<Prop> | TPrimTypeObj<Prop, TStr<Prop>>;
+type TDateFull<Prop> = TDate<Prop> | TPrimTypeObj<Prop, TDate<Prop>>;
 type TRelKeyFull<Prop> = 'pk' | (null extends Prop ? ('fk | null' | { type: 'fk | null', default: null }) : 'fk');
 
-// Object types
-type TObjFull<Prop> = ({
+type TObjFull<Prop> = (Flatten<Prop> extends TStaticObj<Prop> ? {
   type: TObj<Prop>,
   trans?: (Transform<Prop> | 'json'),
   props: TModelSchema<Flatten<Prop>>,
-});
-
-// The 'any' type
-type TAnyFull<Prop> = ({
-  type: 'any' | '?any',
+} : ({
+  type: TObj<Prop>,
   trans?: (Transform<Prop> | 'json'),
-  props?: TModelSchema<Prop>,
-  refine: Refine<Prop>,
-}) & ({
-  type: 'any',
-  default: Prop,
-} | {
-  type: '?any',
-  default?: Prop,
-});
+  refine: Refine<Flatten<Prop>>,
+} & (undefined extends Prop ? {
+  default?: Prop
+} : {
+  default: Prop
+})));
 
-type TEnumFull<Prop> = NonNullable<Prop> extends (string | number) ? {
+type TEnumFull<Prop> = Prop extends (string | number) ? {
   type: 'enum' | '?enum',
   refine: TEnum,
   default?: Prop,
@@ -117,16 +114,14 @@ type TModelSchemaOpts<Prop> = (
 
 // Map the schema to the incoming type
 export type TModelSchema<T> = {
-  [K in keyof T]: (TModelSchemaOpts<T[K]> | TAnyFull<T[K]> | TEnumFull<T[K]>);
+  [K in keyof T]: TModelSchemaOpts<T[K]> | TEnumFull<T[K]>;
 };
 
-// Return value for the pick function
 export type TPickRet<T> = ({
   vldt: (arg: unknown) => arg is Exclude<T, undefined>,
   default: () => Exclude<T, undefined>,
-// This stops general Record types from using "pick"
-}) & (symbol extends keyof T ? {} : number extends keyof T ? {} : string extends keyof T ? {} : T extends Record<string, unknown> ? {
-  pick: <K extends keyof T>(k: K) => TPickRet<T[K]>,
+}) & (T extends TStaticObj<T> ? {
+  pick: <K extends keyof T>(key: K) => TPickRet<T[K]>,
 } : {});
 
 
