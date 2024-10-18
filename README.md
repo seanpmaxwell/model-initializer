@@ -115,7 +115,7 @@ const validateAvatar = User.pick('avatar').vldt;
 
 ## Guide
 
-### Property Object
+### Specifying the type
 
 - Each key of the schema object must be a key in the type you pass. The value can be a string representing the type OR an object:
 ```typescript
