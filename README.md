@@ -1,6 +1,5 @@
 # About model-initializer
 <h3>Quick, easy, typescript-first library for initializing and validating objects. Works client or server side and much simpler than other schema validation tools like <b>zod</b>. Unlike typia, doesn't require an extra compilation step so still works with ts-node.</h3>
-<br/>
 
 
 ## Why Model-Initializer
@@ -16,8 +15,6 @@
   - Joi: `149 kB`
   - Model-Initializer: `44.9 kB` 😊
 
-<br/>
-
 ## Summary
 - This library's default export is an object that holds several properties. The main one `init` is the heart of the library, we'll talk about the other ones later.
 - To call `init` you must pass a generic and an object used to represent your schema (i.e. `init<IUser>({ name: 'string' })`) it gives you back an object with 3 functions: `new`, `isValid`, and `pick`. For all 3, typesafety is enforced by the generic you passed.
@@ -25,7 +22,6 @@
   - `isValid` accepts an unknown argument and throws errors if they do not match the schema requirements.
   - `pick("prop")` extracts the validation logic and default value for a single property and returns an object with the format: `{ default: fn, vldt: fn }`. The property passed must be a key of the the generic passed to `init`. However, one difference with the `vldt` function is that `undefined` will not be accepted as a valid value even if the property is optional. `default()` returns a deep-clone of the default value. If the property is also a nested object, you can chain the `pick` method to select its values as well.
 - By default `structuredClone()` is used for deep cloning values. I know some older versions of node don't supported `structuredClone()`, so you can set your own clone function if you want: see the last section.
-<br/>
 
 ## Quick Start
 - Installation: `npm i -s modal-initializer`.
@@ -110,7 +106,6 @@ console.log(user1)
 // }
 const validateAvatar = User.pick('avatar').vldt;
 ```
-<br/>
 
 
 ## Guide
