@@ -7,12 +7,15 @@
 - Works client or server side.
 - Works will both runtime and compile-time validation including `ts-node` (unlike `typia`).
 - Super small, fast, and lightweight compared to some other schema-validation libraries.
-- Size comparison to other popular schema validators
+- And here's the big one: separate `new` and `isValid` function allowing you to create new objects using partials using default values 😊,
+
+### Size comparison to other popular schema validators
   - TypeBox: `1.28 MB`
   - Ajv: `676 kB`
   - Zod: `570 kB`
   - Joi: `149 kB`
-  - Model-Initializer: `44.9 kB` 😊
+  - Model-Initializer: `44.9 kB`
+
 
 ## Summary
 - This library's default export is an object that holds several properties. The main one `init` is the heart of the library, we'll talk about the other ones later.
@@ -41,7 +44,6 @@ export interface IUser {
   active: boolean;
   boss: number;
   children: string[];
-  avatar?: { fileName: string; data: string };
   address: {
     street: string;
     city: string;
@@ -62,13 +64,6 @@ const User = MI.init<IUser>({
   lastLogin: 'date | null',
   created: 'date',
   active: 'bool',
-  avatar: {
-    type: '?obj',
-    refine: MI.test<IUser['avatar']>({
-      fileName: 'str',
-      data: 'str',
-    }),
-  },
   children: 'str[]',
   address: {
     type: 'obj',
@@ -83,13 +78,10 @@ const User = MI.init<IUser>({
   },
 });
 
-// We have an independent test functin
-const checkAvatar = MI.test<IUser['avatar']>({
-  fileName: 'str',
-  data: 'str',
-}),
+// Run validation
+User.isValid('user');
 
-User.isValid('user'); // should throw Error
+// Create new instance using defaults for required values not specified
 const user1 = User.new({ name: 'john' });
 console.log(user1)
 // {
@@ -103,7 +95,9 @@ console.log(user1)
 //   boss: null,
 //   children: []
 // }
-const validateAvatar = User.pick('avatar').vldt;
+
+// Extract validation for a particular field
+const validateAddr = User.pick('address').vldt;
 ```
 
 

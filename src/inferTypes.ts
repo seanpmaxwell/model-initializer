@@ -1,42 +1,47 @@
-import { Transform, TModelSchema, TModelSchemaOpts, TObjFull, TPrimitiveTypeObj, Flatten, Refine } from "./types";
+import { Transform, TPrimitiveTypeObj, Flatten, Refine } from "./types";
 
 
 // **** Enforce types **** //
 
 export type TInferObj = {
-  [key: string]: TAllTypes | TFullTypeObj;
+  [key: string]: TAllTypes | TFullTypeObj | TFullTypeObjo;
 }
+
+
+// Pick up here, can't get exclusion to work between these two
 
 // Setup the type object ("distributive-object-type")
 type TFullTypeObj = {
-  [P in TAllTypes]: (
-    P extends TAllObjTypes 
-    ? TCustomObjType<P> 
-    : TPrimitiveTypeObj<TTypeMap<P>, P>
-  );
+  [P in TAllNonObjTypes]: TPrimitiveTypeObj<TTypeMap<P>, P>;
+}[TAllNonObjTypes];
+
+// Setup the type object ("distributive-object-type")
+type TFullTypeObjo = {
+  [P in TAllTypes]: TCustomObjType<TTypeMap<P>, P>;
 }[TAllTypes];
 
-type TCustomObjType<Prop> = {
-  type: Prop,
-  trans?: (Transform<Prop> | 'json'),
-  props: TInferObj,
-} | ({
-  type: Prop,
-  trans?: (Transform<Prop> | 'json'),
-  refine: Refine<Flatten<Prop>>,
-} & (undefined extends Prop ? {
-  default?: Prop
-} : {
-  default: Prop
-}))
 
-// type TIterTypeObj = {
-//   [P in TAllObjTypes]: (
-//     P extends TAllObjTypes 
-//     ? TCustomObjType<P> 
-//     : TPrimitiveTypeObj<TTypeMap<P>, P>
-//   );
-// }[TAllObjTypes];
+
+
+type TCustomObjType<TType, P> = ({
+  type: P,
+  trans?: (Transform<TType> | 'json'),
+  props: TInferObj,
+});
+
+// type TCustomObjType<TType, P> = ({
+//   type: P,
+//   trans?: (Transform<TType> | 'json'),
+//   props: TInferObj,
+// } | ({
+//   type: P,
+//   trans?: (Transform<TType> | 'json'),
+//   // refine: Refine<TType>,
+// } & (undefined extends P ? {
+//   // default?: TType,
+// } : {
+//   // default: TType,
+// })));
 
 
 // **** The "inferTypes" function **** //
@@ -51,7 +56,7 @@ type inferTypesHelper<T> = {
     T[K] extends string 
       ? TTypeMap<T[K]> 
       : 'props' extends keyof T[K] 
-      ? (T[K]['props'] extends TModelSchemaOpts<T[K]['props']> ? T[K]['props'] : never)
+      ? inferTypesHelper<T[K]['props']>
       : 'type' extends keyof T[K] 
       ? TTypeMap<T[K]['type']> 
       : never
@@ -61,13 +66,18 @@ type inferTypesHelper<T> = {
 
 // **** All Base Types **** //
 
-type TAllTypes = '?bool[] | null' | 'bool[] | null' | '?bool | null' | 'bool | null' | '?bool[]' | '?bool' | 'bool[]' | 'bool' |
+// type TAllTypes = '?bool[] | null' | 'bool[] | null' | '?bool | null' | 'bool | null' | '?bool[]' | '?bool' | 'bool[]' | 'bool' |
+//   '?date[] | null' | 'date[] | null' | '?date | null' | 'date | null' | '?date[]' | '?date' | 'date[]' | 'date' |
+//   '?num[] | null' | 'num[] | null' | '?num | null' | 'num | null' | '?num[]' | '?num' | 'num[]' | 'num' |
+//   '?str[] | null' | 'str[] | null' | '?str | null' | 'str | null' | '?str[]' | '?str' | 'str[]' | 'str' | 
+//   '?obj[] | null' | 'obj[] | null' | '?obj | null' | 'obj | null' | '?obj[]' | '?obj' | 'obj[]' | 'obj';
+
+type TAllNonObjTypes = '?bool[] | null' | 'bool[] | null' | '?bool | null' | 'bool | null' | '?bool[]' | '?bool' | 'bool[]' | 'bool' |
   '?date[] | null' | 'date[] | null' | '?date | null' | 'date | null' | '?date[]' | '?date' | 'date[]' | 'date' |
   '?num[] | null' | 'num[] | null' | '?num | null' | 'num | null' | '?num[]' | '?num' | 'num[]' | 'num' |
-  '?str[] | null' | 'str[] | null' | '?str | null' | 'str | null' | '?str[]' | '?str' | 'str[]' | 'str' | 
-  '?obj[] | null' | 'obj[] | null' | '?obj | null' | 'obj | null' | '?obj[]' | '?obj' | 'obj[]' | 'obj';
-
+  '?str[] | null' | 'str[] | null' | '?str | null' | 'str | null' | '?str[]' | '?str' | 'str[]' | 'str';
 type TAllObjTypes = '?obj[] | null' | 'obj[] | null' | '?obj | null' | 'obj | null' | '?obj[]' | '?obj' | 'obj[]' | 'obj';
+type TAllTypes = TAllNonObjTypes | TAllObjTypes;
 
 type TTypeMap<T> = 
   T extends '?bool[] | null' ? boolean[] | undefined | null : 

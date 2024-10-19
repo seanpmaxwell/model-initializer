@@ -381,14 +381,16 @@ User.pick('imageTest5').pick?.('fileName')
 console.log(MI.StringFormats.color.test('asdf'));
 
 
+// **** Test infer types **** //
 
 const Dog = MI.init({
   name: { type: 'str', default: 'asdf' },
   owner: {
     type: 'obj',
-    // props: { address: 'str' },
-    refine: (() => '') as any,
-    default: ('asdf') as any,
+    props: { address: 'str' },
+    // refine: (() => ''),
+    // default: 876,
+    // horse: 'asdf',
   },
   other: {
     type: '?bool | null',
@@ -400,9 +402,9 @@ const Dog = MI.init({
 
 // let dog: TDog = {
 //   name: '',
-//   // owner: {
-//   //   address: 'asdf'
-//   // },
-//   owner: 'dave',
+//   owner: {
+//     address: 'asdf',
+//     // refine: () => 'asdf'
+//   },
 //   other: undefined
 // }
