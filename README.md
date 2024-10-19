@@ -159,10 +159,10 @@ const validateAvatar = User.pick('avatar').vldt;
   - `obj`: See the objects section below.
   - `pk` and `fk`: `-1`
 
-### Objects (`type: 'obj'`)
+### Objects (`{ type: 'obj' }`)
 - Some terminology: <b>static-object</b> is for objects with a distinct set of properties (i.e. a mapped-type alias, interface, or object returned from an object-literal) while <b>dynamic-object</b> refers to objects without specified keys like `Record<string, unknown>`, `object` etc.
-- Typesafety enforces that static-objects must specify their properties in the `props` key while dynamic-objects must supply a `refine` function.
-- static-objects default value is defined in their schema, but for dynamic-objects you need to define your own default value. If a dynamic-object is not optional, then a default value is required.
+- The libraries typesafety enforces that static-objects must specify their properties in the `props` key while dynamic-objects must define a `refine` function.
+- static-objects' default value is defined in their schema, but for dynamic-objects you need to define your own default value. If a dynamic-object is not optional, then a default value is required.
 
 ### Enums
 - For enum types you can set the type to `enum` and pass an enum-object to the `refine` prop. This will make sure that the value is a value in the enum and it will also set the first value in the `enum` as the default value when `new` is called.

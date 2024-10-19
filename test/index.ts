@@ -1,6 +1,5 @@
 
 import MI, { ModelInitializer, TObjSchema } from '../src';
-import { TModelSchema } from '../src/types';
 
 
 enum Status {
@@ -78,6 +77,12 @@ export interface IUser {
   recordTest6: Record<string, any>;
   recordTest7: {};
   recordTest8: IAvatar;
+  recordTest9: IImage;
+  recordTest10?: IImage[];
+  recordTest11?: IImage;
+  recordTest12: IImage | null;
+  recordTest13?: IImage | null;
+  recordTest14?: IImage[] | null;
   enumTest1: Status;
   enumTest2: Fruit;
 }
@@ -86,6 +91,11 @@ type IAvatar = {
   fileName: string;
   data: string;
   fileTypes?: 'jpeg' | 'jpg' | 'png' | 'gif';
+}
+
+interface IImage {
+  fileName: string;
+  base64Str?: string;
 }
 
 const a: TObjSchema<IAvatar> = {
@@ -178,7 +188,7 @@ const User = MI.init<IUser>({
     default: {},
   },
   recordTest: {
-    type: '?obj',
+    type: '?obj[]',
     // props: {},
     refine: (() => true) as any,
     // default: '' as any,
@@ -226,8 +236,44 @@ const User = MI.init<IUser>({
     // refine: (() => true) as any,
     // default: '' as any,
   },
+  recordTest9: {
+    type: 'obj',
+    props: { fileName: 'str', base64Str: '?str' },
+    // refine: (() => true) as any,
+    // default: '' as any,
+  },
+  recordTest10: {
+    type: '?obj[]',
+    props: { fileName: 'str', base64Str: '?str' },
+    // refine: (() => true) as any,
+    // default: '' as any,
+  },
+  recordTest11: {
+    type: '?obj',
+    props: { fileName: 'str', base64Str: '?str' },
+    // refine: (() => true) as any,
+    // default: '' as any,
+  },
+  recordTest12: {
+    type: 'obj | null',
+    props: { fileName: 'str', base64Str: '?str' },
+    // refine: (() => true) as any,
+    // default: '' as any,
+  },
+  recordTest13: {
+    type: '?obj | null',
+    props: { fileName: 'str', base64Str: '?str' },
+    // refine: (() => true) as any,
+    // default: '' as any,
+  },
+  recordTest14: {
+    type: '?obj[] | null',
+    props: { fileName: 'str', base64Str: '?str' },
+    // refine: (() => true) as any,
+    // default: '' as any,
+  },
   enumTest1: { type: 'enum', refine: Status },
-  enumTest2: { type: 'enum', refine: Fruit, default: Fruit.Orange }
+  enumTest2: { type: 'enum', refine: Fruit, default: Fruit.Orange },
 });
 
 
@@ -303,5 +349,11 @@ if (User.pick('nested').pick('foo')) {
   const val = User.pick('nested').pick('foo').default();
   console.log(val)
 }
+
+User.pick('recordTest9').pick('fileName')
+User.pick('recordTest10')
+User.pick('recordTest11').pick?.('fileName')
+User.pick('recordTest12').pick?.('fileName')
+User.pick('recordTest13').pick?.('fileName')
 
 console.log(MI.StringFormats.color.test('asdf'));

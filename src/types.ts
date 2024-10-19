@@ -3,12 +3,20 @@ import StringFormats from './StringFormats';
 
 // **** Helpers **** //
 
-type TStaticObj<Prop> = string extends keyof Flatten<Prop> ? never : {
-  [key: string]: string | number | boolean | TStaticObj<Prop>,
+// This roots out Record<string,...> and makes sure we use a named type
+type TStaticObj<Prop> = string extends keyof Prop ? never : {
+  [key: string]: string | number | boolean | TStaticObj<Prop>;
 };
+type TConvertInterToType<Prop> = {
+  [K in keyof Prop]: Prop[K];
+}
+type IsStaticObj<Prop> = TConvertInterToType<Prop> extends TStaticObj<Prop> ? true : false;
 
+// Some Utility Types
 export type TEnum = Record<string, string | number>;
 type Flatten<T> = (T extends unknown[] ? T[number] : NonNullable<T>);
+type NotUndef<T> = Exclude<T, undefined>;
+type NotNull<T> = Exclude<T, null>
 type Refine<Prop> = (arg: unknown) => arg is Prop;
 type Transform<Prop> = (arg: unknown) => Prop;
 export type TRange = ['<' | '>' | '<=' | '>=', number] | [number, number] | '+' | '-';
@@ -49,7 +57,7 @@ export type TPrimTypeObj<Prop, TType> = {
 
 // Setup Utility Types
 type TSetupArr<Prop, ArrType, Base> = 
-  Prop extends unknown[]
+  NonNullable<Prop> extends unknown[]
     ? ArrType
     : Base
 
@@ -77,7 +85,7 @@ type TStrFull<Prop> = TStr<Prop> | TPrimTypeObj<Prop, TStr<Prop>>;
 type TDateFull<Prop> = TDate<Prop> | TPrimTypeObj<Prop, TDate<Prop>>;
 type TRelKeyFull<Prop> = 'pk' | (null extends Prop ? ('fk | null' | { type: 'fk | null', default: null }) : 'fk');
 
-type TObjFull<Prop> = (Flatten<Prop> extends TStaticObj<Prop> ? {
+type TObjFull<Prop> = (IsStaticObj<Flatten<Prop>> extends true ? {
   type: TObj<Prop>,
   trans?: (Transform<Prop> | 'json'),
   props: TModelSchema<Flatten<Prop>>,
@@ -90,6 +98,7 @@ type TObjFull<Prop> = (Flatten<Prop> extends TStaticObj<Prop> ? {
 } : {
   default: Prop
 })));
+
 
 type TEnumFull<Prop> = Prop extends (string | number) ? {
   type: 'enum' | '?enum',
@@ -118,9 +127,13 @@ export type TModelSchema<T> = {
 };
 
 export type TPickRet<T> = ({
-  vldt: (arg: unknown) => arg is Exclude<T, undefined>,
-  default: () => Exclude<T, undefined>,
-}) & (T extends TStaticObj<T> ? {
+  vldt: (arg: unknown) => arg is NotUndef<T>,
+  default: () => NotUndef<T>,
+}) & (IsStaticObj<Flatten<T>> extends true ? null extends T ? {
+  pick?: <K extends keyof NonNullable<T>>(key: K) => TPickRet<NonNullable<T>[K]>,
+} : undefined extends T ? {
+  pick?: <K extends keyof NotUndef<T>>(key: K) => TPickRet<NotUndef<T>[K]>,
+} : {
   pick: <K extends keyof T>(key: K) => TPickRet<T[K]>,
 } : {});
 
