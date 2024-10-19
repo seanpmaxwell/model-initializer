@@ -77,13 +77,13 @@ export interface IUser {
   recordTest6: Record<string, any>;
   recordTest7: {};
   recordTest8: IAvatar;
-  recordTest9: IImage;
-  recordTest10?: IImage[];
-  recordTest11?: IImage;
-  recordTest12: IImage | null;
-  recordTest13?: IImage | null;
-  recordTest14?: IImage[] | null;
-  recordTest15?: [];
+  imageTest1: IImage;
+  imageTest2: IImage[];
+  imageTest3?: IImage;
+  imageTest4: IImage | null;
+  imageTest5?: IImage | null;
+  imageTest6?: IImage[] | null;
+  emptyArrTest?: [];
   enumTest1: Status;
   enumTest2: Fruit;
 }
@@ -242,43 +242,43 @@ const User = MI.init<IUser>({
     // refine: (() => true) as any,
     // default: '' as any,
   },
-  recordTest9: {
+  imageTest1: {
     type: 'obj',
     props: { fileName: 'str', base64Str: '?str' },
     // refine: (() => true) as any,
     // default: '' as any,
   },
-  recordTest10: {
-    type: '?obj[]',
+  imageTest2: {
+    type: 'obj[]',
     props: { fileName: 'str', base64Str: '?str' },
     // refine: (() => true) as any,
     // default: '' as any,
   },
-  recordTest11: {
+  imageTest3: {
     type: '?obj',
     props: { fileName: 'str', base64Str: '?str' },
     // refine: (() => true) as any,
     // default: '' as any,
   },
-  recordTest12: {
+  imageTest4: {
     type: 'obj | null',
     props: { fileName: 'str', base64Str: '?str' },
     // refine: (() => true) as any,
     // default: '' as any,
   },
-  recordTest13: {
+  imageTest5: {
     type: '?obj | null',
     props: { fileName: 'str', base64Str: '?str' },
     // refine: (() => true) as any,
     // default: '' as any,
   },
-  recordTest14: {
+  imageTest6: {
     type: '?obj[] | null',
     props: { fileName: 'str', base64Str: '?str' },
     // refine: (() => true) as any,
     // default: '' as any,
   },
-  recordTest15: {
+  emptyArrTest: {
     type: '?bool[]',
     // props: { fileName: 'str', base64Str: '?str' },
     // refine: (() => true) as any,
@@ -362,10 +362,10 @@ if (User.pick('nested').pick('foo')) {
   console.log(val)
 }
 
-User.pick('recordTest9').pick('fileName')
-User.pick('recordTest10')
-User.pick('recordTest11').pick?.('fileName')
-User.pick('recordTest12').pick?.('fileName')
-User.pick('recordTest13').pick?.('fileName')
+User.pick('imageTest1').pick('fileName')
+User.pick('imageTest2')
+User.pick('imageTest3').pick?.('fileName')
+User.pick('imageTest4').pick?.('fileName')
+User.pick('imageTest5').pick?.('fileName')
 
 console.log(MI.StringFormats.color.test('asdf'));
