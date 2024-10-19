@@ -153,7 +153,7 @@ function processType(
     // Process nested schemas type
     if (type === 'object' && !!typeProp.props) {
       if (Object.keys(typeProp.props).length > 0) {
-        _schema = new ModelInitializer().init(typeProp.props);
+        _schema = new ModelInitializer().init(typeProp.props as any);
         getDefault = () => _schema.new();
         refine = _schema.isValid;
         pick = _schema.pick;

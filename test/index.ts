@@ -1,5 +1,5 @@
 
-import MI, { ModelInitializer, TObjSchema } from '../src';
+import MI, { TObjSchema, inferTypes } from '../src';
 
 
 enum Status {
@@ -290,7 +290,7 @@ const User = MI.init<IUser>({
     // default: '' as any,
   },
   enumTest1: { type: 'enum', refine: Status },
-  enumTest2: { type: 'enum', refine: Fruit, default: Fruit.Orange },
+  enumTest2: { type: 'enum', refine: Fruit },
   altTest: {
     type: 'obj',
     // props: { '0': 'str' }, // This works too
@@ -379,3 +379,30 @@ User.pick('imageTest4').pick?.('fileName')
 User.pick('imageTest5').pick?.('fileName')
 
 console.log(MI.StringFormats.color.test('asdf'));
+
+
+
+const Dog = MI.init({
+  name: { type: 'str', default: 'asdf' },
+  owner: {
+    type: 'obj',
+    // props: { address: 'str' },
+    refine: (() => '') as any,
+    default: ('asdf') as any,
+  },
+  other: {
+    type: '?bool | null',
+    // refine: (arg: unknown): arg is string => false,
+  },
+});
+// type TDog = inferTypes<typeof Dog>;
+
+
+// let dog: TDog = {
+//   name: '',
+//   // owner: {
+//   //   address: 'asdf'
+//   // },
+//   owner: 'dave',
+//   other: undefined
+// }

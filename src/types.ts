@@ -1,3 +1,4 @@
+import { TInferObj } from './inferTypes';
 import StringFormats from './StringFormats';
 
 
@@ -14,17 +15,17 @@ type IsStaticObj<Prop> = TConvertInterToType<Prop> extends TStaticObj<Prop> ? tr
 
 // Some Utility Types
 export type TEnum = Record<string, string | number>;
-type Flatten<T> = (T extends unknown[] ? T[number] : NonNullable<T>);
+export type Flatten<T> = (T extends unknown[] ? T[number] : NonNullable<T>);
 type NotUndef<T> = Exclude<T, undefined>;
-type Refine<Prop> = (arg: unknown) => arg is Prop;
-type Transform<Prop> = (arg: unknown) => Prop;
+export type Refine<Prop> = (arg: unknown) => arg is Prop;
+export type Transform<Prop> = (arg: unknown) => Prop;
 export type TRange = ['<' | '>' | '<=' | '>=', number] | [number, number] | '+' | '-';
 
 
 // **** Setup Schema Types **** //
 
 // Setup the type object
-export type TPrimTypeObj<Prop, TType> = {
+export type TPrimitiveTypeObj<Prop, TType> = ({
   type: TType;
   default?: Prop;
   refine?: (
@@ -52,7 +53,7 @@ export type TPrimTypeObj<Prop, TType> = {
 // Add format
 (Flatten<Prop> extends string ? {
   format?: keyof typeof StringFormats,
-} : {});
+} : {}))
 
 // Setup Utility Types
 type TSetupArr<Prop, ArrType, Base> = 
@@ -78,13 +79,13 @@ type TStr<Prop> = TSetupTypes<Prop, '?str[] | null', 'str[] | null', '?str | nul
 type TObj<Prop> = TSetupTypes<Prop, '?obj[] | null', 'obj[] | null', '?obj | null', 'obj | null', '?obj[]', '?obj', 'obj[]', 'obj'>;
 
 // Primitive types
-type TBoolFull<Prop> = TBool<Prop> | TPrimTypeObj<Prop, TBool<Prop>>;
-type TNumFull<Prop> = TNum<Prop> | TPrimTypeObj<Prop, TNum<Prop>>;
-type TStrFull<Prop> = TStr<Prop> | TPrimTypeObj<Prop, TStr<Prop>>;
-type TDateFull<Prop> = TDate<Prop> | TPrimTypeObj<Prop, TDate<Prop>>;
+type TBoolFull<Prop> = TBool<Prop> | TPrimitiveTypeObj<Prop, TBool<Prop>>;
+type TNumFull<Prop> = TNum<Prop> | TPrimitiveTypeObj<Prop, TNum<Prop>>;
+type TStrFull<Prop> = TStr<Prop> | TPrimitiveTypeObj<Prop, TStr<Prop>>;
+type TDateFull<Prop> = TDate<Prop> | TPrimitiveTypeObj<Prop, TDate<Prop>>;
 type TRelKeyFull<Prop> = 'pk' | (null extends Prop ? ('fk | null' | { type: 'fk | null', default: null }) : 'fk');
 
-type TObjFull<Prop> = (IsStaticObj<Flatten<Prop>> extends true ? {
+export type TObjFull<Prop> = (IsStaticObj<Flatten<Prop>> extends true ? {
   type: TObj<Prop>,
   trans?: (Transform<Prop> | 'json'),
   props: TModelSchema<Flatten<Prop>>,
@@ -98,15 +99,8 @@ type TObjFull<Prop> = (IsStaticObj<Flatten<Prop>> extends true ? {
   default: Prop
 })));
 
-
-type TEnumFull<Prop> = Prop extends (string | number) ? {
-  type: 'enum' | '?enum',
-  refine: TEnum,
-  default?: Prop,
-} : never;
-
 // Combine all types
-type TModelSchemaOpts<Prop> = (
+export type TModelSchemaOpts<Prop> = (
   Flatten<Prop> extends boolean
   ? TBoolFull<Prop>
   : Flatten<Prop> extends number
@@ -118,11 +112,16 @@ type TModelSchemaOpts<Prop> = (
   : Flatten<Prop> extends object
   ? TObjFull<Prop>
   : never
-)
+// Add enum support
+) | (Flatten<Prop> extends (string | number) ? {
+  type: 'enum' | '?enum',
+  refine: TEnum,
+  default?: Prop,
+} : never);
 
 // Map the schema to the incoming type
-export type TModelSchema<T> = {
-  [K in keyof T]: TModelSchemaOpts<T[K]> | TEnumFull<T[K]>;
+export type TModelSchema<T> = T extends void ? TInferObj : {
+  [K in keyof T]: TModelSchemaOpts<T[K]>;
 };
 
 export type TPickRet<T> = ({

@@ -25,7 +25,7 @@ export class ModelInitializer {
   /**
    * Initialize a schema function
    */
-  public init<T, U extends TModelSchema<T> = TModelSchema<T>>(schema: U) {
+  public init<T = void, U extends TModelSchema<T> = TModelSchema<T>>(schema: U) {
     // Process types
     const typeMap: Record<any, IProcessedType> = {};
     for (const key in schema) {
@@ -52,6 +52,7 @@ export class ModelInitializer {
           pick: typeMap[prop].pick,
         } : {}),
       }) as TPickRet<T[K]>),
+      _schema: schema,
     };
   }
 

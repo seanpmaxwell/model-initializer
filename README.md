@@ -7,7 +7,6 @@
 - Works client or server side.
 - Works will both runtime and compile-time validation including `ts-node` (unlike `typia`).
 - Super small, fast, and lightweight compared to some other schema-validation libraries.
-- No it does not generate types for you BUT, I like modeling my data with interfaces cause they help to act as kind of a documentation for my model properties without having to dig through some long nested schema definitions. If you want something that does both, a library like `zod` or `typebox` might be better.
 - Size comparison to other popular schema validators
   - TypeBox: `1.28 MB`
   - Ajv: `676 kB`
