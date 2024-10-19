@@ -86,6 +86,7 @@ export interface IUser {
   emptyArrTest?: [];
   enumTest1: Status;
   enumTest2: Fruit;
+  altTest: IAlt;
 }
 
 type IAvatar = {
@@ -97,6 +98,10 @@ type IAvatar = {
 interface IImage {
   fileName: string;
   base64Str?: string;
+}
+
+interface IAlt {
+  0: string;
 }
 
 // type IImage = {
@@ -286,6 +291,11 @@ const User = MI.init<IUser>({
   },
   enumTest1: { type: 'enum', refine: Status },
   enumTest2: { type: 'enum', refine: Fruit, default: Fruit.Orange },
+  altTest: {
+    type: 'obj',
+    // props: { '0': 'str' }, // This works too
+    props: { 0: 'str' },
+  }
 });
 
 
