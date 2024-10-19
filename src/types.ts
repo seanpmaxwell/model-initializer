@@ -16,7 +16,6 @@ type IsStaticObj<Prop> = TConvertInterToType<Prop> extends TStaticObj<Prop> ? tr
 export type TEnum = Record<string, string | number>;
 type Flatten<T> = (T extends unknown[] ? T[number] : NonNullable<T>);
 type NotUndef<T> = Exclude<T, undefined>;
-type NotNull<T> = Exclude<T, null>
 type Refine<Prop> = (arg: unknown) => arg is Prop;
 type Transform<Prop> = (arg: unknown) => Prop;
 export type TRange = ['<' | '>' | '<=' | '>=', number] | [number, number] | '+' | '-';

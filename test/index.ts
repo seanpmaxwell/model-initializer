@@ -83,6 +83,7 @@ export interface IUser {
   recordTest12: IImage | null;
   recordTest13?: IImage | null;
   recordTest14?: IImage[] | null;
+  recordTest15?: [];
   enumTest1: Status;
   enumTest2: Fruit;
 }
@@ -97,6 +98,11 @@ interface IImage {
   fileName: string;
   base64Str?: string;
 }
+
+// type IImage = {
+//   fileName: string;
+//   base64Str?: string;
+// }
 
 const a: TObjSchema<IAvatar> = {
   fileName: 'str',
@@ -269,6 +275,12 @@ const User = MI.init<IUser>({
   recordTest14: {
     type: '?obj[] | null',
     props: { fileName: 'str', base64Str: '?str' },
+    // refine: (() => true) as any,
+    // default: '' as any,
+  },
+  recordTest15: {
+    type: '?bool[]',
+    // props: { fileName: 'str', base64Str: '?str' },
     // refine: (() => true) as any,
     // default: '' as any,
   },
